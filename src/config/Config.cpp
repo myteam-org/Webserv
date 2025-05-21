@@ -40,3 +40,43 @@ void	Config::_makeToken(const std::string& filename) {
 	}
 	file.close();
 }
+
+ConfigNode*	Config::makeConfTree(const std::vector<std::string>& tokens) {
+	this->root = new ConfigNode("root");
+	std::vector<ConfigNode*> servers;
+	std::vector<ConfigNode*> locations;
+	ConfigNode*	currentServer = nullptr;
+	ConfigNode*	locationNode = nullptr;
+	this->brace = 0;
+	this->errFlag = 0;
+
+	for (size_t i = 0; i < tokens.size(); ++i) {
+		if (tokens[i] == "server") {
+			ConfigNode::setNode("server", currentServer, root, servers);
+		} else if (tokens[i] == "location") {
+			if (brace == 0 || !currentServer)
+				printErr("config syntax error: ", tokens[i]);
+			else 
+				ConfigNode::setNode("location", locationNode, currentServer, locations);
+		} else if (tokens[i] == "{") {
+			if (!currentServer || 
+				!(tokens[i - 1] == "server" || tokens[i - 1] == "location")) {
+				printErr("config syntax error: ", tokens[i]);
+			} else {
+				this->brace++;
+			}				
+		} else if (tokens[i] == "}") {
+			this->brace--;
+			if (this->brace < 0)
+				printErr("Config brace close error: ", tokens[i]);
+		} else {
+			// TODO
+		}
+	}
+	return (root);
+}
+
+void	Config::printErr(const std::string& msgA, const std::string& msgB) {
+	std::cerr << msgA << msgB << std::endl;
+	this->errFlag++;
+}

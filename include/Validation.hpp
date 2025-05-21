@@ -7,7 +7,7 @@
 # include "ConfigNode.hpp"
 
 enum {
-	DIRECTORY,
+	// DIRECTORY,
 	FILENAME
 };
 

@@ -15,17 +15,17 @@
 // 	return (openBrace = closeBrace);
 // }
 
-bool	Validation::number(const std::string& number, int kind) {
-	char*	endP;
-	int	num = strtod(number.c_str(), &endP);
+// bool	Validation::number(const std::string& number, int kind) {
+// 	char*	endP;
+// 	int	num = strtod(number.c_str(), &endP);
 
-	if (kind == LISTEN)
-		return (num >= 0 && num <= 35535);
-	if (kind == IP)
-		return (num >= 0 && num <= 255);
-	if (kind == MAX_SIZE)
-		return (num > 0 && num < 1000000);
-}
+// 	if (kind == LISTEN)
+// 		return (num >= 0 && num <= 35535);
+// 	if (kind == IP)
+// 		return (num >= 0 && num <= 255);
+// 	if (kind == MAX_SIZE)
+// 		return (num > 0 && num < 1000000);
+// }
 
 bool	Validation::path(const std::string& path, int select) {
 	struct stat	s;
@@ -45,6 +45,6 @@ bool	Validation::onOff(const std::string& onOff) {
 	return (onOff == "on" || onOff == "off");
 }
 
-bool	Validation::url(const std::string& url) {
+// bool	Validation::url(const std::string& url) {
 
-}
+// }

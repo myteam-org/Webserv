@@ -20,13 +20,13 @@ private:
 	void	_makeToken(const std::string& filename);
 public:
 	ConfigNode*	root;
-	int		brace;
+	// int		brace;
 	int		errFlag;
 
 	Config(const std::string& filename);
 	~Config();
 
 	const std::vector<std::string>&	getTokens() const;
-	ConfigNode*			makeConfTree(const std::vector<std::string>& tokens);
+	void				makeConfTree(const std::vector<std::string>& tokens);
 	void				printErr(const std::string& msgA, const std::string& msgB);
 };

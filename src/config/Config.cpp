@@ -3,8 +3,14 @@
 Config::Config(const std::string& filename) {
 	_checkFile(filename);
 	_makeToken(filename);
-	for (std::vector<std::string>::iterator it = _tokens.begin(); it != _tokens.end(); ++it)
-		std::cout << "token = " << *it << std::endl;
+	// for (std::vector<std::string>::iterator it = _tokens.begin(); it != _tokens.end(); ++it)
+	// 	std::cout << "token = " << *it << std::endl;
+	makeConfTree(getTokens());
+	for (std::vector<ConfigNode*>::iterator it = root->children.begin(); it != root->children.end(); ++it) {
+		std::cout << (*it)->key << std::endl;
+		for (std::vector<ConfigNode*>::iterator ite = (*it)->children.begin(); ite != (*it)->children.end(); ++ite)
+			std::cout << " |- " << (*ite)->key << std::endl;
+	}
 }
 
 Config::~Config() {}
@@ -41,39 +47,50 @@ void	Config::_makeToken(const std::string& filename) {
 	file.close();
 }
 
-ConfigNode*	Config::makeConfTree(const std::vector<std::string>& tokens) {
-	this->root = new ConfigNode("root");
-	std::vector<ConfigNode*> servers;
-	std::vector<ConfigNode*> locations;
-	ConfigNode*	currentServer = nullptr;
-	ConfigNode*	locationNode = nullptr;
-	this->brace = 0;
-	this->errFlag = 0;
+const std::vector<std::string>&	Config::getTokens() const {
+	return (this->_tokens);
+}
 
+void	Config::makeConfTree(const std::vector<std::string>& tokens) {
+	this->root = new ConfigNode("root");
+	ConfigNode*	currentServer;
+	ConfigNode*	locationNode;
+	int	server = 0;
+	int	brace = 0;
+	this->errFlag = 0;
+	
 	for (size_t i = 0; i < tokens.size(); ++i) {
 		if (tokens[i] == "server") {
-			ConfigNode::setNode("server", currentServer, root, servers);
-		} else if (tokens[i] == "location") {
-			if (brace == 0 || !currentServer)
-				printErr("config syntax error: ", tokens[i]);
+			if (!(brace == 0 && server == 0))
+				printErr("1 config syntax error: ", tokens[i]);
+			ConfigNode::setChild(tokens[i], currentServer, root);
+			server++;
+		} else if (tokens[i] == "location" || tokens[i] == "location_back") {
+			if (!(brace == 1 && server == 1))
+				printErr("2 config syntax error: ", tokens[i]);
 			else 
-				ConfigNode::setNode("location", locationNode, currentServer, locations);
+				ConfigNode::setChild(tokens[i], locationNode, currentServer);
 		} else if (tokens[i] == "{") {
-			if (!currentServer || 
-				!(tokens[i - 1] == "server" || tokens[i - 1] == "location")) {
-				printErr("config syntax error: ", tokens[i]);
-			} else {
-				this->brace++;
-			}				
+			if (server == 1 && i > 0 && tokens[i - 1] == "server")
+				brace++;
+			else if (server == 1 && i > 1 && (tokens[i - 2] == "location" || tokens[i - 2] == "location_back"))
+				brace++;
+			else {
+				std::cout << "token = " << tokens[i] << ", brace = " << brace << ", server = " << server << std::endl;
+				printErr("3 config syntax error: ", tokens[i]);
+				brace++;
+			}
 		} else if (tokens[i] == "}") {
-			this->brace--;
-			if (this->brace < 0)
-				printErr("Config brace close error: ", tokens[i]);
+			brace--;
+			if (brace < 0)
+				printErr("4 Config brace close error: ", tokens[i]);
+			else if (brace == 0)
+				server = 0;
 		} else {
 			// TODO
 		}
+		
 	}
-	return (root);
 }
 
 void	Config::printErr(const std::string& msgA, const std::string& msgB) {

@@ -10,6 +10,11 @@ ConfigNode::ConfigNode(std::string key)
 ConfigNode::~ConfigNode() {}
 
 void	ConfigNode::addChild(ConfigNode* child) {
+	if (!child) {
+		std::cerr << "Error: NULL child" << std::endl;
+		return ;
+	}
+	child->parent = this;
 	this->children.push_back(child);
 }
 
@@ -20,7 +25,7 @@ void	ConfigNode::addValue(const std::string& value) {
 int	ConfigNode::setKind(const std::string& string) {
 	if (string == "server")
 		return (SERVER);
-	if (string == "location")
+	if (string == "location" || string == "location_back")
 		return (LOCATION);
 	if (string == "listen")
 		return (LISTEN);
@@ -45,21 +50,19 @@ int	ConfigNode::setKind(const std::string& string) {
 	return (-1);
 }
 
-void	ConfigNode::setNode(const std::string& string, ConfigNode* current,
-			    ConfigNode* root, std::vector<ConfigNode*> keep) {
+void	ConfigNode::setChild(const std::string& string, ConfigNode*& current, ConfigNode* parent) {
 	current = new ConfigNode(string);
 	current->keyKind = setKind(string);
-	root->addChild(current);		// rootのchildにする
-	keep.push_back(current);		// vector serversに保管する
-
+	current->parent = parent;
+	parent->children.push_back(current);
 }
 
-void	ConfigNode::judgePort(const std::string& port) {
-	char*	pEnd;
-	int	num = std::strtod(port.c_str(), &pEnd);
-	if (num < 0 || num > 65535)
-		throw std::runtime_error("Invalid PORT number: " + port);
-}
+// void	ConfigNode::judgePort(const std::string& port) {
+// 	char*	pEnd;
+// 	int	num = std::strtod(port.c_str(), &pEnd);
+// 	if (num < 0 || num > 65535)
+// 		throw std::runtime_error("Invalid PORT number: " + port);
+// }
 
 void	ConfigNode::judgeHostname(const std::string& hostname) {
 	(void)hostname;

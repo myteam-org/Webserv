@@ -37,6 +37,7 @@ public:
 	std::vector<ConfigNode*>	children;
 	int				keyKind;
 	int				valuesKind;
+	ConfigNode*			parent;
 
 	ConfigNode(std::string key);
 	~ConfigNode();
@@ -44,8 +45,9 @@ public:
 	void	addChild(ConfigNode* child);
 	void	addValue(const std::string& value);
 	static int	setKind(const std::string& string);
-	static void	setNode(const std::string& string, ConfigNode* current, 
-			        ConfigNode* root, std::vector<ConfigNode*> keep);
+	static void	setChild(const std::string& string, ConfigNode*& current, ConfigNode* parent);
+	// static void	setNode(const std::string& string, ConfigNode* current, 
+	// 		        ConfigNode* root, std::vector<ConfigNode*> keep);
 	void	judgePort(const std::string& port);
 	void	judgeHostname(const std::string& hostname);
 	void	judgeDirectory(const std::string& directory);

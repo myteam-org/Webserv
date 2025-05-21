@@ -1,14 +1,16 @@
 #include "Config.hpp"
+#include <signal.h>
 
 void	checkInterpreter() {
 	// TODO
 }
 
-void	checkArgc(int argc) {
+bool	checkArgc(int argc) {
 	if (argc > 2) {
 		std::cerr << "Argument error" << std::endl;
-		exit(1);
+		return (false);
 	}
+	return (true);
 }
 
 std::string	setFile(int argc, char **argv) {
@@ -23,7 +25,8 @@ std::string	setFile(int argc, char **argv) {
 int	main(int argc, char **argv) {
 	signal(SIGPIPE, SIG_IGN);
 	checkInterpreter(); // TODO
-	checkArgc(argc);
+	if (checkArgc(argc) == false)
+		return (1);
 	std::string	confFile = setFile(argc, argv);
 
 	try {

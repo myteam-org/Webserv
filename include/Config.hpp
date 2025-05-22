@@ -16,24 +16,24 @@ class ConfigNode;
 class Config {
 private:
 	std::vector<std::string>	_tokens;
-	void	_checkFile(const std::string& filename);
-	void	_makeToken(const std::string& filename);
+	int				_server;
+	int				_location;
+	int				_brace;
+	int				_errFlag;
+	void				_checkFile(const std::string& filename);
+	void				_makeToken(const std::string& filename);
+	void				_makeConfTree(const std::vector<std::string>& tokens);
+	void				_init();
+	int				_checkSyntaxErr(int select, std::string token);
+	void				_printErr(const std::string& msgA, const std::string& msgB);
+	void				_updateBrace(const std::string& token);
+	void				_printTree(ConfigNode* node, int depth = 0);
+	void				_deleteTree(ConfigNode* node);
 public:
 	std::vector<ConfigNode*>	layers;
-	int		server;
-	int		location;
-	int		brace;
-	int		errFlag;
 
 	Config(const std::string& filename);
 	~Config();
 
 	const std::vector<std::string>&	getTokens() const;
-	void				makeConfTree(const std::vector<std::string>& tokens);
-	void				init();
-	int				checkSyntaxErr(int select, std::string token);
-	void				printErr(const std::string& msgA, const std::string& msgB);
-	void				updateBrace(const std::string& token);
-	void				printTree(ConfigNode* node, int depth = 0);
-	void				deleteTree(ConfigNode* node);
 };

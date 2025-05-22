@@ -3,14 +3,15 @@
 Config::Config(const std::string& filename) {
 	_checkFile(filename);
 	_makeToken(filename);
-	makeConfTree(getTokens());
-	printTree(layers[0]);
-	if (errFlag > 0)
+	_makeConfTree(getTokens());
+	// checkTree(); TODO
+	_printTree(layers[0]);
+	if (_errFlag > 0)
 		throw (std::runtime_error("Config file error"));
 }
 
 Config::~Config() {
-	deleteTree(layers[0]);
+	_deleteTree(layers[0]);
 }
 
 void	Config::_checkFile(const std::string& filename) {
@@ -49,93 +50,93 @@ const std::vector<std::string>&	Config::getTokens() const {
 	return (this->_tokens);
 }
 
-void	Config::makeConfTree(const std::vector<std::string>& tokens) {
-	init();
+void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
+	_init();
 	for (size_t i = 0; i < tokens.size(); ++i) {
 		if (tokens[i] == "server") {
-			if (checkSyntaxErr(SERVER, tokens[i]) == true){
+			if (_checkSyntaxErr(SERVER, tokens[i]) == true){
 				ConfigNode::addChild(tokens[i], layers[1], layers[0]);
-				server++;
+				_server++;
 			}
 		} else if (tokens[i] == "location" || tokens[i] == "location_back") {
-			if (checkSyntaxErr(LOCATION, tokens[i]) == true) {
+			if (_checkSyntaxErr(LOCATION, tokens[i]) == true) {
 				ConfigNode::addChild(tokens[i], layers[2], layers[1]);
-				location++;
+				_location++;
 			}
 		} else if (tokens[i] == "error_page") {
-			if (checkSyntaxErr(ERR_PAGE, tokens[i]) == true)
+			if (_checkSyntaxErr(ERR_PAGE, tokens[i]) == true)
 				ConfigNode::addChild(tokens[i], layers[3], layers[2]);
 		} else if (tokens[i] == "{" || tokens[i] == "}") {
-			updateBrace(tokens[i]);
+			_updateBrace(tokens[i]);
 		} else {
-			// locationのchildにerror_pageをaddする
+			// error_pageのchildにstatus No.をaddしvalueをsetする
 			if (i > 0 && (tokens [i - 1] == "error_page"))
 				ConfigNode::addChildSetValue(tokens, &i, layers[4], layers[3]);
 			// locationのvalueをsetする
 			else if (i > 0 && (tokens[i - 1] == "location" || tokens[i - 1] == "location_back"))
 				ConfigNode::setValue(tokens[i], layers[2], DIRECTORY);
 			// serverのchildrenにaddしてvalueをsetする
-			else if (server == 1 && brace == 1) {
+			else if (_server== 1 && _brace == 1) {
 				ConfigNode::addChildSetValue(tokens, &i, layers[2], layers[1]);
 			// locationのchildrenにaddしてvalueをsetする
-			} else if (server == 1 && brace == 2 && location == 1) {
+			} else if (_server== 1 && _brace == 2 && _location== 1) {
 				ConfigNode::addChildSetValue(tokens, &i, layers[3], layers[2]);
 			} else {
-				printErr("Config file syntax error: ", tokens[i]);
+				_printErr("Config file syntax error: ", tokens[i]);
 			}
 		}
 	}
 }
 
-void	Config::init() {
+void	Config::_init() {
 	for (int i = 0; i < 5; ++i)
 		this->layers.push_back(new ConfigNode("root"));
-	this->server = 0;
-	this->location = 0;
-	this->brace = 0;
-	this->errFlag = 0;
+	this->_server= 0;
+	this->_location= 0;
+	this->_brace = 0;
+	this->_errFlag = 0;
 }
 
-int	Config::checkSyntaxErr(int select, std::string token) {
-	if ((select == SERVER && !(server == 0 && brace == 0)) ||
-	    (select == LOCATION && !(server == 1 && brace == 1)) ||
-	    (select == ERR_PAGE && !(server == 1 && brace == 2 && location == 1))) {
+int	Config::_checkSyntaxErr(int select, std::string token) {
+	if ((select == SERVER && !(_server== 0 && _brace == 0)) ||
+	    (select == LOCATION && !(_server== 1 && _brace == 1)) ||
+	    (select == ERR_PAGE && !(_server== 1 && _brace == 2 && _location== 1))) {
 		    std::cerr << select << " Syntax error: " << token << std::endl;
-		    this->errFlag++;
+		    this->_errFlag++;
 		    return (false);
 	    }
 	return (true);
 }
 
-void	Config::printErr(const std::string& msgA, const std::string& msgB) {
+void	Config::_printErr(const std::string& msgA, const std::string& msgB) {
 	std::cerr << msgA << msgB << std::endl;
-	this->errFlag++;
+	this->_errFlag++;
 }
 
-void	Config::updateBrace(const std::string& token) {
+void	Config::_updateBrace(const std::string& token) {
 	if (token == "{") {
-		brace++;
+		_brace++;
 	} else if (token == "}") {
-		brace--;
-		if (brace < 0)
-			printErr("4 Config brace close error: ", token);
-		if (brace == 0)
-			server = 0;
-		if (brace == 1)
-			location = 0;
+		_brace--;
+		if (_brace < 0)
+			_printErr("4 Config brace close error: ", token);
+		if (_brace == 0)
+			_server= 0;
+		if (_brace == 1)
+			_location= 0;
 	}
 }
 
-void	Config::deleteTree(ConfigNode* node) {
+void	Config::_deleteTree(ConfigNode* node) {
 	if (!node)
 		return ;
 	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it )
-		deleteTree(*it);
+		_deleteTree(*it);
 	delete(node);
 	node = NULL;
 }
 
-void	Config::printTree(ConfigNode* node, int depth) {
+void	Config::_printTree(ConfigNode* node, int depth) {
 	if (!node)
 		return ;
 
@@ -150,5 +151,5 @@ void	Config::printTree(ConfigNode* node, int depth) {
 	std::cout << std::endl;
 
 	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it)
-		printTree(*it, depth + 1);
+		_printTree(*it, depth + 1);
 }

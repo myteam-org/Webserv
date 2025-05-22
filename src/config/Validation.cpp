@@ -20,7 +20,7 @@
 // 	int	num = strtod(number.c_str(), &endP);
 
 // 	if (kind == LISTEN)
-// 		return (num >= 0 && num <= 35535);
+// 		return (num >= 0 && num <= 65535);
 // 	if (kind == IP)
 // 		return (num >= 0 && num <= 255);
 // 	if (kind == MAX_SIZE)
@@ -32,9 +32,8 @@ bool	Validation::path(const std::string& path, int select) {
 
 	if (stat(path.c_str(), &s) != 0)
 		throw (std::runtime_error("Failed to stat path: " + path));
-	return (select == DIRECTORY && (s.st_mode & S_IFDIR));
-	return (select == FILENAME && (s.st_mode & S_IFREG));
-	throw (std::runtime_error("Invalid path or file name: " + path));
+	return ((select == DIRECTORY && (s.st_mode & S_IFDIR)) ||
+		(select == FILENAME && (s.st_mode & S_IFREG)));
 }
 
 bool	Validation::method(const std::string& method) {

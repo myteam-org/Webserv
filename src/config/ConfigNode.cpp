@@ -67,22 +67,3 @@ void	ConfigNode::addChildSetValue(const std::vector<std::string>& tokens, size_t
 		++*i;
 	}
 }
-
-// 	char*	pEnd;
-// 	int	num = std::strtod(port.c_str(), &pEnd);
-// 	if (num < 0 || num > 65535)
-// 		throw std::runtime_error("Invalid PORT number: " + port);
-// }
-
-// void	ConfigNode::judgeHostname(const std::string& hostname) {
-// 	(void)hostname;
-// }
-
-// void	ConfigNode::judgeDirectory(const std::string& directory) {
-// 	struct stat s;
-
-// 	if (stat(directory.c_str(), &s) != 0)
-// 		throw std::runtime_error("Failed to stat directory: " + directory);
-// 	if (s.st_mode & S_IFDIR)
-// 		throw std::runtime_error(directory + " is a directory");
-// }

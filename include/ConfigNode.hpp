@@ -45,11 +45,4 @@ public:
 	static void	setValue(const std::string& token, ConfigNode* node, int kind);
 	static void	addChildSetValue(const std::vector<std::string>& tokens, size_t* i, 
 					 ConfigNode*& current, ConfigNode* parent);
-	// void	judgePort(const std::string& port);
-	// void	judgeHostname(const std::string& hostname);
-	// void	judgeDirectory(const std::string& directory);
-	// void	judgeSize(const std::string& size);
-	// void	judgeMethod(const std::string& method);
-	// void	judgeDouble();
-	// void	judgeURL(const std::string& url);
 };

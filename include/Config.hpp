@@ -19,7 +19,7 @@ private:
 	void	_checkFile(const std::string& filename);
 	void	_makeToken(const std::string& filename);
 public:
-	ConfigNode*	root;
+	std::vector<ConfigNode*>	layers;
 	int		server;
 	int		location;
 	int		brace;
@@ -30,7 +30,8 @@ public:
 
 	const std::vector<std::string>&	getTokens() const;
 	void				makeConfTree(const std::vector<std::string>& tokens);
-	void				checkSyntaxErr(int select, std::string token);
+	void				init();
+	int				checkSyntaxErr(int select, std::string token);
 	void				printErr(const std::string& msgA, const std::string& msgB);
 	void				updateBrace(const std::string& token);
 	void				printTree(ConfigNode* node, int depth = 0);

@@ -24,6 +24,7 @@ enum DirectiveKind {
 	RETURN,
 	VALUE,
 	IP,
+	ERR_STATUS,
 	BRACE
 };
 
@@ -40,10 +41,10 @@ public:
 	~ConfigNode();
 
 	static int	setKind(const std::string& string);
-	static void	setChild(const std::string& token, ConfigNode*& current, ConfigNode* parent);
+	static void	addChild(const std::string& token, ConfigNode*& current, ConfigNode* parent);
 	static void	setValue(const std::string& token, ConfigNode* node, int kind);
-	static void	setChildValue(const std::vector<std::string>& tokens, size_t* i, ConfigNode*& current, ConfigNode* parent);
-
+	static void	addChildSetValue(const std::vector<std::string>& tokens, size_t* i, 
+					 ConfigNode*& current, ConfigNode* parent);
 	// void	judgePort(const std::string& port);
 	// void	judgeHostname(const std::string& hostname);
 	// void	judgeDirectory(const std::string& directory);

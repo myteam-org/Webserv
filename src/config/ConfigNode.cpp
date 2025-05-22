@@ -36,13 +36,15 @@ int	ConfigNode::setKind(const std::string& string) {
 		return (RETURN);
 	if (string == "{" || string == "")
 		return (BRACE);
+	char* endP;
+	if (strtod(string.c_str(), &endP) >= 400 && strtod(string.c_str(), &endP) < 600)
+		return (ERR_STATUS);
 	return (-1);
 }
 	
-void	ConfigNode::setChild(const std::string& token, ConfigNode*& current, ConfigNode* parent) {
+void	ConfigNode::addChild(const std::string& token, ConfigNode*& current, ConfigNode* parent) {
 	current = new ConfigNode(token);
-	current->keyKind = setKind(token);
-	current->parent = parent;
+	// current->parent = parent;
 	parent->children.push_back(current);
 	
 }
@@ -52,8 +54,8 @@ void	ConfigNode::setValue(const std::string& token, ConfigNode* node, int kind) 
 	node->valuesKind = kind;
 }
 	
-void	ConfigNode::setChildValue(const std::vector<std::string>& tokens, size_t* i, ConfigNode*& current, ConfigNode* parent) {
-	ConfigNode::setChild(tokens[*i], current, parent);
+void	ConfigNode::addChildSetValue(const std::vector<std::string>& tokens, size_t* i, ConfigNode*& current, ConfigNode* parent) {
+	ConfigNode::addChild(tokens[*i], current, parent);
 	++*i;
 	while (*i < tokens.size()) {
 		std::string	token = tokens[*i];
@@ -66,7 +68,6 @@ void	ConfigNode::setChildValue(const std::vector<std::string>& tokens, size_t* i
 	}
 }
 
-// void	ConfigNode::judgePort(const std::string& port) {
 // 	char*	pEnd;
 // 	int	num = std::strtod(port.c_str(), &pEnd);
 // 	if (num < 0 || num > 65535)

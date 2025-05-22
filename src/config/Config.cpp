@@ -6,25 +6,11 @@ Config::Config(const std::string& filename) {
 	// for (std::vector<std::string>::iterator it = _tokens.begin(); it != _tokens.end(); ++it)
 	// 	std::cout << "token = " << *it << std::endl;
 	makeConfTree(getTokens());
-	for (std::vector<ConfigNode*>::iterator it = root->children.begin(); it != root->children.end(); ++it) {
-		std::cout << (*it)->key << std::endl;
-		for (std::vector<ConfigNode*>::iterator ite = (*it)->children.begin(); ite != (*it)->children.end(); ++ite) {
-			std::cout << " |- " << (*ite)->key;
-			for (std::vector<std::string>::iterator iter = (*ite)->values.begin(); iter != (*ite)->values.end(); ++iter)
-				std::cout << "  " << *iter;
-			std::cout << std::endl;
-			for (std::vector<ConfigNode*>::iterator itera = (*ite)->children.begin(); itera != (*ite)->children.end(); ++itera) {
-				std::cout << "   |- " << (*itera)->key;
-				for (std::vector<std::string>::iterator iterat = (*itera)->values.begin(); iterat != (*itera)->values.end(); ++iterat)
-					std::cout << "  " << *iterat;
-				std::cout << std::endl;
-			}
-		}
-	}
+	printTree(root);
 }
 
 Config::~Config() {
-	deleteNode();
+	deleteTree(root);
 }
 
 void	Config::_checkFile(const std::string& filename) {
@@ -82,38 +68,16 @@ void	Config::makeConfTree(const std::vector<std::string>& tokens) {
 			checkSyntaxErr(LOCATION, tokens[i]);
 			ConfigNode::setChild(tokens[i], middleLayer, topLayer);
 			location++;
-		} else if (tokens[i] == "{") {
-			brace++;
-		} else if (tokens[i] == "}") {
-			brace--;
-			if (brace < 0)
-				printErr("4 Config brace close error: ", tokens[i]);
-			if (brace == 0)
-				server = 0;
-			if (brace == 1)
-				location = 0;
+		} else if (tokens[i] == "{" || tokens[i] == "}") {
+			updateBrace(tokens[i]);
 		} else {
 			if (i > 0 && (tokens[i - 1] == "location" || tokens[i - 1] == "location_back"))
 				ConfigNode::setValue(tokens[i], middleLayer, DIRECTORY);
 			else if (server == 1 && brace == 1) {
-				ConfigNode::setChild(tokens[i], middleLayer, topLayer);
-				++i;
-				for (tokens[i]; tokens[i][tokens[i].size() - 1] != ';'; ++i)
-					ConfigNode::setValue(tokens[i], middleLayer, VALUE);
-				if (tokens[i][tokens[i].size() - 1] == ';')
-					ConfigNode::setValue(tokens[i].substr(0, tokens[i].size() - 1), middleLayer, VALUE);
+				ConfigNode::setChildValue(tokens, &i, middleLayer, topLayer);
 			} else if (server == 1 && brace == 2 && location == 1) {
-				ConfigNode::setChild(tokens[i], bottomLayer, middleLayer);
-				++i;
-				for (tokens[i]; tokens[i][tokens[i].size() - 1] != ';'; ++i)
-					ConfigNode::setValue(tokens[i], bottomLayer, VALUE);
-				if (tokens[i][tokens[i].size() - 1] == ';')
-					ConfigNode::setValue(tokens[i].substr(0, tokens[i].size() - 1), bottomLayer, VALUE);
-			}
-
-
+				ConfigNode::setChildValue(tokens, &i, bottomLayer, middleLayer);			}
 		}
-		
 	}
 }
 
@@ -130,14 +94,43 @@ void	Config::printErr(const std::string& msgA, const std::string& msgB) {
 	this->errFlag++;
 }
 
-void	Config::deleteNode() {
-	for (std::vector<ConfigNode*>::iterator it = root->children.begin(); it != root->children.end(); ++it) {
-		for (std::vector<ConfigNode*>::iterator ite = (*it)->children.begin(); ite != (*it)->children.end(); ++ite) {
-			delete(*ite);
-		}
-		(*it)->children.clear();
-		delete(*it);
+void	Config::updateBrace(const std::string& token) {
+	if (token == "{") {
+		brace++;
+	} else if (token == "}") {
+		brace--;
+		if (brace < 0)
+			printErr("4 Config brace close error: ", token);
+		if (brace == 0)
+			server = 0;
+		if (brace == 1)
+			location = 0;
 	}
-	root->children.clear();
-	delete(root);
+}
+
+void	Config::deleteTree(ConfigNode* node) {
+	if (!node)
+		return ;
+	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it )
+		deleteTree(*it);
+	node->children.clear();
+	delete(node);
+}
+
+void	Config::printTree(ConfigNode* node, int depth) {
+	if (!node)
+		return ;
+
+	for (int i = 0; i < depth * 2; ++i)
+		std::cout << " ";
+	if (depth > 0)
+		std::cout << "|- ";
+	std::cout << node->key;
+
+	for (std::vector<std::string>::iterator iter = node->values.begin(); iter != node->values.end(); ++iter)
+		std::cout << " " << *iter;
+	std::cout << std::endl;
+
+	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it)
+		printTree(*it, depth + 1);
 }

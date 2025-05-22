@@ -8,20 +8,7 @@ ConfigNode::ConfigNode(std::string key)
 }
 
 ConfigNode::~ConfigNode() {}
-
-void	ConfigNode::addChild(ConfigNode* child) {
-	if (!child) {
-		std::cerr << "Error: NULL child" << std::endl;
-		return ;
-	}
-	child->parent = this;
-	this->children.push_back(child);
-}
-
-void	ConfigNode::addValue(const std::string& value) {
-	values.push_back(value);
-}
-
+	
 int	ConfigNode::setKind(const std::string& string) {
 	if (string == "server")
 		return (SERVER);
@@ -47,20 +34,36 @@ int	ConfigNode::setKind(const std::string& string) {
 		return (IS_CGI);
 	if (string == "return")
 		return (RETURN);
+	if (string == "{" || string == "")
+		return (BRACE);
 	return (-1);
 }
-
-void	ConfigNode::setChild(const std::string& string, ConfigNode*& current, ConfigNode* parent) {
-	current = new ConfigNode(string);
-	current->keyKind = setKind(string);
+	
+void	ConfigNode::setChild(const std::string& token, ConfigNode*& current, ConfigNode* parent) {
+	current = new ConfigNode(token);
+	current->keyKind = setKind(token);
 	current->parent = parent;
 	parent->children.push_back(current);
-
+	
 }
 
-void	ConfigNode::setValue(const std::string& string, ConfigNode* node, int kind) {
-	node->values.push_back(string);
+void	ConfigNode::setValue(const std::string& token, ConfigNode* node, int kind) {
+	node->values.push_back(token);
 	node->valuesKind = kind;
+}
+	
+void	ConfigNode::setChildValue(const std::vector<std::string>& tokens, size_t* i, ConfigNode*& current, ConfigNode* parent) {
+	ConfigNode::setChild(tokens[*i], current, parent);
+	++*i;
+	while (*i < tokens.size()) {
+		std::string	token = tokens[*i];
+		if (token[token.size() - 1] == ';') {
+			ConfigNode::setValue(token.substr(0, token.size() - 1), current, VALUE);
+			break;
+		}
+		ConfigNode::setValue(tokens[*i], current, VALUE);
+		++*i;
+	}
 }
 
 // void	ConfigNode::judgePort(const std::string& port) {
@@ -70,15 +73,15 @@ void	ConfigNode::setValue(const std::string& string, ConfigNode* node, int kind)
 // 		throw std::runtime_error("Invalid PORT number: " + port);
 // }
 
-void	ConfigNode::judgeHostname(const std::string& hostname) {
-	(void)hostname;
-}
+// void	ConfigNode::judgeHostname(const std::string& hostname) {
+// 	(void)hostname;
+// }
 
-void	ConfigNode::judgeDirectory(const std::string& directory) {
-	struct stat s;
+// void	ConfigNode::judgeDirectory(const std::string& directory) {
+// 	struct stat s;
 
-	if (stat(directory.c_str(), &s) != 0)
-		throw std::runtime_error("Failed to stat directory: " + directory);
-	if (s.st_mode & S_IFDIR)
-		throw std::runtime_error(directory + " is a directory");
-}
+// 	if (stat(directory.c_str(), &s) != 0)
+// 		throw std::runtime_error("Failed to stat directory: " + directory);
+// 	if (s.st_mode & S_IFDIR)
+// 		throw std::runtime_error(directory + " is a directory");
+// }

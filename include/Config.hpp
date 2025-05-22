@@ -32,5 +32,7 @@ public:
 	void				makeConfTree(const std::vector<std::string>& tokens);
 	void				checkSyntaxErr(int select, std::string token);
 	void				printErr(const std::string& msgA, const std::string& msgB);
-	void				deleteNode();
+	void				updateBrace(const std::string& token);
+	void				printTree(ConfigNode* node, int depth = 0);
+	void				deleteTree(ConfigNode* node);
 };

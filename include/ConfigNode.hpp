@@ -27,7 +27,8 @@ enum DirectiveKind {
 	IS_CGI,
 	RETURN,
 	VALUE,
-	IP
+	IP,
+	BRACE
 };
 
 class ConfigNode {
@@ -45,8 +46,9 @@ public:
 	void	addChild(ConfigNode* child);
 	void	addValue(const std::string& value);
 	static int	setKind(const std::string& string);
-	static void	setChild(const std::string& string, ConfigNode*& current, ConfigNode* parent);
-	static void	setValue(const std::string& stfing, ConfigNode* node, int kind);
+	static void	setChild(const std::string& token, ConfigNode*& current, ConfigNode* parent);
+	static void	setValue(const std::string& token, ConfigNode* node, int kind);
+	static void	setChildValue(const std::vector<std::string>& tokens, size_t* i, ConfigNode*& current, ConfigNode* parent);
 	// static void	setNode(const std::string& string, ConfigNode* current, 
 	// 		        ConfigNode* root, std::vector<ConfigNode*> keep);
 	void	judgePort(const std::string& port);

@@ -7,10 +7,6 @@
 # include <sys/stat.h>
 # include "Config.hpp"
 
-
-// enum BlockKind {
-// };
-
 enum DirectiveKind {
 	SERVER,
 	LOCATION,
@@ -43,17 +39,14 @@ public:
 	ConfigNode(std::string key);
 	~ConfigNode();
 
-	void	addChild(ConfigNode* child);
-	void	addValue(const std::string& value);
 	static int	setKind(const std::string& string);
 	static void	setChild(const std::string& token, ConfigNode*& current, ConfigNode* parent);
 	static void	setValue(const std::string& token, ConfigNode* node, int kind);
 	static void	setChildValue(const std::vector<std::string>& tokens, size_t* i, ConfigNode*& current, ConfigNode* parent);
-	// static void	setNode(const std::string& string, ConfigNode* current, 
-	// 		        ConfigNode* root, std::vector<ConfigNode*> keep);
-	void	judgePort(const std::string& port);
-	void	judgeHostname(const std::string& hostname);
-	void	judgeDirectory(const std::string& directory);
+
+	// void	judgePort(const std::string& port);
+	// void	judgeHostname(const std::string& hostname);
+	// void	judgeDirectory(const std::string& directory);
 	// void	judgeSize(const std::string& size);
 	// void	judgeMethod(const std::string& method);
 	// void	judgeDouble();

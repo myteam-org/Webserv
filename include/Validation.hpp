@@ -13,8 +13,6 @@ enum {
 
 namespace Validation {
 	bool	validate(const Config& config);
-	bool	brace(const Config& config);
-	bool	hierarchy(const ConfigNode& root);
 	bool	number(const std::string& number, int kind);
 	bool	path(const std::string& path, int select);
 	bool	method(const std::string& method);

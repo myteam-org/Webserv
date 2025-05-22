@@ -70,10 +70,10 @@ void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
 			_updateBrace(tokens[i]);
 		} else {
 			// error_pageのchildにstatus No.をaddしvalueをsetする
-			if (i > 0 && (tokens [i - 1] == "error_page"))
+			if (_location == 1 && i > 0 && (tokens [i - 1] == "error_page"))
 				ConfigNode::addChildSetValue(tokens, &i, layers[4], layers[3]);
 			// locationのvalueをsetする
-			else if (i > 0 && (tokens[i - 1] == "location" || tokens[i - 1] == "location_back"))
+			else if (_location == 1 && i > 0 && (tokens[i - 1] == "location" || tokens[i - 1] == "location_back"))
 				ConfigNode::setValue(tokens[i], layers[2], DIRECTORY);
 			// serverのchildrenにaddしてvalueをsetする
 			else if (_server== 1 && _brace == 1) {

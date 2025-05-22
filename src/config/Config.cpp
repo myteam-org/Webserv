@@ -102,8 +102,8 @@ void	Config::_init() {
 }
 
 int	Config::_checkSyntaxErr(int select, std::string token) {
-	if ((select == SERVER && !(_server== 0 && _brace == 0)) ||
-	    (select == LOCATION && !(_server== 1 && _brace == 1)) ||
+	if ((select == SERVER && !(_server== 0 && _brace == 0 && _location == 0)) ||
+	    (select == LOCATION && !(_server== 1 && _brace == 1 && _location == 0)) ||
 	    (select == ERR_PAGE && !(_server== 1 && _brace == 2 && _location== 1))) {
 		    std::cerr << select << " Syntax error: " << token << std::endl;
 		    this->_errFlag++;

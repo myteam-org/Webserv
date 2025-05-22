@@ -5,6 +5,8 @@ Config::Config(const std::string& filename) {
 	_makeToken(filename);
 	makeConfTree(getTokens());
 	printTree(layers[0]);
+	if (errFlag > 0)
+		throw (std::runtime_error("Config file error"));
 }
 
 Config::~Config() {
@@ -86,11 +88,8 @@ void	Config::makeConfTree(const std::vector<std::string>& tokens) {
 }
 
 void	Config::init() {
-	this->layers.push_back(new ConfigNode("root"));
-	this->layers.push_back(new ConfigNode("root"));
-	this->layers.push_back(new ConfigNode("root"));
-	this->layers.push_back(new ConfigNode("root"));
-	this->layers.push_back(new ConfigNode("root"));
+	for (int i = 0; i < 5; ++i)
+		this->layers.push_back(new ConfigNode("root"));
 	this->server = 0;
 	this->location = 0;
 	this->brace = 0;

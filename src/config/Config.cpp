@@ -37,6 +37,10 @@ void	Config::_makeToken(const std::string& filename) {
 		oneLine.erase(0, oneLine.find_first_not_of(" \t")); 	// 先頭の空白を削除
 		oneLine.erase(oneLine.find_last_not_of(" \t") + 1); 	// 末尾の空白を削除
 
+		char	c = oneLine[oneLine.size() - 1];
+		if (!(c == '{' || c == '}' || c == ';' || c == 0))
+			throw (std::runtime_error("Syntax error at the end of the line"));
+
 		std::istringstream	tokenStream(oneLine);
 		std::string		token;
 

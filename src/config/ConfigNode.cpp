@@ -4,7 +4,7 @@ ConfigNode::ConfigNode(std::string key)
 	: key(key) {
 	keyKind = setKind(key);
 	if (keyKind == -1)
-		std::cerr << "config syntax error: " << key << std::endl;
+		std::cerr << "5 config syntax error: " << key << std::endl;
 }
 
 ConfigNode::~ConfigNode() {}
@@ -55,6 +55,12 @@ void	ConfigNode::setChild(const std::string& string, ConfigNode*& current, Confi
 	current->keyKind = setKind(string);
 	current->parent = parent;
 	parent->children.push_back(current);
+
+}
+
+void	ConfigNode::setValue(const std::string& string, ConfigNode* node, int kind) {
+	node->values.push_back(string);
+	node->valuesKind = kind;
 }
 
 // void	ConfigNode::judgePort(const std::string& port) {

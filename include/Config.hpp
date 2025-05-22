@@ -20,7 +20,9 @@ private:
 	void	_makeToken(const std::string& filename);
 public:
 	ConfigNode*	root;
-	// int		brace;
+	int		server;
+	int		location;
+	int		brace;
 	int		errFlag;
 
 	Config(const std::string& filename);
@@ -28,5 +30,7 @@ public:
 
 	const std::vector<std::string>&	getTokens() const;
 	void				makeConfTree(const std::vector<std::string>& tokens);
+	void				checkSyntaxErr(int select, std::string token);
 	void				printErr(const std::string& msgA, const std::string& msgB);
+	void				deleteNode();
 };

@@ -19,16 +19,14 @@ private:
 	int				_server;
 	int				_location;
 	int				_brace;
-	int				_errFlag;
 	void				_checkFile(const std::string& filename);
 	void				_makeToken(const std::string& filename);
 	void				_makeConfTree(const std::vector<std::string>& tokens);
 	void				_init();
-	int				_checkSyntaxErr(int select, std::string token);
-	void				_printErr(const std::string& msgA, const std::string& msgB);
+	void				_checkSyntaxErr(int select, std::string token);
 	void				_updateBrace(const std::string& token);
-	void				_printTree(ConfigNode* node, int depth = 0);
 	void				_deleteTree(ConfigNode* node);
+	void				_printTree(ConfigNode* node, int depth = 0);
 public:
 	std::vector<ConfigNode*>	layers;
 

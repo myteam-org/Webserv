@@ -3,8 +3,8 @@
 ConfigNode::ConfigNode(std::string key) 
 	: key(key) {
 	keyKind = setKind(key);
-	if (keyKind == -1)
-		std::cerr << "5 config syntax error: " << key << std::endl;
+// 	if (keyKind == -1)
+// 		throw (std::runtime_error("5 config syntax error: " + key));
 }
 
 ConfigNode::~ConfigNode() {}

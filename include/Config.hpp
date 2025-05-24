@@ -19,7 +19,6 @@ private:
 	int				_server;
 	int				_location;
 	int				_brace;
-	void				_checkFile(const std::string& filename);
 	void				_makeToken(const std::string& filename);
 	void				_makeConfTree(const std::vector<std::string>& tokens);
 	void				_init();
@@ -27,11 +26,9 @@ private:
 	void				_updateBrace(const std::string& token);
 	void				_deleteTree(ConfigNode* node);
 public:
-	std::vector<ConfigNode*>	layers;
-
 	Config(const std::string& filename);
 	~Config();
 
-
+	std::vector<ConfigNode*>	layers;
 	void				printTree(ConfigNode* node, int depth = 0);
 };

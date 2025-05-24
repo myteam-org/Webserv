@@ -52,20 +52,17 @@ void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
 			ConfigNode::addChild(tokens[i], layers[3], layers[2]);
 		} else if (kind == BRACE) {
 			_updateBrace(tokens[i]);
-		} else {
-			// error_pageのchildにstatus No.をaddしvalueをsetする
-			if (_location == 1 && i > 0 && (tokens [i - 1] == "error_page"))
-				ConfigNode::addChildSetValue(tokens, &i, layers[4], layers[3]);
-			// serverにchildrenとValueをaddする
-			else if (_server== 1 && _brace == 1 && (kind >= LISTEN && kind <= RETURN)) {
-				ConfigNode::addChildSetValue(tokens, &i, layers[2], layers[1]);
-			// locationにchildrenとvalueをaddする
-			} else if (_server== 1 && _brace == 2 && _location== 1 && (kind >= LISTEN && kind <= RETURN)) {
-				ConfigNode::addChildSetValue(tokens, &i, layers[3], layers[2]);
-			} else {
-				throw (std::runtime_error("Config file syntax error: " + tokens[i]));
-			}
-		}
+		// error_pageのchildにstatus No.をaddしvalueをsetする
+		} else if (_location == 1 && i > 0 && (tokens [i - 1] == "error_page"))
+			ConfigNode::addChildSetValue(tokens, &i, layers[4], layers[3]);
+		// serverにchildrenとValueをaddする
+		else if (_server== 1 && _brace == 1 && (kind >= LISTEN && kind <= RETURN))
+			ConfigNode::addChildSetValue(tokens, &i, layers[2], layers[1]);
+		// locationにchildrenとvalueをaddする
+		else if (_server== 1 && _brace == 2 && _location== 1 && (kind >= LISTEN && kind <= RETURN))
+			ConfigNode::addChildSetValue(tokens, &i, layers[3], layers[2]);
+		else
+			throw (std::runtime_error("Config file syntax error: " + tokens[i]));
 	}
 }
 

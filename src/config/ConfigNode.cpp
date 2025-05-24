@@ -3,8 +3,6 @@
 ConfigNode::ConfigNode(std::string key) 
 	: key(key) {
 	keyKind = tokenKind(key);
-// 	if (keyKind == -1)
-// 		throw (std::runtime_error("5 config syntax error: " + key));
 }
 
 ConfigNode::~ConfigNode() {}
@@ -37,10 +35,6 @@ int	ConfigNode::tokenKind(const std::string& string) {
 	if (string == "{" || string == "}")
 		return (BRACE);
 	return (VALUE);
-	// char* endP;
-	// if (strtod(string.c_str(), &endP) >= 0 && strtod(string.c_str(), &endP) < 600)
-	// 	return (ERR_STATUS);
-	// return (-1);
 }
 	
 void	ConfigNode::addChild(const std::string& token, ConfigNode*& current, ConfigNode* parent) {

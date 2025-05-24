@@ -10,22 +10,22 @@ ConfigNode::ConfigNode(std::string key)
 ConfigNode::~ConfigNode() {}
 	
 int	ConfigNode::setKind(const std::string& string) {
+	if (string == "root")
+		return (ROOT);
 	if (string == "server")
 		return (SERVER);
 	if (string == "location" || string == "location_back")
 		return (LOCATION);
+	if (string == "error_page")
+		return (ERR_PAGE);
 	if (string == "listen")
 		return (LISTEN);
 	if (string == "server_name")
 		return (SERVER_NAME);
 	if (string == "allow_method")
 		return (METHOD);
-	if (string == "root")
-		return (ROOT);
 	if (string == "index")
 		return (INDEX);
-	if (string == "error_page")
-		return (ERR_PAGE);
 	if (string == "client_max_body_size")
 		return (MAX_SIZE);
 	if (string == "autoindex")
@@ -34,12 +34,15 @@ int	ConfigNode::setKind(const std::string& string) {
 		return (IS_CGI);
 	if (string == "return")
 		return (RETURN);
-	if (string == "{" || string == "")
-		return (BRACE);
-	char* endP;
-	if (strtod(string.c_str(), &endP) >= 400 && strtod(string.c_str(), &endP) < 600)
-		return (ERR_STATUS);
-	return (-1);
+	if (string == "{")
+		return (OPENBRACE);
+	if (string == "}")
+		return (CLOSEBRACE);
+	return (VALUE);
+	// char* endP;
+	// if (strtod(string.c_str(), &endP) >= 0 && strtod(string.c_str(), &endP) < 600)
+	// 	return (ERR_STATUS);
+	// return (-1);
 }
 	
 void	ConfigNode::addChild(const std::string& token, ConfigNode*& current, ConfigNode* parent) {

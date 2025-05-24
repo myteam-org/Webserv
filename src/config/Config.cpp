@@ -3,7 +3,8 @@
 Config::Config(const std::string& filename) {
 	_checkFile(filename);
 	_makeToken(filename);
-	_makeConfTree(getTokens());
+	const std::vector<std::string>& tokens = getTokens();
+	_makeConfTree(tokens);
 	// checkTree(); TODO
 	_printTree(layers[0]);
 }

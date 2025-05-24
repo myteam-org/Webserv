@@ -8,24 +8,23 @@
 # include "Config.hpp"
 
 enum DirectiveKind {
+	ROOT,
 	SERVER,
 	LOCATION,
-	ROOT,
+	ERR_PAGE,
 	LISTEN,
 	SERVER_NAME,
 	DIRECTORY,
 	METHOD,
 	ROOT_DIRECTORY,
 	INDEX,
-	ERR_PAGE,
 	MAX_SIZE,
 	AUTOINDEX,
 	IS_CGI,
 	RETURN,
 	VALUE,
-	IP,
-	ERR_STATUS,
-	BRACE
+	OPENBRACE,
+	CLOSEBRACE
 };
 
 class ConfigNode {

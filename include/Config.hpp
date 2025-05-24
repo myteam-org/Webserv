@@ -23,15 +23,15 @@ private:
 	void				_makeToken(const std::string& filename);
 	void				_makeConfTree(const std::vector<std::string>& tokens);
 	void				_init();
-	void				_checkSyntaxErr(int select, std::string token);
+	void				_checkSyntaxErr(std::string token);
 	void				_updateBrace(const std::string& token);
 	void				_deleteTree(ConfigNode* node);
-	void				_printTree(ConfigNode* node, int depth = 0);
 public:
 	std::vector<ConfigNode*>	layers;
 
 	Config(const std::string& filename);
 	~Config();
 
-	const std::vector<std::string>&	getTokens() const;
+
+	void				printTree(ConfigNode* node, int depth = 0);
 };

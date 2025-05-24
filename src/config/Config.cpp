@@ -1,25 +1,13 @@
 #include "Config.hpp"
 
 Config::Config(const std::string& filename) {
-	_checkFile(filename);
 	_makeToken(filename);
-	const std::vector<std::string>& tokens = getTokens();
-	_makeConfTree(tokens);
+	_makeConfTree(_tokens);
 	// checkTree(); TODO
-	_printTree(layers[0]);
 }
 
 Config::~Config() {
 	_deleteTree(layers[0]);
-}
-
-void	Config::_checkFile(const std::string& filename) {
-	struct stat s;
-
-	if (stat(filename.c_str(), &s) != 0)
-		throw std::runtime_error("Failed to stat file: " + filename);
-	if (s.st_mode & S_IFDIR)
-		throw std::runtime_error(filename + " is a directory");
 }
 
 void	Config::_makeToken(const std::string& filename) {
@@ -48,38 +36,31 @@ void	Config::_makeToken(const std::string& filename) {
 	file.close();
 }
 
-const std::vector<std::string>&	Config::getTokens() const {
-	return (this->_tokens);
-}
-
 void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
 	_init();
 	for (size_t i = 0; i < tokens.size(); ++i) {
-		if (tokens[i] == "server") {
-			_checkSyntaxErr(SERVER, tokens[i]);
+		int	kind = ConfigNode::tokenKind(tokens[i]);
+
+		_checkSyntaxErr(tokens[i]);
+		if (kind == SERVER) {
 			ConfigNode::addChild(tokens[i], layers[1], layers[0]);
 			_server++;
-		} else if (tokens[i] == "location" || tokens[i] == "location_back") {
-			_checkSyntaxErr(LOCATION, tokens[i]);
-			ConfigNode::addChild(tokens[i], layers[2], layers[1]);
+		} else if (kind == LOCATION) {
+			ConfigNode::addChildSetValue(tokens, &i, layers[2], layers[1]);
 			_location++;
-		} else if (tokens[i] == "error_page") {
-			_checkSyntaxErr(ERR_PAGE, tokens[i]);
+		} else if (kind == ERR_PAGE) {
 			ConfigNode::addChild(tokens[i], layers[3], layers[2]);
-		} else if (tokens[i] == "{" || tokens[i] == "}") {
+		} else if (kind == BRACE) {
 			_updateBrace(tokens[i]);
 		} else {
 			// error_pageのchildにstatus No.をaddしvalueをsetする
 			if (_location == 1 && i > 0 && (tokens [i - 1] == "error_page"))
 				ConfigNode::addChildSetValue(tokens, &i, layers[4], layers[3]);
-			// locationのvalueをsetする
-			else if (_location == 1 && i > 0 && (tokens[i - 1] == "location" || tokens[i - 1] == "location_back"))
-				ConfigNode::setValue(tokens[i], layers[2], DIRECTORY);
-			// serverのchildrenにaddしてvalueをsetする
-			else if (_server== 1 && _brace == 1) {
+			// serverにchildrenとValueをaddする
+			else if (_server== 1 && _brace == 1 && (kind >= LISTEN && kind <= RETURN)) {
 				ConfigNode::addChildSetValue(tokens, &i, layers[2], layers[1]);
-			// locationのchildrenにaddしてvalueをsetする
-			} else if (_server== 1 && _brace == 2 && _location== 1) {
+			// locationにchildrenとvalueをaddする
+			} else if (_server== 1 && _brace == 2 && _location== 1 && (kind >= LISTEN && kind <= RETURN)) {
 				ConfigNode::addChildSetValue(tokens, &i, layers[3], layers[2]);
 			} else {
 				throw (std::runtime_error("Config file syntax error: " + tokens[i]));
@@ -96,10 +77,11 @@ void	Config::_init() {
 	this->_brace = 0;
 }
 
-void	Config::_checkSyntaxErr(int select, std::string token) {
-	if ((select == SERVER && !(_server== 0 && _brace == 0 && _location == 0)) ||
-	    (select == LOCATION && !(_server== 1 && _brace == 1 && _location == 0)) ||
-	    (select == ERR_PAGE && !(_server== 1 && _brace == 2 && _location== 1))) {
+void	Config::_checkSyntaxErr(std::string token) {
+	int	kind = ConfigNode::tokenKind(token);
+	if ((kind == SERVER && !(_server== 0 && _brace == 0 && _location == 0)) ||
+	    (kind == LOCATION && !(_server== 1 && _brace == 1 && _location == 0)) ||
+	    (kind == ERR_PAGE && !(_server== 1 && _brace == 2 && _location== 1))) {
 		    throw (std::runtime_error("Syntax error: " + token));
 	    }
 }
@@ -127,7 +109,7 @@ void	Config::_deleteTree(ConfigNode* node) {
 	node = NULL;
 }
 
-void	Config::_printTree(ConfigNode* node, int depth) {
+void	Config::printTree(ConfigNode* node, int depth) {
 	if (!node)
 		return ;
 
@@ -140,5 +122,5 @@ void	Config::_printTree(ConfigNode* node, int depth) {
 		std::cout << " " << *iter;
 	std::cout << std::endl;
 	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it)
-		_printTree(*it, depth + 1);
+		printTree(*it, depth + 1);
 }

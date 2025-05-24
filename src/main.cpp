@@ -22,6 +22,15 @@ std::string	setFile(int argc, char **argv) {
 	return (confFile);
 }
 
+void	checkFile(std::string& filename) {
+	struct stat s;
+
+	if (stat(filename.c_str(), &s) != 0)
+		throw std::runtime_error("Failed to stat file: " + filename);
+	if (s.st_mode & S_IFDIR)
+		throw std::runtime_error(filename + " is a directory");
+}
+
 int	main(int argc, char **argv) {
 	signal(SIGPIPE, SIG_IGN);
 	checkInterpreter(); // TODO
@@ -30,7 +39,9 @@ int	main(int argc, char **argv) {
 	std::string	confFile = setFile(argc, argv);
 
 	try {
+		checkFile(confFile);
 		Config	config(confFile);
+		config.printTree(config.layers[0]);
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return (1);

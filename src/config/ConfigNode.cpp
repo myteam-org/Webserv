@@ -2,14 +2,14 @@
 
 ConfigNode::ConfigNode(std::string key) 
 	: key(key) {
-	keyKind = setKind(key);
+	keyKind = tokenKind(key);
 // 	if (keyKind == -1)
 // 		throw (std::runtime_error("5 config syntax error: " + key));
 }
 
 ConfigNode::~ConfigNode() {}
 	
-int	ConfigNode::setKind(const std::string& string) {
+int	ConfigNode::tokenKind(const std::string& string) {
 	if (string == "root")
 		return (ROOT);
 	if (string == "server")
@@ -34,10 +34,8 @@ int	ConfigNode::setKind(const std::string& string) {
 		return (IS_CGI);
 	if (string == "return")
 		return (RETURN);
-	if (string == "{")
-		return (OPENBRACE);
-	if (string == "}")
-		return (CLOSEBRACE);
+	if (string == "{" || string == "}")
+		return (BRACE);
 	return (VALUE);
 	// char* endP;
 	// if (strtod(string.c_str(), &endP) >= 0 && strtod(string.c_str(), &endP) < 600)
@@ -58,8 +56,14 @@ void	ConfigNode::setValue(const std::string& token, ConfigNode* node, int kind) 
 }
 	
 void	ConfigNode::addChildSetValue(const std::vector<std::string>& tokens, size_t* i, ConfigNode*& current, ConfigNode* parent) {
+	int	kind = ConfigNode::tokenKind(tokens[*i]);
+
 	ConfigNode::addChild(tokens[*i], current, parent);
 	++*i;
+	if (kind == LOCATION) {
+		ConfigNode::setValue(tokens[*i], current, VALUE);
+		return ;
+	}
 	while (*i < tokens.size()) {
 		std::string	token = tokens[*i];
 		if (token[token.size() - 1] == ';') {

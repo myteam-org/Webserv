@@ -42,43 +42,30 @@ void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
 		int	kind = ConfigNode::tokenKind(tokens[i]);
 
 		_checkSyntaxErr(tokens[i]);
-		if (kind == SERVER) {
-			ConfigNode::addChild(tokens[i], layers[1], layers[0]);
-			_server++;
-		} else if (kind == LOCATION) {
-			ConfigNode::addChildSetValue(tokens, &i, layers[2], layers[1]);
-			_location++;
-		} else if (kind == ERR_PAGE) {
-			ConfigNode::addChild(tokens[i], layers[3], layers[2]);
-		} else if (kind == BRACE) {
+		if (kind == BRACE)
 			_updateBrace(tokens[i]);
-		// error_pageのchildにstatus No.をaddしvalueをsetする
-		} else if (_location == 1 && i > 0 && (tokens [i - 1] == "error_page"))
-			ConfigNode::addChildSetValue(tokens, &i, layers[4], layers[3]);
-		// serverにchildrenとValueをaddする
-		else if (_server== 1 && _brace == 1 && (kind >= LISTEN && kind <= RETURN))
-			ConfigNode::addChildSetValue(tokens, &i, layers[2], layers[1]);
-		// locationにchildrenとvalueをaddする
-		else if (_server== 1 && _brace == 2 && _location== 1 && (kind >= LISTEN && kind <= RETURN))
-			ConfigNode::addChildSetValue(tokens, &i, layers[3], layers[2]);
+		else if (kind == SERVER || kind == ERR_PAGE)
+			ConfigNode::addChild(tokens[i], layers[_brace + 1], layers[_brace]);
+		else if (i > 0 && (tokens [i - 1] == "error_page"))
+			ConfigNode::addChildSetValue(tokens, &i, layers[_brace + 2], layers[_brace + 1]);
+		else if (kind == LOCATION || (kind >= LISTEN && kind <= RETURN))
+			ConfigNode::addChildSetValue(tokens, &i, layers[_brace + 1], layers[_brace]);
 		else
 			throw (std::runtime_error("Config file syntax error: " + tokens[i]));
 	}
 }
 
 void	Config::_init() {
-	for (int i = 0; i < 5; ++i)
-		this->layers.push_back(new ConfigNode("root"));
-	this->_server= 0;
-	this->_location= 0;
+	this->layers[0] = new ConfigNode("root");
 	this->_brace = 0;
 }
 
 void	Config::_checkSyntaxErr(std::string token) {
 	int	kind = ConfigNode::tokenKind(token);
-	if ((kind == SERVER && !(_server== 0 && _brace == 0 && _location == 0)) ||
-	    (kind == LOCATION && !(_server== 1 && _brace == 1 && _location == 0)) ||
-	    (kind == ERR_PAGE && !(_server== 1 && _brace == 2 && _location== 1))) {
+	if ((kind == SERVER && _brace != 0) ||
+	    (kind == LOCATION && _brace != 1) ||
+	    (kind == ERR_PAGE && _brace == 0) ||
+	    ((kind >= LISTEN && kind <= RETURN) && _brace == 0)) {
 		    throw (std::runtime_error("Syntax error: " + token));
 	    }
 }
@@ -90,10 +77,6 @@ void	Config::_updateBrace(const std::string& token) {
 		_brace--;
 		if (_brace < 0)
 			throw (std::runtime_error("4 Config brace close error: " + token));
-		if (_brace == 0)
-			_server= 0;
-		if (_brace == 1)
-			_location= 0;
 	}
 }
 

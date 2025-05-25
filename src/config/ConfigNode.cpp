@@ -1,5 +1,7 @@
 #include "ConfigNode.hpp"
 
+ConfigNode::ConfigNode() {}
+
 ConfigNode::ConfigNode(std::string key) 
 	: key(key) {
 	keyKind = tokenKind(key);
@@ -49,7 +51,8 @@ void	ConfigNode::setValue(const std::string& token, ConfigNode* node, int kind) 
 	node->valuesKind = kind;
 }
 	
-void	ConfigNode::addChildSetValue(const std::vector<std::string>& tokens, size_t* i, ConfigNode*& current, ConfigNode* parent) {
+void	ConfigNode::addChildSetValue(const std::vector<std::string>& tokens, size_t* i,
+				     ConfigNode*& current, ConfigNode* parent) {
 	int	kind = ConfigNode::tokenKind(tokens[*i]);
 
 	ConfigNode::addChild(tokens[*i], current, parent);

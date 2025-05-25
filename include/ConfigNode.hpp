@@ -33,8 +33,9 @@ public:
 	std::vector<ConfigNode*>	children;
 	int				keyKind;
 	int				valuesKind;
-	ConfigNode*			parent;
+	// ConfigNode*			parent;
 
+	ConfigNode();
 	ConfigNode(std::string key);
 	~ConfigNode();
 

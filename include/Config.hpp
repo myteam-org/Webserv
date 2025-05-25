@@ -16,8 +16,6 @@ class ConfigNode;
 class Config {
 private:
 	std::vector<std::string>	_tokens;
-	int				_server;
-	int				_location;
 	int				_brace;
 	void				_makeToken(const std::string& filename);
 	void				_makeConfTree(const std::vector<std::string>& tokens);
@@ -29,6 +27,7 @@ public:
 	Config(const std::string& filename);
 	~Config();
 
-	std::vector<ConfigNode*>	layers;
-	void				printTree(ConfigNode* node, int depth = 0);
+	ConfigNode*	layers[5];
+	// ConfigNode*	mp[4];
+	void		printTree(ConfigNode* node, int depth = 0);
 };

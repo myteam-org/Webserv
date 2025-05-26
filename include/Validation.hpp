@@ -3,6 +3,7 @@
 # include <iostream>
 # include <sys/stat.h>
 # include <stdexcept>
+# include <cstdlib>
 # include "Config.hpp"
 # include "ConfigNode.hpp"
 

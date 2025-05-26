@@ -43,13 +43,14 @@ void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
 
 		_checkSyntaxErr(tokens[i]);
 		if (kind == BRACE)
-			_updateBrace(tokens[i]);
+			_updateDepth(tokens[i]);
 		else if (kind == SERVER || kind == ERR_PAGE)
-			ConfigNode::addChild(tokens[i], layers[_brace + 1], layers[_brace]);
-		else if (i > 0 && (tokens [i - 1] == "error_page"))
-			ConfigNode::addChildSetValue(tokens, &i, layers[_brace + 2], layers[_brace + 1]);
-		else if (kind == LOCATION || (kind >= LISTEN && kind <= RETURN))
-			ConfigNode::addChildSetValue(tokens, &i, layers[_brace + 1], layers[_brace]);
+			ConfigNode::addChild(tokens[i], layers[_depth + 1], layers[_depth]);
+		else if (i > 0 && (tokens [i - 1] == "error_page")) {
+			Validation::numberAndFile(tokens, i);
+			ConfigNode::addChildSetValue(tokens, &i, layers[_depth + 2], layers[_depth + 1]);
+		} else if (kind == LOCATION || (kind >= LISTEN && kind <= RETURN))
+			ConfigNode::addChildSetValue(tokens, &i, layers[_depth + 1], layers[_depth]);
 		else
 			throw (std::runtime_error("Config file syntax error: " + tokens[i]));
 	}
@@ -57,25 +58,25 @@ void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
 
 void	Config::_init() {
 	this->layers[0] = new ConfigNode("root");
-	this->_brace = 0;
+	this->_depth = 0;
 }
 
 void	Config::_checkSyntaxErr(std::string token) {
 	int	kind = ConfigNode::tokenKind(token);
-	if ((kind == SERVER && _brace != 0) ||
-	    (kind == LOCATION && _brace != 1) ||
-	    (kind == ERR_PAGE && _brace == 0) ||
-	    ((kind >= LISTEN && kind <= RETURN) && _brace == 0)) {
+	if ((kind == SERVER && _depth != 0) ||
+	    (kind == LOCATION && _depth != 1) ||
+	    (kind == ERR_PAGE && _depth == 0) ||
+	    ((kind >= LISTEN && kind <= RETURN) && _depth == 0)) {
 		    throw (std::runtime_error("Syntax error: " + token));
 	    }
 }
 
-void	Config::_updateBrace(const std::string& token) {
+void	Config::_updateDepth(const std::string& token) {
 	if (token == "{") {
-		_brace++;
+		_depth++;
 	} else if (token == "}") {
-		_brace--;
-		if (_brace < 0)
+		_depth--;
+		if (_depth < 0)
 			throw (std::runtime_error("4 Config brace close error: " + token));
 	}
 }

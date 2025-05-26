@@ -1,8 +1,11 @@
 #include "Config.hpp"
 
-Config::Config(const std::string& filename) {
-	_makeToken(filename);
-	_makeConfTree(_tokens);
+Config::Config(const std::string& filename) 
+	: parser_(const_cast<std::string&>(filename)) {
+	// parser_(filename);
+	// _makeToken(filename);
+	_makeConfTree(parser_.getTokens());
+	// _makeConfTree(_tokens);
 	// checkTree(); TODO
 }
 
@@ -10,36 +13,39 @@ Config::~Config() {
 	_deleteTree(layers[0]);
 }
 
-void	Config::_makeToken(const std::string& filename) {
-	std::ifstream	file(filename.c_str());
-	if (!file.is_open())
-		throw std::runtime_error("Failed to open file: " + filename);
+// void	Config::_makeToken(const std::string& filename) {
+// 	std::ifstream	file(filename.c_str());
+// 	if (!file.is_open())
+// 		throw std::runtime_error("Failed to open file: " + filename);
 	
-	std::string	line;
-	while (std::getline(file, line)) {
-		std::istringstream	iss(line);
-		std::string		oneLine;
+// 	std::string	line;
+// 	while (std::getline(file, line)) {
+// 		std::istringstream	iss(line);
+// 		std::string		oneLine;
 
-		std::getline(iss, oneLine, '#');		    	// #以降を削除
-		oneLine.erase(0, oneLine.find_first_not_of(" \t")); 	// 先頭の空白を削除
-		oneLine.erase(oneLine.find_last_not_of(" \t") + 1); 	// 末尾の空白を削除
+// 		std::getline(iss, oneLine, '#');		    	// #以降を削除
+// 		oneLine.erase(0, oneLine.find_first_not_of(" \t")); 	// 先頭の空白を削除
+// 		oneLine.erase(oneLine.find_last_not_of(" \t") + 1); 	// 末尾の空白を削除
 
-		char	c = oneLine[oneLine.size() - 1];
-		if (!(c == '{' || c == '}' || c == ';' || c == 0))
-			throw (std::runtime_error("Syntax error at the end of the line"));
+// 		char	c = oneLine[oneLine.size() - 1];
+// 		if (!(c == '{' || c == '}' || c == ';' || c == 0))
+// 			throw (std::runtime_error("Syntax error at the end of the line"));
 
-		std::istringstream	tokenStream(oneLine);
-		std::string		token;
-		while (tokenStream >> token)				// 空白区切りでtokenをset
-			this->_tokens.push_back(token);
-	}
-	file.close();
-}
+// 		std::istringstream	tokenStream(oneLine);
+// 		std::string		token;
+// 		while (tokenStream >> token)				// 空白区切りでtokenをset
+// 			this->_tokens.push_back(token);
+// 	}
+// 	file.close();
+// }
 
+// void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
 void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
 	_init();
 	for (size_t i = 0; i < tokens.size(); ++i) {
-		int	kind = ConfigNode::tokenKind(tokens[i]);
+		Token		t(tokens[i], 0);
+		int		kind = t.getType();
+		std::string	token = t.getText();
 
 		_checkSyntaxErr(tokens[i]);
 		if (kind == BRACE)
@@ -62,7 +68,8 @@ void	Config::_init() {
 }
 
 void	Config::_checkSyntaxErr(std::string token) {
-	int	kind = ConfigNode::tokenKind(token);
+	Token	t(token, 0);
+	int	kind = t.getType();
 	if ((kind == SERVER && _depth != 0) ||
 	    (kind == LOCATION && _depth != 1) ||
 	    (kind == ERR_PAGE && _depth == 0) ||

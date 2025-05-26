@@ -4,40 +4,40 @@ ConfigNode::ConfigNode() {}
 
 ConfigNode::ConfigNode(std::string key) 
 	: key(key) {
-	keyKind = tokenKind(key);
+	// keyKind = tokenKind(key);
 }
 
 ConfigNode::~ConfigNode() {}
 	
-int	ConfigNode::tokenKind(const std::string& string) {
-	if (string == "root")
-		return (ROOT);
-	if (string == "server")
-		return (SERVER);
-	if (string == "location" || string == "location_back")
-		return (LOCATION);
-	if (string == "error_page")
-		return (ERR_PAGE);
-	if (string == "listen")
-		return (LISTEN);
-	if (string == "server_name")
-		return (SERVER_NAME);
-	if (string == "allow_method")
-		return (METHOD);
-	if (string == "index")
-		return (INDEX);
-	if (string == "client_max_body_size")
-		return (MAX_SIZE);
-	if (string == "autoindex")
-		return (AUTOINDEX);
-	if (string == "is_cgi")
-		return (IS_CGI);
-	if (string == "return")
-		return (RETURN);
-	if (string == "{" || string == "}")
-		return (BRACE);
-	return (VALUE);
-}
+// int	ConfigNode::tokenKind(const std::string& string) {
+// 	if (string == "root")
+// 		return (ROOT);
+// 	if (string == "server")
+// 		return (SERVER);
+// 	if (string == "location" || string == "location_back")
+// 		return (LOCATION);
+// 	if (string == "error_page")
+// 		return (ERR_PAGE);
+// 	if (string == "listen")
+// 		return (LISTEN);
+// 	if (string == "server_name")
+// 		return (SERVER_NAME);
+// 	if (string == "allow_method")
+// 		return (METHOD);
+// 	if (string == "index")
+// 		return (INDEX);
+// 	if (string == "client_max_body_size")
+// 		return (MAX_SIZE);
+// 	if (string == "autoindex")
+// 		return (AUTOINDEX);
+// 	if (string == "is_cgi")
+// 		return (IS_CGI);
+// 	if (string == "return")
+// 		return (RETURN);
+// 	if (string == "{" || string == "}")
+// 		return (BRACE);
+// 	return (VALUE);
+// }
 	
 void	ConfigNode::addChild(const std::string& token, ConfigNode*& current, ConfigNode* parent) {
 	current = new ConfigNode(token);
@@ -54,7 +54,9 @@ void	ConfigNode::setValue(const std::string& token, ConfigNode* node, int kind) 
 	
 void	ConfigNode::addChildSetValue(const std::vector<std::string>& tokens, size_t* i,
 				     ConfigNode*& current, ConfigNode* parent) {
-	int	kind = ConfigNode::tokenKind(tokens[*i]);
+	Token	t(tokens[*i], 0);
+	int	kind = t.getType();
+	// int	kind = ConfigNode::tokenKind(tokens[*i]);
 
 	ConfigNode::addChild(tokens[*i], current, parent);
 	++*i;

@@ -1,12 +1,15 @@
 NAME	= Webserv
 CPP	= c++
 CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
-# CPPFLAG += -g -fsanitize=address
+CPPFLAG += -g -fsanitize=address
 INC_DIR	= include
 SRCS	= src/main.cpp \
 	  src/config/Config.cpp \
 	  src/config/ConfigNode.cpp \
-	  src/config/Validation.cpp
+	  src/validator/Validation.cpp \
+	  src/config/ConfigParser.cpp \
+	  src/config/Token.cpp
+
 OBJS	= $(SRCS:.cpp=.o)
 
 %.o: %.cpp

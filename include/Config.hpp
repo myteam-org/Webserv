@@ -3,6 +3,7 @@
 class ConfigNode;
 
 # include "ConfigNode.hpp"
+# include "Validation.hpp"
 # include <iostream>
 # include <fstream>
 # include <sstream>
@@ -16,19 +17,18 @@ class ConfigNode;
 class Config {
 private:
 	std::vector<std::string>	_tokens;
-	int				_server;
-	int				_location;
-	int				_brace;
+	int				_depth;
 	void				_makeToken(const std::string& filename);
 	void				_makeConfTree(const std::vector<std::string>& tokens);
 	void				_init();
 	void				_checkSyntaxErr(std::string token);
-	void				_updateBrace(const std::string& token);
+	void				_updateDepth(const std::string& token);
 	void				_deleteTree(ConfigNode* node);
 public:
 	Config(const std::string& filename);
 	~Config();
 
-	std::vector<ConfigNode*>	layers;
-	void				printTree(ConfigNode* node, int depth = 0);
+	ConfigNode*	layers[5];
+	// ConfigNode*	mp[4];
+	void		printTree(ConfigNode* node, int depth = 0);
 };

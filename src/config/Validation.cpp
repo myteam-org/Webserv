@@ -2,30 +2,30 @@
 
 // bool	Validation::validate()
 
-// bool	Validation::brace(const Config& config) {
-// 	int	openBrace = 0, closeBrace = 0;
-// 	std::vector<std::string> tokens = config.getTokens();
+bool	Validation::number(const std::string& number, int kind) {
+	char*	endP;
+	int	num = strtod(number.c_str(), &endP);
 
-// 	for (size_t i = 0; i < tokens.size(); ++i) {
-// 		if (tokens[i] == "{")
-// 			openBrace++;
-// 		if (tokens[i] == "}")
-// 			closeBrace++;
-// 	}
-// 	return (openBrace = closeBrace);
-// }
+	if (*endP)
+		throw (std::runtime_error("required number: " + number));
+	if (kind == LISTEN)
+		return (num >= 0 && num <= 65535);
+	if (kind == MAX_SIZE)
+		return (num > 0 && num < 1000000);
+	return (true);
+}
 
-// bool	Validation::number(const std::string& number, int kind) {
-// 	char*	endP;
-// 	int	num = strtod(number.c_str(), &endP);
+bool	Validation::numberAndFile(const std::vector<std::string>& tokens, int i) {
+	char*	endP;
+	int	num = strtod(tokens[i].c_str(), &endP);
 
-// 	if (kind == LISTEN)
-// 		return (num >= 0 && num <= 65535);
-// 	if (kind == IP)
-// 		return (num >= 0 && num <= 255);
-// 	if (kind == MAX_SIZE)
-// 		return (num > 0 && num < 1000000);
-// }
+	if (*endP)
+		throw (std::runtime_error("required number: " + tokens[i]));
+	// if (tokens[i + 1])
+	if (num >= 0 && num < 600)
+		return (true);
+	return (false);
+}
 
 bool	Validation::path(const std::string& path, int select) {
 	struct stat	s;

@@ -7,7 +7,7 @@ class Token;
 # include "ConfigTree.hpp"
 # include "ConfigParser.hpp"
 # include "Token.hpp"
-# include "Validation.hpp"
+# include "Validator.hpp"
 # include <iostream>
 # include <fstream>
 # include <sstream>

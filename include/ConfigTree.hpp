@@ -5,7 +5,7 @@
 # include <string>
 # include <sys/types.h>
 # include <sys/stat.h>
-# include "Config.hpp"
+# include "Token.hpp"
 
 class ConfigTree {
 public:

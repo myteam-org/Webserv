@@ -6,7 +6,7 @@ ConfigParser::ConfigParser(std::string& filename) {
 
 ConfigParser::~ConfigParser() {}
 
-const std::vector<Token>	ConfigParser::getTokens() const {
+const std::vector<Token>&	ConfigParser::getTokens() const {
 	return (this->tokens_);
 }
 

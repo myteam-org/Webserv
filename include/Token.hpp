@@ -28,11 +28,11 @@ public:
 
 	std::string	getText() const;
 	int		getLineNumber() const;
-	TokenType	getType();
+	TokenType	getType() const;
 	
 private:
 	std::string	text_;
 	int		lineNumber_;
 	TokenType	type_;
-	void		setType_(std::string& text);
+	void		setType_(const std::string& text);
 };

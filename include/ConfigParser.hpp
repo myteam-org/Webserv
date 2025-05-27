@@ -18,7 +18,7 @@ public:
 	ConfigParser(std::string& filename);
 	~ConfigParser();
 
-	const std::vector<Token>	getTokens() const;
+	const std::vector<Token>&	getTokens() const;
 
 private:
 	void	tokenize_(std::string& filename);

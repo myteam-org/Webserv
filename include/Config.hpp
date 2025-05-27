@@ -23,11 +23,14 @@ private:
 	std::vector<std::string>	_tokens;
 	int				_depth;
 	// void				_makeToken(const std::string& filename);
-	void				_makeConfTree(const std::vector<std::string>& tokens);
+	// void				_makeConfTree(const std::vector<std::string>& tokens);
+	void				_makeConfTree(const std::vector<Token>& tokens);
 	void				_init();
-	void				_checkSyntaxErr(std::string token);
+	// void				_checkSyntaxErr(std::string token);
+	void				_checkSyntaxErr(const Token token);
 	void				_updateDepth(const std::string& token);
-	void				_deleteTree(ConfigNode* node);
+	// void				_deleteTree(ConfigNode* node);
+	void				_deleteTree(ConfigParser parser_);
 	ConfigParser			parser_;
 public:
 	Config(const std::string& filename);

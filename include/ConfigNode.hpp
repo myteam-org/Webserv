@@ -41,7 +41,10 @@ public:
 
 	// static int	tokenKind(const std::string& string);
 	static void	addChild(const std::string& token, ConfigNode*& current, ConfigNode* parent);
+	// static void	addChild(const std::string& token, ConfigNode*& current, ConfigNode* parent);
 	static void	setValue(const std::string& token, ConfigNode* node, int kind);
-	static void	addChildSetValue(const std::vector<std::string>& tokens, size_t* i, 
+	// static void	addChildSetValue(const std::vector<std::string>& tokens, size_t* i, 
+	// 				 ConfigNode*& current, ConfigNode* parent);
+	static void	addChildSetValue(const std::vector<Token>& tokens, size_t* i, 
 					 ConfigNode*& current, ConfigNode* parent);
 };

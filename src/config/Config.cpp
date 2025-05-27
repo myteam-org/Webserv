@@ -1,64 +1,35 @@
 #include "Config.hpp"
 
-Config::Config(const std::string& filename) 
+Config::Config(const std::string& filename)
 	: parser_(const_cast<std::string&>(filename)) {
-	// parser_(filename);
-	// _makeToken(filename);
+	// for (std::vector<Token>::const_iterator it = parser_.getTokens().begin(); it != parser_.getTokens().end(); ++it)
+	// std::cout << "token = " << it->getText() << "' kind = " << it->getType() << std::endl;
 	_makeConfTree(parser_.getTokens());
-	// _makeConfTree(_tokens);
 	// checkTree(); TODO
 }
 
 Config::~Config() {
-	_deleteTree(layers[0]);
+	// _deleteTree(layers[0]);
 }
 
-// void	Config::_makeToken(const std::string& filename) {
-// 	std::ifstream	file(filename.c_str());
-// 	if (!file.is_open())
-// 		throw std::runtime_error("Failed to open file: " + filename);
-	
-// 	std::string	line;
-// 	while (std::getline(file, line)) {
-// 		std::istringstream	iss(line);
-// 		std::string		oneLine;
-
-// 		std::getline(iss, oneLine, '#');		    	// #以降を削除
-// 		oneLine.erase(0, oneLine.find_first_not_of(" \t")); 	// 先頭の空白を削除
-// 		oneLine.erase(oneLine.find_last_not_of(" \t") + 1); 	// 末尾の空白を削除
-
-// 		char	c = oneLine[oneLine.size() - 1];
-// 		if (!(c == '{' || c == '}' || c == ';' || c == 0))
-// 			throw (std::runtime_error("Syntax error at the end of the line"));
-
-// 		std::istringstream	tokenStream(oneLine);
-// 		std::string		token;
-// 		while (tokenStream >> token)				// 空白区切りでtokenをset
-// 			this->_tokens.push_back(token);
-// 	}
-// 	file.close();
-// }
-
-// void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
-void	Config::_makeConfTree(const std::vector<std::string>& tokens) {
+void	Config::_makeConfTree(const std::vector<Token>& tokens) {
 	_init();
 	for (size_t i = 0; i < tokens.size(); ++i) {
-		Token		t(tokens[i], 0);
-		int		kind = t.getType();
-		std::string	token = t.getText();
+		TokenType	kind = tokens[i].getType();
+		const std::string	token = tokens[i].getText();
 
 		_checkSyntaxErr(tokens[i]);
 		if (kind == BRACE)
-			_updateDepth(tokens[i]);
+			_updateDepth(token);
 		else if (kind == SERVER || kind == ERR_PAGE)
-			ConfigNode::addChild(tokens[i], layers[_depth + 1], layers[_depth]);
-		else if (i > 0 && (tokens [i - 1] == "error_page")) {
-			Validation::numberAndFile(tokens, i);
+			ConfigNode::addChild(token, layers[_depth + 1], layers[_depth]);
+		else if (i > 0 && (tokens [i - 1].getText() == "error_page")) {
+			// Validation::numberAndFile(tokens, i);
 			ConfigNode::addChildSetValue(tokens, &i, layers[_depth + 2], layers[_depth + 1]);
 		} else if (kind == LOCATION || (kind >= LISTEN && kind <= RETURN))
 			ConfigNode::addChildSetValue(tokens, &i, layers[_depth + 1], layers[_depth]);
 		else
-			throw (std::runtime_error("Config file syntax error: " + tokens[i]));
+			throw (std::runtime_error("Config file syntax error: " + token));
 	}
 }
 
@@ -67,14 +38,15 @@ void	Config::_init() {
 	this->_depth = 0;
 }
 
-void	Config::_checkSyntaxErr(std::string token) {
-	Token	t(token, 0);
-	int	kind = t.getType();
+void	Config::_checkSyntaxErr(const Token token) {
+	TokenType	kind = token.getType();
+	std::string	text = token.getText();
+
 	if ((kind == SERVER && _depth != 0) ||
 	    (kind == LOCATION && _depth != 1) ||
 	    (kind == ERR_PAGE && _depth == 0) ||
 	    ((kind >= LISTEN && kind <= RETURN) && _depth == 0)) {
-		    throw (std::runtime_error("Syntax error: " + token));
+		    throw (std::runtime_error("Syntax error: " + text));
 	    }
 }
 
@@ -88,14 +60,15 @@ void	Config::_updateDepth(const std::string& token) {
 	}
 }
 
-void	Config::_deleteTree(ConfigNode* node) {
-	if (!node)
-		return ;
-	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it )
-		_deleteTree(*it);
-	delete(node);
-	node = NULL;
-}
+// void	Config::_deleteTree(ConfigNode* node) {
+// void	Config::_deleteTree(ConfigParser parser) {
+// 	if (!node)
+// 		return ;
+// 	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it )
+// 		_deleteTree(*it);
+// 	delete(node);
+// 	node = NULL;
+// }
 
 void	Config::printTree(ConfigNode* node, int depth) {
 	if (!node)

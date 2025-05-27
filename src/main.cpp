@@ -1,4 +1,5 @@
 #include "Config.hpp"
+#include "ConfigTree.hpp"
 #include <signal.h>
 
 void	checkInterpreter() {
@@ -41,7 +42,7 @@ int	main(int argc, char **argv) {
 	try {
 		checkFile(confFile);
 		Config	config(confFile);
-		config.printTree(config.layers[0]);
+		config.printTree(config.getTree().getRoot(), 0);
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		return (1);

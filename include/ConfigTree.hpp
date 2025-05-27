@@ -1,26 +1,28 @@
 #pragma once
 
 # include <iostream>
-# include <vector>
-# include <string>
-# include <sys/types.h>
-# include <sys/stat.h>
+# include "ConfigNode.hpp"
 # include "Token.hpp"
+# include "ConfigParser.hpp"
 
 class ConfigTree {
 public:
-	std::string			key;
-	std::vector<std::string>	values;
-	std::vector<ConfigTree*>	children;
-	int				keyKind;
-	int				valuesKind;
-
-	ConfigTree();
-	ConfigTree(std::string key);
+	ConfigTree(const ConfigParser& parser);
 	~ConfigTree();
 
-	static void	addChild(const std::string& token, ConfigTree*& current, ConfigTree* parent);
-	static void	setValue(const std::string& token, ConfigTree* node, int kind);
-	static void	addChildSetValue(const std::vector<Token>& tokens, size_t* i, 
-					ConfigTree*& current, ConfigTree* parent);
+	ConfigParser	parser;
+	ConfigNode*	getRoot() const;
+	void		addChild(const Token& token, ConfigNode*& current, ConfigNode* parent);
+	void		setValue(const std::string& token, ConfigNode* node, int type);
+	void		addChildSetValue(const std::vector<Token>& tokens, size_t* i, 
+					ConfigNode*& current, ConfigNode* parent);
+private:
+	int		depth_;
+	ConfigNode*	root_;
+	ConfigNode*	layers_[5];
+	// void		makeConfTree(const std::vector<Token>& tokens)
+	void		makeConfTree_(const ConfigParser& parser);
+	void		checkSyntaxErr_(const Token token);
+	void		updateDepth_(const std::string& token);
+	void		deleteTree_(ConfigNode* node);
 };

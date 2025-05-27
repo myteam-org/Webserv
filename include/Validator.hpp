@@ -5,7 +5,7 @@
 # include <stdexcept>
 # include <cstdlib>
 # include "Config.hpp"
-# include "ConfigTree.hpp"
+# include "ConfigNode.hpp"
 
 enum {
 	// DIRECTORY,
@@ -20,5 +20,5 @@ namespace Validation {
 	bool	method(const std::string& method);
 	bool	onOff(const std::string& onOff);
 	// bool	url(const std::string& url);
-	// bool	duplicate(const ConfigTree* root);
+	// bool	duplicate(const ConfigNode* root);
 }

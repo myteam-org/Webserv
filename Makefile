@@ -5,9 +5,10 @@ CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
 INC_DIR	= include
 SRCS	= src/main.cpp \
 	  src/config/Config.cpp \
-	  src/config/ConfigTree.cpp \
+	  src/config/ConfigNode.cpp \
 	  src/validator/Validator.cpp \
 	  src/config/ConfigParser.cpp \
+	  src/config/ConfigTree.cpp \
 	  src/config/Token.cpp
 
 OBJS	= $(SRCS:.cpp=.o)

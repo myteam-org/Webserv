@@ -1,11 +1,12 @@
 #pragma once
 
-class ConfigTree;
+class ConfigNode;
 class ConfigParser;
 class Token;
 
-# include "ConfigTree.hpp"
+# include "ConfigNode.hpp"
 # include "ConfigParser.hpp"
+# include "ConfigTree.hpp"
 # include "Token.hpp"
 # include "Validator.hpp"
 # include <iostream>
@@ -20,22 +21,21 @@ class Token;
 
 class Config {
 private:
-	std::vector<std::string>	_tokens;
-	int				_depth;
-	// void				_makeToken(const std::string& filename);
-	// void				_makeConfTree(const std::vector<std::string>& tokens);
-	void				_makeConfTree(const std::vector<Token>& tokens);
-	void				_init();
-	// void				_checkSyntaxErr(std::string token);
-	void				_checkSyntaxErr(const Token token);
-	void				_updateDepth(const std::string& token);
-	// void				_deleteTree(ConfigTree* node);
-	void				_deleteTree(ConfigParser parser_);
+	// std::vector<std::string>	_tokens;
+	// int				_depth;
+	// void				_makeConfTree(const std::vector<Token>& tokens);
+	// void				_init();
+	// void				_checkSyntaxErr(const Token token);
+	// void				_updateDepth(const std::string& token);
+	// void				_deleteTree(ConfigNode* layer);
 	ConfigParser			parser_;
+	ConfigTree			tree_;
 public:
 	Config(const std::string& filename);
 	~Config();
 
-	ConfigTree*	layers[5];
-	void		printTree(ConfigTree* node, int depth = 0);
+	// ConfigNode*	layers[5];
+	void			printTree(ConfigNode* node, int depth = 0);
+	ConfigParser&		getParser();
+	const ConfigTree&	getTree() const;
 };

@@ -20,32 +20,29 @@ TokenType	Token::getType() const {
 }
 
 void		Token::setType_(const std::string& text) {
-	if (text == "root")
-		this->type_ = ROOT;
-	else if (text == "server")
-		this->type_ = SERVER;
-	else if (text == "location" || text == "location_back")
-		this->type_ = LOCATION;
-	else if (text == "error_page")
-		this->type_ = ERR_PAGE;
-	else if (text == "listen")
-		this->type_ = LISTEN;
-	else if (text == "server_name")
-		this->type_ = SERVER_NAME;
-	else if (text == "allow_method")
-		this->type_ = METHOD;
-	else if (text == "index")
-		this->type_ = INDEX;
-	else if (text == "client_max_body_size")
-		this->type_ = MAX_SIZE;
-	else if (text == "autoindex")
-		this->type_ = AUTOINDEX;
-	else if (text == "is_cgi")
-		this->type_ = IS_CGI;
-	else if (text == "return")
-		this->type_ = RETURN;
-	else if (text == "{" || text == "}")
-		this->type_ = BRACE;
-	else
-		this->type_ = VALUE;
+	static std::map<std::string, TokenType> tokenMap;
+
+	if (tokenMap.empty()) {
+	    tokenMap.insert(std::make_pair("root", ROOT));
+	    tokenMap.insert(std::make_pair("server", SERVER));
+	    tokenMap.insert(std::make_pair("location", LOCATION));
+	    tokenMap.insert(std::make_pair("location_back", LOCATION));
+	    tokenMap.insert(std::make_pair("error_page", ERR_PAGE));
+	    tokenMap.insert(std::make_pair("listen", LISTEN));
+	    tokenMap.insert(std::make_pair("server_name", SERVER_NAME));
+	    tokenMap.insert(std::make_pair("allow_method", METHOD));
+	    tokenMap.insert(std::make_pair("index", INDEX));
+	    tokenMap.insert(std::make_pair("client_max_body_size", MAX_SIZE));
+	    tokenMap.insert(std::make_pair("autoindex", AUTOINDEX));
+	    tokenMap.insert(std::make_pair("is_cgi", IS_CGI));
+	    tokenMap.insert(std::make_pair("return", RETURN));
+	    tokenMap.insert(std::make_pair("{", BRACE));
+	    tokenMap.insert(std::make_pair("}", BRACE));
+	}
+	std::map<std::string, TokenType>::const_iterator it = tokenMap.find(text);
+	if (it != tokenMap.end()) {
+	    this->type_ = it->second;
+	} else {
+	    this->type_ = VALUE;
+	}
 }

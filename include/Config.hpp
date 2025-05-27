@@ -1,10 +1,10 @@
 #pragma once
 
-class ConfigNode;
+class ConfigTree;
 class ConfigParser;
 class Token;
 
-# include "ConfigNode.hpp"
+# include "ConfigTree.hpp"
 # include "ConfigParser.hpp"
 # include "Token.hpp"
 # include "Validation.hpp"
@@ -29,13 +29,13 @@ private:
 	// void				_checkSyntaxErr(std::string token);
 	void				_checkSyntaxErr(const Token token);
 	void				_updateDepth(const std::string& token);
-	// void				_deleteTree(ConfigNode* node);
+	// void				_deleteTree(ConfigTree* node);
 	void				_deleteTree(ConfigParser parser_);
 	ConfigParser			parser_;
 public:
 	Config(const std::string& filename);
 	~Config();
 
-	ConfigNode*	layers[5];
-	void		printTree(ConfigNode* node, int depth = 0);
+	ConfigTree*	layers[5];
+	void		printTree(ConfigTree* node, int depth = 0);
 };

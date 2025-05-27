@@ -5,7 +5,7 @@ CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
 INC_DIR	= include
 SRCS	= src/main.cpp \
 	  src/config/Config.cpp \
-	  src/config/ConfigNode.cpp \
+	  src/config/ConfigTree.cpp \
 	  src/validator/Validation.cpp \
 	  src/config/ConfigParser.cpp \
 	  src/config/Token.cpp

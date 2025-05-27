@@ -22,19 +22,19 @@ void	Config::_makeConfTree(const std::vector<Token>& tokens) {
 		if (kind == BRACE)
 			_updateDepth(token);
 		else if (kind == SERVER || kind == ERR_PAGE)
-			ConfigNode::addChild(token, layers[_depth + 1], layers[_depth]);
+			ConfigTree::addChild(token, layers[_depth + 1], layers[_depth]);
 		else if (i > 0 && (tokens [i - 1].getText() == "error_page")) {
 			// Validation::numberAndFile(tokens, i);
-			ConfigNode::addChildSetValue(tokens, &i, layers[_depth + 2], layers[_depth + 1]);
+			ConfigTree::addChildSetValue(tokens, &i, layers[_depth + 2], layers[_depth + 1]);
 		} else if (kind == LOCATION || (kind >= LISTEN && kind <= RETURN))
-			ConfigNode::addChildSetValue(tokens, &i, layers[_depth + 1], layers[_depth]);
+			ConfigTree::addChildSetValue(tokens, &i, layers[_depth + 1], layers[_depth]);
 		else
 			throw (std::runtime_error("Config file syntax error: " + token));
 	}
 }
 
 void	Config::_init() {
-	this->layers[0] = new ConfigNode("root");
+	this->layers[0] = new ConfigTree("root");
 	this->_depth = 0;
 }
 
@@ -60,17 +60,17 @@ void	Config::_updateDepth(const std::string& token) {
 	}
 }
 
-// void	Config::_deleteTree(ConfigNode* node) {
+// void	Config::_deleteTree(ConfigTree* node) {
 // void	Config::_deleteTree(ConfigParser parser) {
 // 	if (!node)
 // 		return ;
-// 	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it )
+// 	for (std::vector<ConfigTree*>::iterator it = node->children.begin(); it != node->children.end(); ++it )
 // 		_deleteTree(*it);
 // 	delete(node);
 // 	node = NULL;
 // }
 
-void	Config::printTree(ConfigNode* node, int depth) {
+void	Config::printTree(ConfigTree* node, int depth) {
 	if (!node)
 		return ;
 
@@ -82,6 +82,6 @@ void	Config::printTree(ConfigNode* node, int depth) {
 	for (std::vector<std::string>::iterator iter = node->values.begin(); iter != node->values.end(); ++iter)
 		std::cout << " " << *iter;
 	std::cout << std::endl;
-	for (std::vector<ConfigNode*>::iterator it = node->children.begin(); it != node->children.end(); ++it)
+	for (std::vector<ConfigTree*>::iterator it = node->children.begin(); it != node->children.end(); ++it)
 		printTree(*it, depth + 1);
 }

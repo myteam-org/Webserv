@@ -49,5 +49,8 @@
 		"stdexcept": "cpp",
 		"streambuf": "cpp",
 		"typeinfo": "cpp"
+	},
+	{
+		"clang-format.executable": "/absolute/path/to/clang-format"
 	}
 }

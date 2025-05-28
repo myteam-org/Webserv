@@ -2,7 +2,7 @@
 
 // bool	Validation::validate()
 
-bool	Validation::number(const std::string& number, int kind) {
+bool	Validator::number(const std::string& number, int kind) {
 	char*	endP;
 	int	num = strtod(number.c_str(), &endP);
 
@@ -15,7 +15,7 @@ bool	Validation::number(const std::string& number, int kind) {
 	return (true);
 }
 
-bool	Validation::numberAndFile(const std::vector<std::string>& tokens, int i) {
+bool	Validator::numberAndFile(const std::vector<std::string>& tokens, int i) {
 	char*	endP;
 	int	num = strtod(tokens[i].c_str(), &endP);
 
@@ -27,7 +27,7 @@ bool	Validation::numberAndFile(const std::vector<std::string>& tokens, int i) {
 	return (false);
 }
 
-bool	Validation::path(const std::string& path, int select) {
+bool	Validator::path(const std::string& path, int select) {
 	struct stat	s;
 
 	if (stat(path.c_str(), &s) != 0)
@@ -36,14 +36,28 @@ bool	Validation::path(const std::string& path, int select) {
 		(select == FILENAME && (s.st_mode & S_IFREG)));
 }
 
-bool	Validation::method(const std::string& method) {
+bool	Validator::method(const std::string& method) {
 	return (method == "GET" || method == "POST" || method == "DELETE");
 }
 
-bool	Validation::onOff(const std::string& onOff) {
+bool	Validator::onOff(const std::string& onOff) {
 	return (onOff == "on" || onOff == "off");
 }
 
-// bool	Validation::url(const std::string& url) {
+void	Validator::checkSyntaxErr(const Token token, int depth) {
+	TokenType	kind = token.getType();
+	std::string	text = token.getText();
 
-// }
+	if ((kind == SERVER && depth != 0) ||
+	    (kind == LOCATION && depth != 1) ||
+	    (kind == ERR_PAGE && depth == 0) ||
+	    ((kind >= LISTEN && kind <= RETURN) && depth == 0)) {
+		    throw (std::runtime_error("Syntax error: " + text));
+	    }
+}
+
+bool	Validator::url(const std::string& url) {
+	if (!(url.find("http://") == 0 || url.find("https://") == 0))
+		return (false);
+	return (true);
+}

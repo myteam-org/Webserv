@@ -1,14 +1,13 @@
 #pragma once
 
-class ConfigNode;
+class ConfigTree;
 class ConfigParser;
-class Token;
+// class Token;
 
-# include "ConfigNode.hpp"
+# include "Token.hpp"
 # include "ConfigParser.hpp"
 # include "ConfigTree.hpp"
-# include "Token.hpp"
-# include "Validator.hpp"
+# include "ConfigNode.hpp"
 # include <iostream>
 # include <fstream>
 # include <sstream>
@@ -21,20 +20,12 @@ class Token;
 
 class Config {
 private:
-	// std::vector<std::string>	_tokens;
-	// int				_depth;
-	// void				_makeConfTree(const std::vector<Token>& tokens);
-	// void				_init();
-	// void				_checkSyntaxErr(const Token token);
-	// void				_updateDepth(const std::string& token);
-	// void				_deleteTree(ConfigNode* layer);
 	ConfigParser			parser_;
 	ConfigTree			tree_;
 public:
 	Config(const std::string& filename);
 	~Config();
 
-	// ConfigNode*	layers[5];
 	void			printTree(ConfigNode* node, int depth = 0);
 	ConfigParser&		getParser();
 	const ConfigTree&	getTree() const;

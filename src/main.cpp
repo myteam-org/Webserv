@@ -45,6 +45,7 @@ int	main(int argc, char **argv) {
 		config.printTree(config.getTree().getRoot(), 0);
 	} catch (const std::exception& e) {
 		std::cerr << e.what() << std::endl;
+		std::cout << "here" << std::endl;
 		return (1);
 	}
 	return (0);

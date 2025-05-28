@@ -2,6 +2,7 @@
 
 ConfigTree::ConfigTree(const ConfigParser& parser) : parser(parser) {
 	makeConfTree_(parser);
+	this->root_ = this->layers_[0];
 }
 
 ConfigTree::~ConfigTree() {

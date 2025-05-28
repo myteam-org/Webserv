@@ -92,7 +92,7 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
       ConfigTree::setValue(token.substr(0, token.size() - 1), current);
       break;
     } else if (token.size() == 1 && token[0] == ';') {
-      throw(std::runtime_error("can't find vlue: " + token));
+      throw(std::runtime_error("can't find value: " + token));
       ConfigTree::setValue(token, current);
     }
     ++*i;

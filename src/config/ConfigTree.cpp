@@ -69,7 +69,7 @@ void ConfigTree::addChild(const Token& token, ConfigNode*& current,
 
 void ConfigTree::setValue(const std::string& token, ConfigNode* node) {
   if (token.size() == 1 && token[0] == ';')
-    throw(std::runtime_error("can't find vlue: " + token));
+    throw(std::runtime_error("can't find value: " + token));
   node->getValues().push_back(token);
 }
 

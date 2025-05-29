@@ -81,13 +81,10 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
                                   ConfigNode*& current, ConfigNode* parent) {
         const std::string token = tokens[*i].getText();
         const TokenType kind = tokens[*i].getType();
+        const int lineNumber = tokens[*i].getLineNumber();
 
         ConfigTree::addChild(tokens[*i], current, parent);
         ++*i;
-        if (*i >= tokens.size()) {
-                std::cerr << token << ": Config no token error: line " << tokens[*i].getLineNumber() << std::endl;
-                std::exit(1);
-        }
         if (kind == LOCATION) {
                 ConfigTree::setValue(token, current);
                 this->location_++;
@@ -100,7 +97,7 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
                                              current);
                         break;
                 } else if (token.size() == 1 && token[0] == ';') {
-                        std::cerr << token << ": Config file .. Can't find value: line " << tokens[*i].getLineNumber() << std::endl;
+                        std::cerr << token << ": Config file .. Can't find value: line " << lineNumber << std::endl;
                         std::exit(1);
                 }
                 ++*i;

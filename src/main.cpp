@@ -28,12 +28,12 @@ void checkFile(std::string& filename) {
         struct stat s;
 
         if (stat(filename.c_str(), &s) != 0) {
-            std::cerr << "Failed to stat file: " << filename << std::endl;
-            std::exit(1);
+                std::cerr << "Failed to stat file: " << filename << std::endl;
+                std::exit(1);
         }
         if (s.st_mode & S_IFDIR) {
-            std::cerr << filename << ": is a directory" << std::endl;
-            std::exit(1);
+                std::cerr << filename << ": is a directory" << std::endl;
+                std::exit(1);
         }
 }
 

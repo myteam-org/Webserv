@@ -20,15 +20,15 @@ class ConfigParser;
 #define FILE_NAME "./config_file/default.conf"
 
 class Config {
- private:
-  ConfigParser parser_;
-  ConfigTree tree_;
+       private:
+        ConfigParser parser_;
+        ConfigTree tree_;
 
- public:
-  explicit Config(const std::string& filename);
-  ~Config();
+       public:
+        explicit Config(const std::string& filename);
+        ~Config();
 
-  void printTree(ConfigNode* node, int depth = 0);
-  ConfigParser& getParser();
-  const ConfigTree& getTree() const;
+        void printTree(ConfigNode* node, int depth = 0);
+        ConfigParser& getParser();
+        const ConfigTree& getTree() const;
 };

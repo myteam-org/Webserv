@@ -10,19 +10,19 @@
 #include "Token.hpp"
 
 class ConfigNode {
- public:
-  ConfigNode();
-  explicit ConfigNode(const Token& token);
-  ~ConfigNode();
+       public:
+        ConfigNode();
+        explicit ConfigNode(const Token& token);
+        ~ConfigNode();
 
-  const std::string& getKey() const;
-  std::vector<std::string>& getValues();
-  std::vector<ConfigNode*>& getChildren();
-  TokenType getKeyKind();
+        const std::string& getKey() const;
+        std::vector<std::string>& getValues();
+        std::vector<ConfigNode*>& getChildren();
+        TokenType getKeyKind();
 
- private:
-  std::string key_;
-  std::vector<std::string> values_;
-  std::vector<ConfigNode*> children_;
-  TokenType keyKind_;
+       private:
+        std::string key_;
+        std::vector<std::string> values_;
+        std::vector<ConfigNode*> children_;
+        TokenType keyKind_;
 };

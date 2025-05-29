@@ -1,6 +1,6 @@
 #include "Token.hpp"
 
-Token::Token(const std::string& text, int line)
+Token::Token(const std::string& text, const std::string& line)
     : text_(text), lineNumber_(line) {
     setType_(text);
 }
@@ -9,7 +9,7 @@ Token::~Token() {}
 
 std::string Token::getText() const { return (this->text_); }
 
-int Token::getLineNumber() const { return (this->lineNumber_); }
+std::string Token::getLineNumber() const { return (this->lineNumber_); }
 
 TokenType Token::getType() const { return (this->type_); }
 

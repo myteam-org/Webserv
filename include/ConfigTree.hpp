@@ -29,6 +29,6 @@ class ConfigTree {
         ConfigNode* root_;
         ConfigNode* layers_[5];
         void makeConfTree_(const ConfigParser& parser);
-        void updateDepth_(const std::string& token);
+        void updateDepth_(const std::string& token, const std::string& lineNumber);
         void deleteTree_(ConfigNode* node);
 };

@@ -5,7 +5,7 @@ ConfigTree::ConfigTree(const ConfigParser& parser)
         try {
                 makeConfTree_(parser);
         } catch (const std::exception& e) {
-                std::cerr << "Config Syntax error" << e.what() << std::endl;
+                std::cerr << e.what() << std::endl;
                 deleteTree_(this->root_);
                 this->root_ = NULL;
                 throw;
@@ -22,7 +22,7 @@ ConfigTree::~ConfigTree() {
 ConfigNode* ConfigTree::getRoot() const { return (this->root_); }
 
 void ConfigTree::makeConfTree_(const ConfigParser& parser) {
-        this->layers_[0] = new ConfigNode(Token("root", 99));
+        this->layers_[0] = new ConfigNode(Token("root", "99"));
         this->root_ = this->layers_[0];
         std::vector<Token> tokens = parser.getTokens();
 
@@ -32,7 +32,7 @@ void ConfigTree::makeConfTree_(const ConfigParser& parser) {
 
                 Validator::checkSyntaxErr(tokens[i], depth_);
                 if (kind == BRACE) {
-                        updateDepth_(token);
+                        updateDepth_(token, tokens[i].getLineNumber());
                 } else if (kind == SERVER || kind == ERR_PAGE) {
                         ConfigTree::addChild(tokens[i], layers_[depth_ + 1],
                                              layers_[depth_]);
@@ -46,23 +46,27 @@ void ConfigTree::makeConfTree_(const ConfigParser& parser) {
                         ConfigTree::addChildSetValue(
                             tokens, &i, layers_[depth_ + 1], layers_[depth_]);
                 } else {
-                        throw(std::runtime_error("Config file syntax error: " +
-                                                 token));
+                        throw(std::runtime_error(
+                            token + ": Config file syntax error: line " +
+                            tokens[i].getLineNumber()));
                 }
         }
 }
 
-void ConfigTree::updateDepth_(const std::string& token) {
+void ConfigTree::updateDepth_(const std::string& token,
+                              const std::string& lineNumber) {
         if (token == "{") {
                 this->depth_++;
         } else if (token == "}") {
                 this->depth_--;
                 if (this->depth_ < 0)
                         throw(std::runtime_error(
-                            "4 Config brace close error: " + token));
+                            token + ": Config brace close error: line " +
+                            lineNumber));
                 if (this->depth_ == 0 && location_ == 0)
-                        throw(std::runtime_error("Config location error: " +
-                                                 token));
+                        throw(std::runtime_error(
+                            token + ": Config location error: line " +
+                            lineNumber));
         }
 }
 
@@ -86,7 +90,10 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
 
         ConfigTree::addChild(tokens[*i], current, parent);
         ++*i;
-        if (*i >= tokens.size()) throw(std::runtime_error("no token"));
+        if (*i >= tokens.size())
+                throw(std::runtime_error(token +
+                                         ": Config no token error: line " +
+                                         tokens[*i].getLineNumber()));
         if (kind == LOCATION) {
                 ConfigTree::setValue(token, current);
                 this->location_++;
@@ -99,7 +106,9 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
                                              current);
                         break;
                 } else if (token.size() == 1 && token[0] == ';') {
-                        throw(std::runtime_error("can't find value: " + token));
+                        throw(std::runtime_error(
+                            token + ": Config file .. Can't find value: line " +
+                            tokens[*i].getLineNumber()));
                         ConfigTree::setValue(token, current);
                 }
                 ++*i;

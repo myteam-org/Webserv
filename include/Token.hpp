@@ -24,16 +24,16 @@ enum TokenType {
 
 class Token {
        public:
-        Token(const std::string& text, int line);
+        Token(const std::string& text, const std::string& line);
         ~Token();
 
         std::string getText() const;
-        int getLineNumber() const;
+        std::string getLineNumber() const;
         TokenType getType() const;
 
        private:
         std::string text_;
-        int lineNumber_;
+        std::string lineNumber_;
         TokenType type_;
         void setType_(const std::string& text);
 };

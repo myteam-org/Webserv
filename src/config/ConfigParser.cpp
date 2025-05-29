@@ -39,7 +39,7 @@ void ConfigParser::tokenize_(std::string& filename) {
                 std::istringstream tokenStream(oneLine);
                 std::string token;
                 while (tokenStream >> token) {  // 空白区切りでtokenをset
-                        Token newToken(token, lineCount);
+                        Token newToken(token, oss.str());
                         this->tokens_.push_back(newToken);
                 }
         }

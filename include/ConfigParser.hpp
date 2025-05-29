@@ -4,6 +4,7 @@ class Token;
 
 #include <sys/stat.h>
 
+#include <cstdlib>
 #include <fstream>
 #include <string>
 #include <vector>

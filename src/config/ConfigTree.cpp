@@ -2,14 +2,7 @@
 
 ConfigTree::ConfigTree(const ConfigParser& parser)
     : parser(parser), depth_(0), location_(0) {
-        try {
-                makeConfTree_(parser);
-        } catch (const std::exception& e) {
-                std::cerr << e.what() << std::endl;
-                deleteTree_(this->root_);
-                this->root_ = NULL;
-                throw;
-        }
+      makeConfTree_(parser);
 }
 
 ConfigTree::~ConfigTree() {
@@ -22,7 +15,7 @@ ConfigTree::~ConfigTree() {
 ConfigNode* ConfigTree::getRoot() const { return (this->root_); }
 
 void ConfigTree::makeConfTree_(const ConfigParser& parser) {
-        this->layers_[0] = new ConfigNode(Token("root", "99"));
+        this->layers_[0] = new ConfigNode(Token("root", 99));
         this->root_ = this->layers_[0];
         std::vector<Token> tokens = parser.getTokens();
 
@@ -46,27 +39,26 @@ void ConfigTree::makeConfTree_(const ConfigParser& parser) {
                         ConfigTree::addChildSetValue(
                             tokens, &i, layers_[depth_ + 1], layers_[depth_]);
                 } else {
-                        throw(std::runtime_error(
-                            token + ": Config file syntax error: line " +
-                            tokens[i].getLineNumber()));
+                        std::cerr << token << ": Config file syntax error: line " << tokens[i].getLineNumber() << std::endl;
+                        std::exit(1);
                 }
         }
 }
 
 void ConfigTree::updateDepth_(const std::string& token,
-                              const std::string& lineNumber) {
+                              const int lineNumber) {
         if (token == "{") {
                 this->depth_++;
         } else if (token == "}") {
                 this->depth_--;
-                if (this->depth_ < 0)
-                        throw(std::runtime_error(
-                            token + ": Config brace close error: line " +
-                            lineNumber));
-                if (this->depth_ == 0 && location_ == 0)
-                        throw(std::runtime_error(
-                            token + ": Config location error: line " +
-                            lineNumber));
+                if (this->depth_ < 0) {
+                        std::cerr << token << ":Config brace close error: line " << lineNumber << std::endl;
+                        std::exit(1);
+                }
+                if (this->depth_ == 0 && location_ == 0) {
+                        std::cerr << token << ":Config location error: line " << lineNumber << std::endl;
+                        std::exit(1);
+                }
         }
 }
 
@@ -78,8 +70,10 @@ void ConfigTree::addChild(const Token& token, ConfigNode*& current,
 }
 
 void ConfigTree::setValue(const std::string& token, ConfigNode* node) {
-        if (token.size() == 1 && token[0] == ';')
-                throw(std::runtime_error("can't find value: " + token));
+        if (token.size() == 1 && token[0] == ';'){
+              std::cerr << token << ": Can't find value" << std::endl;
+              std::exit(1);
+        }
         node->getValues().push_back(token);
 }
 
@@ -90,10 +84,10 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
 
         ConfigTree::addChild(tokens[*i], current, parent);
         ++*i;
-        if (*i >= tokens.size())
-                throw(std::runtime_error(token +
-                                         ": Config no token error: line " +
-                                         tokens[*i].getLineNumber()));
+        if (*i >= tokens.size()) {
+                std::cerr << token << ": Config no token error: line " << tokens[*i].getLineNumber() << std::endl;
+                std::exit(1);
+        }
         if (kind == LOCATION) {
                 ConfigTree::setValue(token, current);
                 this->location_++;
@@ -106,10 +100,8 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
                                              current);
                         break;
                 } else if (token.size() == 1 && token[0] == ';') {
-                        throw(std::runtime_error(
-                            token + ": Config file .. Can't find value: line " +
-                            tokens[*i].getLineNumber()));
-                        ConfigTree::setValue(token, current);
+                        std::cerr << token << ": Config file .. Can't find value: line " << tokens[*i].getLineNumber() << std::endl;
+                        std::exit(1);
                 }
                 ++*i;
         }

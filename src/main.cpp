@@ -27,10 +27,14 @@ std::string setFile(int argc, char** argv) {
 void checkFile(std::string& filename) {
         struct stat s;
 
-        if (stat(filename.c_str(), &s) != 0)
-                throw std::runtime_error("Failed to stat file: " + filename);
-        if (s.st_mode & S_IFDIR)
-                throw std::runtime_error(filename + " is a directory");
+        if (stat(filename.c_str(), &s) != 0) {
+            std::cerr << "Failed to stat file: " << filename << std::endl;
+            std::exit(1);
+        }
+        if (s.st_mode & S_IFDIR) {
+            std::cerr << filename << ": is a directory" << std::endl;
+            std::exit(1);
+        }
 }
 
 int main(int argc, char** argv) {
@@ -39,13 +43,9 @@ int main(int argc, char** argv) {
         if (checkArgc(argc) == false) return (1);
         std::string confFile = setFile(argc, argv);
 
-        try {
-                checkFile(confFile);
+        checkFile(confFile);
 
-                Config config(confFile);
-                config.printTree(config.getTree().getRoot(), 0);
-        } catch (const std::exception& e) {
-                return (1);
-        }
+        Config config(confFile);
+        config.printTree(config.getTree().getRoot(), 0);
         return (0);
 }

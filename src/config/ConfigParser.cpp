@@ -1,8 +1,6 @@
 #include "ConfigParser.hpp"
 #include <sstream>
 
-// #include <stdexcept>
-
 ConfigParser::ConfigParser(std::string& filename) { tokenize_(filename); }
 
 ConfigParser::~ConfigParser() {}
@@ -13,8 +11,10 @@ const std::vector<Token>& ConfigParser::getTokens() const {
 
 void ConfigParser::tokenize_(std::string& filename) {
         std::ifstream file(filename.c_str());
-        if (!file.is_open())
-                throw std::runtime_error("Failed to open file: " + filename);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << filename << std::endl;
+            std::exit(1);
+        }
 
         std::string line;
         int lineCount = 0;
@@ -29,17 +29,16 @@ void ConfigParser::tokenize_(std::string& filename) {
                               1);  // 末尾の空白を削除
                 lineCount++;
 
-                std::ostringstream  oss;
-                oss << lineCount;
                 char c = oneLine[oneLine.size() - 1];
-                if (!(c == '{' || c == '}' || c == ';' || oneLine.empty()))
-                        throw(std::runtime_error(
-                            "Syntax error at the end of the line: line: line " + oss.str()));
+                if (!(c == '{' || c == '}' || c == ';' || oneLine.empty())) {
+                    std::cerr << "Syntax error at the end of the line: line " << lineCount << std::endl;
+                    std::exit(1);
+                }
 
                 std::istringstream tokenStream(oneLine);
                 std::string token;
                 while (tokenStream >> token) {  // 空白区切りでtokenをset
-                        Token newToken(token, oss.str());
+                        Token newToken(token, lineCount);
                         this->tokens_.push_back(newToken);
                 }
         }

@@ -5,17 +5,11 @@ class ConfigParser;
 
 #include <sys/stat.h>
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <stdexcept>
 #include <string>
-#include <vector>
 
 #include "ConfigNode.hpp"
 #include "ConfigParser.hpp"
 #include "ConfigTree.hpp"
-#include "Token.hpp"
 
 #define FILE_NAME "./config_file/default.conf"
 

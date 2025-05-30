@@ -3,10 +3,6 @@
 #include "Config.hpp"
 #include "ConfigTree.hpp"
 
-void checkInterpreter() {
-        // TODO
-}
-
 bool checkArgc(int argc) {
         if (argc > 2) {
                 std::cerr << "Argument error" << std::endl;
@@ -38,8 +34,6 @@ void checkFile(std::string& filename) {
 }
 
 int main(int argc, char** argv) {
-        signal(SIGPIPE, SIG_IGN);
-        checkInterpreter();  // TODO
         if (checkArgc(argc) == false) return (1);
         std::string confFile = setFile(argc, argv);
 

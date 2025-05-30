@@ -2,7 +2,6 @@
 
 Config::Config(const std::string& filename)
     : parser_(const_cast<std::string&>(filename)), tree_(parser_) {
-
         // checkTree(); TODO
 }
 
@@ -12,9 +11,7 @@ ConfigParser& Config::getParser() { return (this->parser_); }
 
 const ConfigTree& Config::getTree() const { return (this->tree_); }
 
-void Config::printTree() {
-    printTreeRecursion(Config::getTree().getRoot(), 0);
-}
+void Config::printTree() { printTreeRecursion(Config::getTree().getRoot(), 0); }
 
 void Config::printTreeRecursion(ConfigNode* node, int depth) {
         if (!node) return;
@@ -30,5 +27,5 @@ void Config::printTreeRecursion(ConfigNode* node, int depth) {
         for (std::vector<ConfigNode*>::iterator it =
                  node->getChildren().begin();
              it != node->getChildren().end(); ++it)
-             printTreeRecursion(*it, depth + 1);
+                printTreeRecursion(*it, depth + 1);
 }

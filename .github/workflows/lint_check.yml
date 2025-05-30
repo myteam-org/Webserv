@@ -18,7 +18,7 @@ jobs:
 
       - name: Run cpplint with failure on warning
         run: |
-          OUTPUT=$(find . -name "*.cpp" -o -name "*.h" | xargs cpplint 2>&1)
+          OUTPUT=$(find . -name "*.cpp" -o -name "*.h" | xargs cpplint)
           echo "$OUTPUT"
           echo "$OUTPUT" | grep -qE "^[^:]+:[0-9]+:" && {
           echo "cpplint found issues"

@@ -24,7 +24,7 @@ add_library(my_math STATIC
 
 # テストコードのソースファイルを指定
 add_executable(test_math
-    unit_tests_sample/tests/test_math.cpp
+    unit_test_sample/tests/test_math.cpp
 )
 
 # テスト実行ファイルに必要なライブラリをリンク

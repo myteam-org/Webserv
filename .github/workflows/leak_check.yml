@@ -6,6 +6,7 @@ on:
       - '**.cpp'
       - '**.h'
       - Makefile
+      - '**leak_check.yml'
   pull_request:
 
 jobs:
@@ -23,4 +24,4 @@ jobs:
         run: make 
 
       - name: Run valgrind on test binary
-        run: valgrind --leak-check=full --error-exitcode=1 ./WebServ cofig_file/default.conf
+        run: valgrind --leak-check=full --error-exitcode=1 ./webserv cofig_file/default.conf

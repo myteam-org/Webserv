@@ -16,7 +16,11 @@ jobs:
       - name: Install cpplint
         run: pip install cpplint
 
-      - name: Run cpplint
+      - name: Run cpplint with failure on warning
         run: |
-          CONFIG=$(cat CPPLINT.cfg)
-          find . -name "*.cpp" -o -name "*.h" | xargs cpplint --$CONFIG
+          OUTPUT=$(find . -name "*.cpp" -o -name "*.h" | xargs cpplint 2>&1)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -qE "^[^:]+:[0-9]+:" && {
+          echo "cpplint found issues"
+          exit 1
+          } || echo "cpplint passed"

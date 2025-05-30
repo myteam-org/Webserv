@@ -1,8 +1,8 @@
-# srcs/sources.cmake
+# unit_test_sample/srcs/srcs/sources.cmake
 set(MY_MATH_SOURCES
-    {CMAKE_CURRENT_LIST_DIR}/math.cpp
+    unit_test_sample/srcs/math.cpp
 )
 
 set(MY_MATH_HEADERS
-	{CMAKE_CURRENT_LIST_DIR}/math.h
+	unit_test_sample/srcs/math.h
 )

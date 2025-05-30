@@ -17,6 +17,7 @@ enable_testing()
 
 # 以下はサンプルコード。unit_test_sample　以下参照。実際の実装時には置き換える必要あり。
 # 本体コードをライブラリとして定義。ソースは肥大化するためsources.cmakeから取得する。
+
 include(unit_test_sample/srcs/sources.cmake)
 add_library(my_math STATIC
 	${MY_MATH_SOURCES}

@@ -3,7 +3,7 @@
 #include "Validator.hpp"
 
 ConfigTree::ConfigTree(const ConfigParser& parser) : parser(parser) {
-        for (int i = 0; i < 16; ++i) keyFlag_[i] = 0;
+        std::fill(keyFlag_, keyFlag_ + 16, 0);
         makeConfTree_(parser);
 }
 

@@ -1,7 +1,9 @@
 #include "ConfigTree.hpp"
+#include "Token.hpp"
 
 ConfigTree::ConfigTree(const ConfigParser& parser)
-    : parser(parser), depth_(0), location_(0) {
+    : parser(parser) {
+      for (int i = 0; i < 16; ++i) keyFlag_[i] = 0;
       makeConfTree_(parser);
 }
 
@@ -18,26 +20,27 @@ void ConfigTree::makeConfTree_(const ConfigParser& parser) {
         this->layers_[0] = new ConfigNode(Token("root", 99));
         this->root_ = this->layers_[0];
         std::vector<Token> tokens = parser.getTokens();
-
+        
         for (size_t i = 0; i < tokens.size(); ++i) {
+                int depth = this->keyFlag_[BRACE];
                 TokenType kind = tokens[i].getType();
                 const std::string token = tokens[i].getText();
 
-                Validator::checkSyntaxErr(tokens[i], depth_);
+                Validator::checkSyntaxErr(tokens[i], depth);
                 if (kind == BRACE) {
                         updateDepth_(token, tokens[i].getLineNumber());
                 } else if (kind == SERVER || kind == ERR_PAGE) {
-                        ConfigTree::addChild(tokens[i], layers_[depth_ + 1],
-                                             layers_[depth_]);
+                        ConfigTree::addChild(tokens[i], layers_[depth + 1],
+                                             layers_[depth]);
                 } else if (i > 0 && (tokens[i - 1].getText() == "error_page")) {
-                        // Validation::numberAndFile(tokens, i);
+                        // Validator::numberAndFile(tokens, i);
                         ConfigTree::addChildSetValue(tokens, &i,
-                                                     layers_[depth_ + 2],
-                                                     layers_[depth_ + 1]);
+                                                     layers_[depth + 2],
+                                                     layers_[depth + 1]);
                 } else if (kind == LOCATION ||
                            (kind >= LISTEN && kind <= RETURN)) {
                         ConfigTree::addChildSetValue(
-                            tokens, &i, layers_[depth_ + 1], layers_[depth_]);
+                            tokens, &i, layers_[depth + 1], layers_[depth]);
                 } else {
                         std::cerr << token << ": Config file syntax error: line " << tokens[i].getLineNumber() << std::endl;
                         std::exit(1);
@@ -48,14 +51,14 @@ void ConfigTree::makeConfTree_(const ConfigParser& parser) {
 void ConfigTree::updateDepth_(const std::string& token,
                               const int lineNumber) {
         if (token == "{") {
-                this->depth_++;
+                this->keyFlag_[BRACE]++;
         } else if (token == "}") {
-                this->depth_--;
-                if (this->depth_ < 0) {
+                this->keyFlag_[BRACE]--;
+                if (this->keyFlag_[BRACE] < 0) {
                         std::cerr << token << ":Config brace close error: line " << lineNumber << std::endl;
                         std::exit(1);
                 }
-                if (this->depth_ == 0 && location_ == 0) {
+                if (this->keyFlag_[BRACE] == 0 && keyFlag_[LOCATION] == 0) {
                         std::cerr << token << ":Config location error: line " << lineNumber << std::endl;
                         std::exit(1);
                 }
@@ -66,7 +69,7 @@ void ConfigTree::addChild(const Token& token, ConfigNode*& current,
                           ConfigNode* parent) {
         current = new ConfigNode(token);
         parent->getChildren().push_back(current);
-        if (token.getType() == SERVER) this->location_ = 0;
+        if (token.getType() == SERVER) this->keyFlag_[LOCATION] = 0;
 }
 
 void ConfigTree::setValue(const std::string& token, ConfigNode* node) {
@@ -87,7 +90,7 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
         ++*i;
         if (kind == LOCATION) {
                 ConfigTree::setValue(token, current);
-                this->location_++;
+                this->keyFlag_[LOCATION]++;
                 return;
         }
         while (*i < tokens.size()) {

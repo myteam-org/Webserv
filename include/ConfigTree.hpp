@@ -22,8 +22,9 @@ class ConfigTree {
                               ConfigNode*& current, ConfigNode* parent);
 
        private:
-        int depth_;
-        int location_;
+        int keyFlag_[16];
+        // int depth_;
+        // int location_;
         ConfigNode* root_;
         ConfigNode* layers_[5];
         void makeConfTree_(const ConfigParser& parser);

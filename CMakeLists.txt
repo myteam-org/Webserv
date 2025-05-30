@@ -13,15 +13,16 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# 本体コードをライブラリとして定義
-add_library(my_math STATIC
-    src/math.cpp
-    src/math.h
-)
-
-# テストコードのビルド
 enable_testing()
 
+# 以下はサンプルコード。unit_test_sample　以下参照。実際の実装時には置き換える必要あり。
+# 本体コードをライブラリとして定義。ソースは肥大化するためsources.cmakeから取得する。
+add_library(my_math STATIC
+	${MY_MATH_SOURCES}
+	${MY_MATH_HEADERS}
+)
+
+# テストコードのソースファイルを指定
 add_executable(test_math
     unit_tests/test_math.cpp
 )

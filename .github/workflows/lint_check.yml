@@ -18,7 +18,7 @@ jobs:
 
       - name: Run cpplint with failure on warning
         run: |
-          LINT_SETTING = (cat ./CPPLINT.cfg)
+          LINT_SETTING = $(cat ./CPPLINT.cfg)
           OUTPUT=$(find . -name "*.cpp" -o -name "*.h" | xargs cpplint --$LINT_SETTING)
           echo "$OUTPUT"
           echo "$OUTPUT" | grep -qE "^[^:]+:[0-9]+:" && {

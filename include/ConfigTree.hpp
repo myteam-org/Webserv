@@ -3,10 +3,8 @@
 class ConfigNode;
 class ConfigParser;
 
-#include "ConfigNode.hpp"
 #include "ConfigParser.hpp"
 #include "Token.hpp"
-#include "Validator.hpp"
 
 class ConfigTree {
        public:
@@ -22,11 +20,11 @@ class ConfigTree {
         ConfigNode* layers_[5];
 
         void makeConfTree_(const ConfigParser& parser);
+        void updateDepth_(const std::string& token, const int lineNumber);
+        void resetKeyFlag_(const int keyType);
         void addChild_(const Token& token, ConfigNode*& current,
                        ConfigNode* parent);
         void setValue_(const Token& token, ConfigNode* node);
-        void updateDepth_(const std::string& token, const int lineNumber);
-        void resetKeyFlag_(const int keyType);
         void errExit_(const std::string& str1, const std::string& str2,
                       const int number);
         void deleteTree_(ConfigNode* node);

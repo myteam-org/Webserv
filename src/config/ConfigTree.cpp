@@ -1,7 +1,5 @@
 #include "ConfigTree.hpp"
 
-#include "ConfigParser.hpp"
-#include "Token.hpp"
 #include "Validator.hpp"
 
 ConfigTree::ConfigTree(const ConfigParser& parser) : parser(parser) {
@@ -90,7 +88,10 @@ void ConfigTree::setValue_(const Token& token, ConfigNode* node) {
 void ConfigTree::errExit_(const std::string& str1, const std::string& str2,
                           const int number) {
         std::cerr << str1 << str2 << number << std::endl;
-        deleteTree_(this->root_);
+        if (this->root_) {
+                deleteTree_(this->root_);
+                this->root_ = NULL;
+        }
         std::exit(1);
 }
 

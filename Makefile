@@ -1,4 +1,4 @@
-NAME	= Webserv
+NAME	= webserv
 CPP	= c++
 CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
 # CPPFLAG += -g -fsanitize=address

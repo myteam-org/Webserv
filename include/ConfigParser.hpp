@@ -21,6 +21,6 @@ class ConfigParser {
         const std::vector<Token>& getTokens() const;
 
        private:
-        void tokenize_(std::string& filename);
+        void makeTokenList_(std::string& filename);
         std::vector<Token> tokens_;
 };

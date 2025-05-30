@@ -46,6 +46,6 @@ int main(int argc, char** argv) {
         checkFile(confFile);
 
         Config config(confFile);
-        config.printTree(config.getTree().getRoot(), 0);
+        config.printTree();
         return (0);
 }

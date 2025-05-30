@@ -22,7 +22,8 @@ class Config {
         explicit Config(const std::string& filename);
         ~Config();
 
-        void printTree(ConfigNode* node, int depth = 0);
+        void printTree();
+        void printTreeRecursion(ConfigNode* node, int depth = 0);
         ConfigParser& getParser();
         const ConfigTree& getTree() const;
 };

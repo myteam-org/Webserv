@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-ConfigParser::ConfigParser(std::string& filename) { tokenize_(filename); }
+ConfigParser::ConfigParser(std::string& filename) { makeTokenList_(filename); }
 
 ConfigParser::~ConfigParser() {}
 
@@ -10,7 +10,7 @@ const std::vector<Token>& ConfigParser::getTokens() const {
         return (this->tokens_);
 }
 
-void ConfigParser::tokenize_(std::string& filename) {
+void ConfigParser::makeTokenList_(std::string& filename) {
         std::ifstream file(filename.c_str());
         if (!file.is_open()) {
                 std::cerr << "Failed to open file: " << filename << std::endl;

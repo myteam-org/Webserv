@@ -1,0 +1,26 @@
+name: Leak Check (Valgrind - Make)
+
+on:
+  push:
+    paths:
+      - '**.cpp'
+      - '**.h'
+      - Makefile
+  pull_request:
+
+jobs:
+  leakcheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install valgrind
+        run: sudo apt-get update && sudo apt-get install -y valgrind build-essential
+
+      - name: Build test runner
+        run: make 
+
+      - name: Run valgrind on test binary
+        run: valgrind --leak-check=full --error-exitcode=1 ./WebServ cofig_file/default.conf

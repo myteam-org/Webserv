@@ -1,10 +1,10 @@
 #include "ConfigTree.hpp"
+
 #include "Token.hpp"
 
-ConfigTree::ConfigTree(const ConfigParser& parser)
-    : parser(parser) {
-      for (int i = 0; i < 16; ++i) keyFlag_[i] = 0;
-      makeConfTree_(parser);
+ConfigTree::ConfigTree(const ConfigParser& parser) : parser(parser) {
+        for (int i = 0; i < 16; ++i) keyFlag_[i] = 0;
+        makeConfTree_(parser);
 }
 
 ConfigTree::~ConfigTree() {
@@ -20,7 +20,7 @@ void ConfigTree::makeConfTree_(const ConfigParser& parser) {
         this->layers_[0] = new ConfigNode(Token("root", 99));
         this->root_ = this->layers_[0];
         std::vector<Token> tokens = parser.getTokens();
-        
+
         for (size_t i = 0; i < tokens.size(); ++i) {
                 int depth = this->keyFlag_[BRACE];
                 TokenType kind = tokens[i].getType();
@@ -34,34 +34,30 @@ void ConfigTree::makeConfTree_(const ConfigParser& parser) {
                                              layers_[depth]);
                 } else if (i > 0 && (tokens[i - 1].getText() == "error_page")) {
                         // Validator::numberAndFile(tokens, i);
-                        ConfigTree::addChildSetValue(tokens, &i,
-                                                     layers_[depth + 2],
-                                                     layers_[depth + 1]);
+                        ConfigTree::addChildSetValue(
+                            tokens, &i, layers_[depth + 2], layers_[depth + 1]);
                 } else if (kind == LOCATION ||
                            (kind >= LISTEN && kind <= RETURN)) {
                         ConfigTree::addChildSetValue(
                             tokens, &i, layers_[depth + 1], layers_[depth]);
                 } else {
-                        std::cerr << token << ": Config file syntax error: line " << tokens[i].getLineNumber() << std::endl;
-                        std::exit(1);
+                        errExit_(token, ": Config file syntax error: line ",
+                                 tokens[i].getLineNumber());
                 }
         }
 }
 
-void ConfigTree::updateDepth_(const std::string& token,
-                              const int lineNumber) {
+void ConfigTree::updateDepth_(const std::string& token, const int lineNumber) {
         if (token == "{") {
                 this->keyFlag_[BRACE]++;
         } else if (token == "}") {
                 this->keyFlag_[BRACE]--;
-                if (this->keyFlag_[BRACE] < 0) {
-                        std::cerr << token << ":Config brace close error: line " << lineNumber << std::endl;
-                        std::exit(1);
-                }
-                if (this->keyFlag_[BRACE] == 0 && keyFlag_[LOCATION] == 0) {
-                        std::cerr << token << ":Config location error: line " << lineNumber << std::endl;
-                        std::exit(1);
-                }
+                if (this->keyFlag_[BRACE] < 0)
+                        errExit_(token, ":Config brace close error: line ",
+                                 lineNumber);
+                if (this->keyFlag_[BRACE] == 0 && keyFlag_[LOCATION] == 0)
+                        errExit_(token, ":Config location error: line ",
+                                 lineNumber);
         }
 }
 
@@ -73,9 +69,9 @@ void ConfigTree::addChild(const Token& token, ConfigNode*& current,
 }
 
 void ConfigTree::setValue(const std::string& token, ConfigNode* node) {
-        if (token.size() == 1 && token[0] == ';'){
-              std::cerr << token << ": Can't find value" << std::endl;
-              std::exit(1);
+        if (token.size() == 1 && token[0] == ';') {
+                std::cerr << token << ": Can't find value" << std::endl;
+                std::exit(1);
         }
         node->getValues().push_back(token);
 }
@@ -100,11 +96,19 @@ void ConfigTree::addChildSetValue(const std::vector<Token>& tokens, size_t* i,
                                              current);
                         break;
                 } else if (token.size() == 1 && token[0] == ';') {
-                        std::cerr << token << ": Config file .. Can't find value: line " << lineNumber << std::endl;
-                        std::exit(1);
+                        errExit_(token,
+                                 ": Config file .. Can't find value: line ",
+                                 lineNumber);
                 }
                 ++*i;
         }
+}
+
+void ConfigTree::errExit_(const std::string& str1, const std::string& str2,
+                          const int number) {
+        std::cerr << str1 << str2 << number << std::endl;
+        deleteTree_(this->root_);
+        std::exit(1);
 }
 
 void ConfigTree::deleteTree_(ConfigNode* node) {

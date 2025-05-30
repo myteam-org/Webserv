@@ -1,34 +1,29 @@
 #pragma once
 
-class ConfigNode;
+class ConfigTree;
+class ConfigParser;
 
-# include "ConfigNode.hpp"
-# include "Validation.hpp"
-# include <iostream>
-# include <fstream>
-# include <sstream>
-# include <string>
-# include <sys/stat.h>
-# include <stdexcept>
-# include <vector>
+#include <sys/stat.h>
 
-# define FILE_NAME "./config_file/default.conf"
+#include <string>
+
+#include "ConfigNode.hpp"
+#include "ConfigParser.hpp"
+#include "ConfigTree.hpp"
+
+#define FILE_NAME "./config_file/default.conf"
 
 class Config {
-private:
-	std::vector<std::string>	_tokens;
-	int				_depth;
-	void				_makeToken(const std::string& filename);
-	void				_makeConfTree(const std::vector<std::string>& tokens);
-	void				_init();
-	void				_checkSyntaxErr(std::string token);
-	void				_updateDepth(const std::string& token);
-	void				_deleteTree(ConfigNode* node);
-public:
-	Config(const std::string& filename);
-	~Config();
+       private:
+        ConfigParser parser_;
+        ConfigTree tree_;
 
-	ConfigNode*	layers[5];
-	// ConfigNode*	mp[4];
-	void		printTree(ConfigNode* node, int depth = 0);
+       public:
+        explicit Config(const std::string& filename);
+        ~Config();
+
+        void printTree();
+        void printTreeRecursion(ConfigNode* node, int depth = 0);
+        ConfigParser& getParser();
+        const ConfigTree& getTree() const;
 };

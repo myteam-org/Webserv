@@ -8,10 +8,10 @@ class ConfigTokenizer;
 
 class ConfigParser {
        public:
-        explicit ConfigParser(const ConfigTokenizer& parser);
+        explicit ConfigParser(const ConfigTokenizer& tokenizer);
         ~ConfigParser();
 
-        ConfigTokenizer parser;
+        ConfigTokenizer tokens;
         ConfigNode* getRoot() const;
 
        private:
@@ -19,7 +19,7 @@ class ConfigParser {
         ConfigNode* root_;
         ConfigNode* layers_[5];
 
-        void makeConfTree_(const ConfigTokenizer& parser);
+        void makeConfTree_(const ConfigTokenizer& tokens);
         void updateDepth_(const std::string& token, const int lineNumber);
         void resetKeyFlag_(const int keyType);
         void addChild_(const Token& token, ConfigNode*& current,

@@ -15,15 +15,15 @@ class ConfigTokenizer;
 
 class Config {
        private:
-        ConfigTokenizer parser_;
-        ConfigParser tree_;
+        ConfigTokenizer tokenizer_;
+        ConfigParser parser_;
 
        public:
         explicit Config(const std::string& filename);
         ~Config();
 
-        void printTree();
-        void printTreeRecursion(ConfigNode* node, int depth = 0);
-        ConfigTokenizer& getParser();
-        const ConfigParser& getTree() const;
+        void printParser();
+        void printParserRecursion(ConfigNode* node, int depth = 0);
+        ConfigTokenizer& getTokenizer();
+        const ConfigParser& getParser() const;
 };

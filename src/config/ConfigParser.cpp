@@ -1,10 +1,12 @@
 #include "ConfigParser.hpp"
 
+#include "ConfigTokenizer.hpp"
 #include "Validator.hpp"
 
-ConfigParser::ConfigParser(const ConfigTokenizer& parser) : parser(parser) {
+ConfigParser::ConfigParser(const ConfigTokenizer& tokenizer) : tokens(tokenizer) {
         std::fill(keyFlag_, keyFlag_ + 16, 0);
-        makeConfTree_(parser);
+
+        makeConfTree_(tokenizer);
 }
 
 ConfigParser::~ConfigParser() {

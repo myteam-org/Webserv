@@ -1,19 +1,19 @@
 #include "Config.hpp"
 
 Config::Config(const std::string& filename)
-    : parser_(const_cast<std::string&>(filename)), tree_(parser_) {
+    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_) {
         // checkTree(); TODO
 }
 
 Config::~Config() {}
 
-ConfigTokenizer& Config::getParser() { return (this->parser_); }
+ConfigTokenizer& Config::getTokenizer() { return (this->tokenizer_); }
 
-const ConfigParser& Config::getTree() const { return (this->tree_); }
+const ConfigParser& Config::getParser() const { return (this->parser_); }
 
-void Config::printTree() { printTreeRecursion(Config::getTree().getRoot(), 0); }
+void Config::printParser() { printParserRecursion(Config::getParser().getRoot(), 0); }
 
-void Config::printTreeRecursion(ConfigNode* node, int depth) {
+void Config::printParserRecursion(ConfigNode* node, int depth) {
         if (!node) return;
 
         for (int i = 0; i < depth * 2; ++i) std::cout << " ";
@@ -27,5 +27,5 @@ void Config::printTreeRecursion(ConfigNode* node, int depth) {
         for (std::vector<ConfigNode*>::iterator it =
                  node->getChildren().begin();
              it != node->getChildren().end(); ++it)
-                printTreeRecursion(*it, depth + 1);
+                printParserRecursion(*it, depth + 1);
 }

@@ -40,6 +40,6 @@ int main(int argc, char** argv) {
         checkFile(confFile);
 
         Config config(confFile);
-        config.printTree();
+        config.printParser();
         return (0);
 }

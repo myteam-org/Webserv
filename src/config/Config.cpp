@@ -7,9 +7,9 @@ Config::Config(const std::string& filename)
 
 Config::~Config() {}
 
-ConfigParser& Config::getParser() { return (this->parser_); }
+ConfigTokenizer& Config::getParser() { return (this->parser_); }
 
-const ConfigTree& Config::getTree() const { return (this->tree_); }
+const ConfigParser& Config::getTree() const { return (this->tree_); }
 
 void Config::printTree() { printTreeRecursion(Config::getTree().getRoot(), 0); }
 

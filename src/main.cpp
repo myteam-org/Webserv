@@ -1,7 +1,7 @@
 #include <signal.h>
 
 #include "Config.hpp"
-#include "ConfigTree.hpp"
+#include "ConfigParser.hpp"
 
 bool checkArgc(int argc) {
         if (argc > 2) {

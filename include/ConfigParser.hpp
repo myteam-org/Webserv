@@ -1,26 +1,31 @@
 #pragma once
 
-class Token;
+class ConfigNode;
+class ConfigTokenizer;
 
-#include <sys/stat.h>
-
-#include <cstdlib>
-#include <fstream>
-#include <string>
-#include <vector>
-
+#include "ConfigTokenizer.hpp"
 #include "Token.hpp"
-
-#define FILE_NAME "./config_file/default.conf"
 
 class ConfigParser {
        public:
-        explicit ConfigParser(std::string& filename);
+        explicit ConfigParser(const ConfigTokenizer& parser);
         ~ConfigParser();
 
-        const std::vector<Token>& getTokens() const;
+        ConfigTokenizer parser;
+        ConfigNode* getRoot() const;
 
        private:
-        void makeTokenList_(std::string& filename);
-        std::vector<Token> tokens_;
+        int keyFlag_[16];
+        ConfigNode* root_;
+        ConfigNode* layers_[5];
+
+        void makeConfTree_(const ConfigTokenizer& parser);
+        void updateDepth_(const std::string& token, const int lineNumber);
+        void resetKeyFlag_(const int keyType);
+        void addChild_(const Token& token, ConfigNode*& current,
+                       ConfigNode* parent);
+        void setValue_(const Token& token, ConfigNode* node);
+        void errExit_(const std::string& str1, const std::string& str2,
+                      const int number);
+        void deleteTree_(ConfigNode* node);
 };

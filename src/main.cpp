@@ -1,7 +1,7 @@
 #include <signal.h>
 
 #include "Config.hpp"
-#include "ConfigTree.hpp"
+#include "ConfigParser.hpp"
 
 bool checkArgc(int argc) {
         if (argc > 2) {
@@ -40,6 +40,6 @@ int main(int argc, char** argv) {
         checkFile(confFile);
 
         Config config(confFile);
-        config.printTree();
+        config.printParser();
         return (0);
 }

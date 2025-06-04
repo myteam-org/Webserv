@@ -78,11 +78,11 @@
             "-pedantic",
             "-Iinclude",
             "-o",
-            "src/config/ConfigParser.o",
-            "src/config/ConfigParser.cpp"
+            "src/config/ConfigTokenizer.o",
+            "src/config/ConfigTokenizer.cpp"
         ],
         "directory": "/home/yotsurud/Desktop/42cursus/Webserv_yoshi",
-        "file": "src/config/ConfigParser.cpp"
+        "file": "src/config/ConfigTokenizer.cpp"
     },
     {
         "arguments": [
@@ -95,11 +95,11 @@
             "-pedantic",
             "-Iinclude",
             "-o",
-            "src/config/ConfigTree.o",
-            "src/config/ConfigTree.cpp"
+            "src/config/ConfigParser.o",
+            "src/config/ConfigParser.cpp"
         ],
         "directory": "/home/yotsurud/Desktop/42cursus/Webserv_yoshi",
-        "file": "src/config/ConfigTree.cpp"
+        "file": "src/config/ConfigParser.cpp"
     },
     {
         "arguments": [

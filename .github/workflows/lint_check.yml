@@ -1,0 +1,28 @@
+name: Lint (cpplint)
+
+on: [push, pull_request]
+
+jobs:
+  cpplint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+
+      - name: Install cpplint
+        run: pip install cpplint
+
+      - name: Run cpplint with failure on warning
+        run: |
+          LINT_SETTING=$(cat CPPLINT.cfg)
+          echo "Using Lint setting: $LINT_SETTING"
+          OUTPUT=$(find . -name "*.cpp" -o -name "*.h" | xargs cpplint --$LINT_SETTING)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -qE "^[^:]+:[0-9]+:" && {
+          echo "cpplint found issues"
+          exit 1
+          } || echo "cpplint passed"

@@ -1,4 +1,4 @@
-NAME	= Webserv
+NAME	= webserv
 CPP	= c++
 CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
 # CPPFLAG += -g -fsanitize=address
@@ -7,8 +7,8 @@ SRCS	= src/main.cpp \
 	  src/config/Config.cpp \
 	  src/config/ConfigNode.cpp \
 	  src/validator/Validator.cpp \
+	  src/config/ConfigTokenizer.cpp \
 	  src/config/ConfigParser.cpp \
-	  src/config/ConfigTree.cpp \
 	  src/config/Token.cpp
 
 OBJS	= $(SRCS:.cpp=.o)

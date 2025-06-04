@@ -1,7 +1,7 @@
 #pragma once
 
-class ConfigTree;
 class ConfigParser;
+class ConfigTokenizer;
 
 #include <sys/stat.h>
 
@@ -9,21 +9,21 @@ class ConfigParser;
 
 #include "ConfigNode.hpp"
 #include "ConfigParser.hpp"
-#include "ConfigTree.hpp"
+#include "ConfigTokenizer.hpp"
 
 #define FILE_NAME "./config_file/default.conf"
 
 class Config {
        private:
+        ConfigTokenizer tokenizer_;
         ConfigParser parser_;
-        ConfigTree tree_;
 
        public:
         explicit Config(const std::string& filename);
         ~Config();
 
-        void printTree();
-        void printTreeRecursion(ConfigNode* node, int depth = 0);
-        ConfigParser& getParser();
-        const ConfigTree& getTree() const;
+        void printParser();
+        void printParserRecursion(ConfigNode* node, int depth = 0);
+        ConfigTokenizer& getTokenizer();
+        const ConfigParser& getParser() const;
 };

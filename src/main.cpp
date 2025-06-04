@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <exception>
 
 #include "Config.hpp"
 #include "ConfigParser.hpp"
@@ -39,7 +40,12 @@ int main(int argc, char** argv) {
 
         checkFile(confFile);
 
-        Config config(confFile);
-        config.printParser();
+        try {
+                Config config(confFile);
+                config.printParser();
+        } catch (const std::exception& e) {
+                std::cerr << e.what() << std::endl;
+                return (1);
+        }
         return (0);
 }

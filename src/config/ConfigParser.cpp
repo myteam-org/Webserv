@@ -6,22 +6,20 @@
 
 ConfigParser::ConfigParser(const ConfigTokenizer& tokenizer) : tokens(tokenizer) {
         std::fill(keyFlag_, keyFlag_ + 16, 0);
-
         makeConfTree_(tokenizer);
 }
 
 ConfigParser::~ConfigParser() {
-        if (this->root_) {
-                deleteTree(this->root_);
-                this->root_ = NULL;
+        if (this->layers_[0]) {
+                deleteTree(this->layers_[0]);
+                this->layers_[0] = NULL;
         }
 }
 
-ConfigNode* ConfigParser::getRoot() const { return (this->root_); }
+ConfigNode* ConfigParser::getRoot() const { return (this->layers_[0]); }
 
 void ConfigParser::makeConfTree_(const ConfigTokenizer& parser) {
         this->layers_[0] = new ConfigNode(Token("root", 99));
-        this->root_ = this->layers_[0];
         std::vector<Token> tokens = parser.getTokens();
         
         for (size_t i = 0; i < tokens.size(); ++i) {
@@ -32,10 +30,6 @@ void ConfigParser::makeConfTree_(const ConfigTokenizer& parser) {
                 std::string num = ConfigTokenizer::numberToStr(tokens[i].getLineNumber());
                 if (Validator::checkSyntaxErr(tokens[i], depth) == false)
                         throwErr(token, ": Syntax error: line ", num);
-                // {
-                //         deleteTree(this->root_);
-                //         throw (std::runtime_error(token + ": Syntax error: line " + num));
-                // }
 
                 if (type == BRACE)
                         updateDepth_(token, lineNumber);
@@ -61,16 +55,8 @@ void ConfigParser::updateDepth_(const std::string& token,
                 this->keyFlag_[BRACE]--;
                 if (this->keyFlag_[BRACE] < 0)
                         throwErr(token, ":Config brace close error: line ", num);
-                // {
-                //         deleteTree(this->root_);
-                //         throw (std::runtime_error(token + ":Config brace close error: line " + num));
-                // }
                 if (this->keyFlag_[BRACE] == 0 && keyFlag_[LOCATION] == 0)
                         throwErr(token, ":Config location error: line ", num);
-                // {
-                //         deleteTree(this->root_);
-                //         throw (std::runtime_error(token + ":Config location error: line " + num));
-                // }
                 if (this->keyFlag_[BRACE] == 0) resetKeyFlag_(LOCATION);
                 if (this->keyFlag_[BRACE] == 0) resetKeyFlag_(SERVER);
         }
@@ -95,10 +81,6 @@ void ConfigParser::setValue_(const Token& token, ConfigNode* node) {
 
         if (text.size() == 1 && text[0] == ';')
                 throwErr(text, ": Can't find value: line ", num);
-        // {
-        //         deleteTree(this->root_);
-        //         throw (std::runtime_error(text + ": Can't find value: line " + num));
-        // }
         if (text[text.size() - 1] == ';') {
                 text = text.substr(0, text.size() - 1);
                 if (this->keyFlag_[ERR_PAGE] == 1) resetKeyFlag_(ERR_PAGE);
@@ -117,6 +99,6 @@ void ConfigParser::deleteTree(ConfigNode* node) {
 }
 
 void ConfigParser::throwErr(const std::string& str1, const std::string& str2, const std::string& str3) {
-        deleteTree(this->root_);
+        deleteTree(this->layers_[0]);
         throw (std::runtime_error(str1 + str2 + str3));
 }

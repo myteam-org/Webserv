@@ -14,7 +14,8 @@ class ConfigParser {
         ConfigTokenizer tokens;
         ConfigNode* getRoot() const;
         static void deleteTree(ConfigNode* node);
-        void throwErr(const std::string& str1, const std::string& str2, const std::string& str3);
+        void throwErr(const std::string& str1, const std::string& str2,
+                      const int number);
 
        private:
         int keyFlag_[16];

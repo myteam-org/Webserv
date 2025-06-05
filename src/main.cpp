@@ -1,4 +1,5 @@
 #include <signal.h>
+
 #include <exception>
 
 #include "Config.hpp"

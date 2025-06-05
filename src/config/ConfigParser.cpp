@@ -1,10 +1,12 @@
 #include "ConfigParser.hpp"
+
 #include <stdexcept>
 
 #include "ConfigTokenizer.hpp"
 #include "Validator.hpp"
 
-ConfigParser::ConfigParser(const ConfigTokenizer& tokenizer) : tokens(tokenizer) {
+ConfigParser::ConfigParser(const ConfigTokenizer& tokenizer)
+    : tokens(tokenizer) {
         std::fill(keyFlag_, keyFlag_ + 16, 0);
         makeConfTree_(tokenizer);
 }
@@ -21,15 +23,14 @@ ConfigNode* ConfigParser::getRoot() const { return (this->layers_[0]); }
 void ConfigParser::makeConfTree_(const ConfigTokenizer& parser) {
         this->layers_[0] = new ConfigNode(Token("root", 99));
         std::vector<Token> tokens = parser.getTokens();
-        
+
         for (size_t i = 0; i < tokens.size(); ++i) {
                 TokenType type = tokens[i].getType();
                 const std::string token = tokens[i].getText();
                 int depth = this->keyFlag_[BRACE];
                 int lineNumber = tokens[i].getLineNumber();
-                std::string num = ConfigTokenizer::numberToStr(tokens[i].getLineNumber());
                 if (Validator::checkSyntaxErr(tokens[i], depth) == false)
-                        throwErr(token, ": Syntax error: line ", num);
+                        throwErr(token, ": Syntax error: line ", lineNumber);
 
                 if (type == BRACE)
                         updateDepth_(token, lineNumber);
@@ -54,9 +55,11 @@ void ConfigParser::updateDepth_(const std::string& token,
         } else if (token == "}") {
                 this->keyFlag_[BRACE]--;
                 if (this->keyFlag_[BRACE] < 0)
-                        throwErr(token, ":Config brace close error: line ", num);
+                        throwErr(token, ":Config brace close error: line ",
+                                 lineNumber);
                 if (this->keyFlag_[BRACE] == 0 && keyFlag_[LOCATION] == 0)
-                        throwErr(token, ":Config location error: line ", num);
+                        throwErr(token, ":Config location error: line ",
+                                 lineNumber);
                 if (this->keyFlag_[BRACE] == 0) resetKeyFlag_(LOCATION);
                 if (this->keyFlag_[BRACE] == 0) resetKeyFlag_(SERVER);
         }
@@ -76,11 +79,11 @@ void ConfigParser::addChild_(const Token& token, ConfigNode*& current,
 
 void ConfigParser::setValue_(const Token& token, ConfigNode* node) {
         std::string text = token.getText();
-        std::string num = ConfigTokenizer::numberToStr(token.getLineNumber());
         Validator::checkSyntaxErr(token, this->keyFlag_[BRACE]);
 
         if (text.size() == 1 && text[0] == ';')
-                throwErr(text, ": Can't find value: line ", num);
+                throwErr(text, ": Can't find value: line ",
+                         token.getLineNumber());
         if (text[text.size() - 1] == ';') {
                 text = text.substr(0, text.size() - 1);
                 if (this->keyFlag_[ERR_PAGE] == 1) resetKeyFlag_(ERR_PAGE);
@@ -98,7 +101,9 @@ void ConfigParser::deleteTree(ConfigNode* node) {
         node = NULL;
 }
 
-void ConfigParser::throwErr(const std::string& str1, const std::string& str2, const std::string& str3) {
+void ConfigParser::throwErr(const std::string& str1, const std::string& str2,
+                            const int number) {
+        std::string num = ConfigTokenizer::numberToStr(number);
         deleteTree(this->layers_[0]);
-        throw (std::runtime_error(str1 + str2 + str3));
+        throw(std::runtime_error(str1 + str2 + num));
 }

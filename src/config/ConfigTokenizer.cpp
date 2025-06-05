@@ -32,12 +32,11 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
                 checkLineEnd(oneLine, lineCount);
 
                 std::istringstream tokenStream(oneLine);
-                std::istringstream* tokenStreamCopy = &tokenStream;
                 std::string token;
                 while (tokenStream >> token) {  // 空白区切りでtokenをset
                         Token newToken(token, lineCount);
                         this->tokens_.push_back(newToken);
-                        tokenStreamCopy->clear();
+                        tokenStream.clear();
                 }
         }
         file.close();

@@ -19,8 +19,10 @@ class ConfigTokenizer {
         ~ConfigTokenizer();
 
         const std::vector<Token>& getTokens() const;
+        static std::string numberToStr(int number);
 
        private:
-        void makeTokenList_(std::string& filename);
+        void makeTokenList_(std::ifstream& file);
+        void checkLineEnd(const std::string& line, const int lineCount);
         std::vector<Token> tokens_;
 };

@@ -11,21 +11,24 @@ class ConfigParser {
         explicit ConfigParser(const ConfigTokenizer& tokenizer);
         ~ConfigParser();
 
-        ConfigTokenizer tokens;
         ConfigNode* getRoot() const;
 
        private:
-        int keyFlag_[16];
+		static constexpr int kKeyFlagSize = 16;
+        static constexpr int kMaxLayerDepth = 5;
+
+        ConfigTokenizer tokens;
+        int keyFlag_[kKeyFlagSize];
         ConfigNode* root_;
-        ConfigNode* layers_[5];
+        ConfigNode* layers_[kMaxLayerDepth];
 
         void makeConfTree_(const ConfigTokenizer& tokens);
-        void updateDepth_(const std::string& token, const int lineNumber);
-        void resetKeyFlag_(const int keyType);
+        void updateDepth_(const std::string& token, int lineNumber);
+        void resetKeyFlag_(int keyType);
         void addChild_(const Token& token, ConfigNode*& current,
                        ConfigNode* parent);
         void setValue_(const Token& token, ConfigNode* node);
         void errExit_(const std::string& str1, const std::string& str2,
-                      const int number);
+                     int number);
         void deleteTree_(ConfigNode* node);
 };

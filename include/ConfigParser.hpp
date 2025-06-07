@@ -14,7 +14,7 @@ class ConfigParser {
         ConfigNode* getRoot() const;
         static void deleteTree(ConfigNode* node);
         void throwErr(const std::string& str1, const std::string& str2,
-                      const int number);
+                      int number);
 private:
 		static const int kKeyFlagSize = 16;
         static const int kMaxLayerDepth = 5;

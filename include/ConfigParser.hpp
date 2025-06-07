@@ -21,7 +21,7 @@ private:
 
         ConfigTokenizer tokens;
         int keyFlag_[kKeyFlagSize];
-        ConfigNode* root_;
+        // ConfigNode* root_;
         ConfigNode* layers_[kMaxLayerDepth];
 
         void makeConfTree_(const ConfigTokenizer& tokens);

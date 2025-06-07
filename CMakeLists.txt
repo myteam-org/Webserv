@@ -19,7 +19,9 @@ set(CMAKE_TEST_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 98)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # GoogleTestの取得・利用
 include(FetchContent)

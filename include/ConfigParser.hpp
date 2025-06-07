@@ -16,8 +16,8 @@ class ConfigParser {
         void throwErr(const std::string& str1, const std::string& str2,
                       const int number);
 private:
-		static constexpr int kKeyFlagSize = 16;
-        static constexpr int kMaxLayerDepth = 5;
+		static const int kKeyFlagSize = 16;
+        static const int kMaxLayerDepth = 5;
 
         ConfigTokenizer tokens;
         int keyFlag_[kKeyFlagSize];

@@ -12,8 +12,10 @@ class ConfigParser {
         ~ConfigParser();
 
         ConfigNode* getRoot() const;
-
-       private:
+        static void deleteTree(ConfigNode* node);
+        void throwErr(const std::string& str1, const std::string& str2,
+                      const int number);
+private:
 		static constexpr int kKeyFlagSize = 16;
         static constexpr int kMaxLayerDepth = 5;
 
@@ -28,7 +30,4 @@ class ConfigParser {
         void addChild_(const Token& token, ConfigNode*& current,
                        ConfigNode* parent);
         void setValue_(const Token& token, ConfigNode* node);
-        void errExit_(const std::string& str1, const std::string& str2,
-                     int number);
-        void deleteTree_(ConfigNode* node);
 };

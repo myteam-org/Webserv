@@ -11,7 +11,9 @@ ConfigTokenizer& Config::getTokenizer() { return (this->tokenizer_); }
 
 const ConfigParser& Config::getParser() const { return (this->parser_); }
 
-void Config::printParser() { printParserRecursion(Config::getParser().getRoot(), 0); }
+void Config::printParser() {
+        printParserRecursion(Config::getParser().getRoot(), 0);
+}
 
 void Config::printParserRecursion(ConfigNode* node, int depth) {
         if (!node) return;

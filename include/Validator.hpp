@@ -20,7 +20,7 @@ bool numberAndFile(const std::vector<std::string>& tokens, int i);
 bool path(const std::string& path, int select);
 bool method(const std::string& method);
 bool onOff(const std::string& onOff);
-void checkSyntaxErr(const Token& token, int depth);
+bool checkSyntaxErr(const Token& token, int depth);
 bool url(const std::string& url);
 // bool	duplicate(const ConfigNode* root);
 }  // namespace Validator

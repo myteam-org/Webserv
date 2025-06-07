@@ -1,9 +1,14 @@
 #include "ConfigTokenizer.hpp"
 
+#include <fstream>
 #include <sstream>
+#include <stdexcept>
 
 ConfigTokenizer::ConfigTokenizer(std::string& filename) {
-        makeTokenList_(filename);
+        std::ifstream file(filename.c_str());
+        if (!file)
+                throw(std::runtime_error("Failed to open file: " + filename));
+        makeTokenList_(file);
 }
 
 ConfigTokenizer::~ConfigTokenizer() {}
@@ -12,13 +17,7 @@ const std::vector<Token>& ConfigTokenizer::getTokens() const {
         return (this->tokens_);
 }
 
-void ConfigTokenizer::makeTokenList_(std::string& filename) {
-        std::ifstream file(filename.c_str());
-        if (!file.is_open()) {
-                std::cerr << "Failed to open file: " << filename << std::endl;
-                std::exit(1);
-        }
-
+void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
         std::string line;
         int lineCount = 0;
         while (std::getline(file, line)) {
@@ -26,26 +25,36 @@ void ConfigTokenizer::makeTokenList_(std::string& filename) {
                 std::string oneLine;
 
                 std::getline(iss, oneLine, '#');  // #以降を削除
-                oneLine.erase(
-                    0, oneLine.find_first_not_of(" \t"));  // 先頭の空白を削除
-                oneLine.erase(oneLine.find_last_not_of(" \t") +
-                              1);  // 末尾の空白を削除
+                oneLine.erase(0, oneLine.find_first_not_of(" \t")); // 前方の空白を削除
+                oneLine.erase(oneLine.find_last_not_of(" \t") + 1); // 後方の空白を削除
                 lineCount++;
 
-                char c = oneLine[oneLine.size() - 1];
-                if (!(oneLine.empty() || c == '{' || c == '}' || c == ';')) {
-                        std::cerr
-                            << "Syntax error at the end of the line: line "
-                            << lineCount << std::endl;
-                        std::exit(1);
-                }
+                checkLineEnd(oneLine, lineCount);
 
                 std::istringstream tokenStream(oneLine);
                 std::string token;
                 while (tokenStream >> token) {  // 空白区切りでtokenをset
                         Token newToken(token, lineCount);
                         this->tokens_.push_back(newToken);
+                        tokenStream.clear();
                 }
         }
         file.close();
+}
+
+void ConfigTokenizer::checkLineEnd(const std::string& line,
+                                   const int lineCount) {
+        char c = line[line.size() - 1];
+        if (!(line.empty() || c == '{' || c == '}' || c == ';')) {
+                throw(std::runtime_error(
+                    line + ": Syntax error at the end of the line: line " +
+                    numberToStr(lineCount)));
+        }
+}
+
+std::string ConfigTokenizer::numberToStr(int number) {
+        std::stringstream ss;
+        ss << number;
+        std::string str = ss.str();
+        return (str);
 }

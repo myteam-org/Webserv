@@ -1,1 +1,6 @@
 .cache/
+build/
+./compile_commands.json
+CTestTestfile.cmake
+.o
+*.json

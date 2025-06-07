@@ -42,8 +42,7 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
         file.close();
 }
 
-void ConfigTokenizer::checkLineEnd(const std::string& line,
-                                   const int lineCount) {
+void ConfigTokenizer::checkLineEnd(std::string& line, int lineCount) {
         char c = line[line.size() - 1];
         if (!(line.empty() || c == '{' || c == '}' || c == ';')) {
                 throw(std::runtime_error(

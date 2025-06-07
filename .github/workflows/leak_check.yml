@@ -1,13 +1,12 @@
 name: Leak Check (Valgrind - Make)
 
 on:
-  push:
+  pull_request:
     paths:
       - '**.cpp'
       - '**.h'
       - Makefile
       - '**leak_check.yml'
-  pull_request:
 
 jobs:
   leakcheck:

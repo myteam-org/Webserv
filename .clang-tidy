@@ -1,0 +1,53 @@
+---
+Checks: >
+  -*,
+  readability-*,
+  google-*,
+  misc-*,
+  performance-*,
+  bugprone-*,
+  -modernize-*,
+  -readability-implicit-bool-conversion,
+  -readability-braces-around-statements,
+  -performance-avoid-endl,
+  -misc-include-cleaner,
+  -performance-enum-size,
+
+
+CheckOptions:
+  # インデント幅を4スペースに設定
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: 1
+  
+  # 関数の最大行数を30行に制限
+  - key: readability-function-size.LineThreshold
+    value: 30
+  
+  # 関数の最大文数も制限（オプション）
+  - key: readability-function-size.StatementThreshold
+    value: 50
+  
+  # 関数の最大パラメータ数を制限（オプション）
+  - key: readability-function-size.ParameterThreshold
+    value: 8
+  
+  # 変数名の最小長
+  - key: readability-identifier-length.MinimumVariableNameLength
+    value: 2
+  
+  # ループ変数名の最小長（i, jなどを許可）
+  - key: readability-identifier-length.MinimumLoopCounterNameLength
+    value: 1
+
+# 特定のファイルやディレクトリを除外
+HeaderFilterRegex: '.*'
+
+# 警告をエラーとして扱うかどうか
+WarningsAsErrors: ''
+
+# フォーマット設定（clang-formatと連携）
+FormatStyle: google
+
+# compile_commands.jsonがある場合は自動的に使用される
+# 手動でコンパイルオプションを指定する場合:
+# clang-tidy src/main.cpp -- -std=c++98 -Isrc -Iinclude

@@ -1,12 +1,11 @@
 name: Unit Test (GoogleTest)
 
 on:
-  push:
+  pull_request:
     paths:
       - '**.cpp'
       - '**.h'
       - '**/CMakeLists.txt'
-  pull_request:
 
 jobs:
   unittest:

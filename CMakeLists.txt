@@ -1,6 +1,24 @@
 cmake_minimum_required(VERSION 3.14)
 project(WebServ)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# バイナリ出力先の基本設定
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# テストバイナリ用の追加設定
+set(CMAKE_TEST_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+
+# インストールパスの設定（必要に応じて）
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
+
+# テスト実行ファイルの出力先も制御
+set(CMAKE_TEST_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test)
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
+
 set(CMAKE_CXX_STANDARD 17)
 
 # GoogleTestの取得・利用
@@ -27,6 +45,10 @@ add_library(my_math STATIC
 # テストコードのソースファイルを指定
 add_executable(test_math
     unit_test_sample/tests/test_math.cpp
+)
+
+set_target_properties(test_math PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_TEST_OUTPUT_DIRECTORY}
 )
 
 # テスト実行ファイルに必要なライブラリをリンク

@@ -18,6 +18,6 @@ jobs:
 
       - name: make build dirctory
         run: cmake -B build
-      - name: clang-tidy whith parrallel
+      - name: clang-tidy parrallel
         # run: git ls-files '*.cpp' '*.hpp' | parrallel clang-tidy -p build -quiet
         run: git ls-files 'src/main.cpp' | parrallel clang-tidy -p build -quiet

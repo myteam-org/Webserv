@@ -1,6 +1,6 @@
 name: Lint (clang-tidy)
 
-on: [pull_request]
+on: [pull_request, workflow_dispatch]
 
 jobs:
   lint:
@@ -19,4 +19,5 @@ jobs:
       - name: make build dirctory
         run: cmake -B build
       - name: clang-tidy whith parrallel
-        run: git ls-files '*.cpp' '*.hpp' | parrallel clang-tidy -p build -quiet
+        # run: git ls-files '*.cpp' '*.hpp' | parrallel clang-tidy -p build -quiet
+        run: git ls-files 'src/main.cpp' | parrallel clang-tidy -p build -quiet

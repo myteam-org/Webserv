@@ -18,16 +18,20 @@ void Config::printParser() {
 void Config::printParserRecursion(ConfigNode* node, int depth) {
         if (!node) return;
 
-        for (int i = 0; i < depth * 2; ++i) std::cout << " ";
+        for (int i = 0; i < depth * 2; ++i) {
+                std::cout << " ";
+        }
         if (depth > 0) std::cout << "|- ";
         std::cout << node->getKey();
         for (std::vector<std::string>::iterator iter =
                  node->getValues().begin();
-             iter != node->getValues().end(); ++iter)
+             iter != node->getValues().end(); ++iter) {
                 std::cout << " " << *iter;
+        }
         std::cout << std::endl;
         for (std::vector<ConfigNode*>::iterator it =
                  node->getChildren().begin();
-             it != node->getChildren().end(); ++it)
+             it != node->getChildren().end(); ++it) {
                 printParserRecursion(*it, depth + 1);
+        }
 }

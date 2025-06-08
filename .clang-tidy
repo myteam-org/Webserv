@@ -8,7 +8,6 @@ Checks: >
   bugprone-*,
   -modernize-*,
   -readability-implicit-bool-conversion,
-  -readability-braces-around-statements,
   -performance-avoid-endl,
   -misc-include-cleaner,
   -performance-enum-size,

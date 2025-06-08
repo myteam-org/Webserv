@@ -12,7 +12,7 @@ jobs:
 
       - name: Install clang-tidy, parallel in catch
         uses: awalsh128/cache-apt-pkgs-action@v1
-        whith:
+        with:
           packages: clang-tidy parallel
           version: 1.0
 

@@ -40,7 +40,7 @@ CheckOptions:
     value: 1
 
 # 警告をエラーとして扱うかどうか
-WarningsAsErrors: ''
+WarningsAsErrors: '*'
 
 # フォーマット設定（clang-formatと連携）
 FormatStyle: google

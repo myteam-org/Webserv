@@ -25,8 +25,8 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
                 std::string oneLine;
 
                 std::getline(iss, oneLine, '#');  // #以降を削除
-                oneLine.erase(0, oneLine.find_first_not_of(" \t")); // 前方の空白を削除
-                oneLine.erase(oneLine.find_last_not_of(" \t") + 1); // 後方の空白を削除
+                oneLine.erase(0, oneLine.find_first_not_of(" \t"));
+                oneLine.erase(oneLine.find_last_not_of(" \t") + 1);
                 lineCount++;
 
                 checkLineEnd(oneLine, lineCount);

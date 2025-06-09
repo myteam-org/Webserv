@@ -1,5 +1,4 @@
 #include "Config.hpp"
-#include "ConfigParser.hpp"
 
 bool Config::checkArgc(int argc) {
         if (argc > 2) {

@@ -1,5 +1,5 @@
-libdir=/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/install/lib
-includedir=/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/install/include
+libdir=/usr/local/lib
+includedir=/usr/local/include
 
 Name: gmock
 Description: GoogleMock (without main() function)

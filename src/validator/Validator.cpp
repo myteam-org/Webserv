@@ -1,6 +1,7 @@
 #include "Validator.hpp"
 
 #include <stdexcept>
+
 #include "Token.hpp"
 
 // bool	Validation::validate()
@@ -9,7 +10,8 @@ bool Validator::number(const std::string& number, int type) {
         char* endP;
         int num = strtod(number.c_str(), &endP);
 
-        if ((type == LISTEN || type == MAX_SIZE) && *endP != ';') return (false);
+        if ((type == LISTEN || type == MAX_SIZE) && *endP != ';')
+                return (false);
         if (type == ERR_PAGE && *endP) return (false);
         if (type == LISTEN) return (num >= 0 && num <= 65535);
         if (type == MAX_SIZE) return (num > 0 && num <= 1000000);

@@ -545,7 +545,7 @@ CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //CMAKE_INSTALL_PREFIX during last run
-_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/install
+_GNUInstallDirs_LAST_CMAKE_INSTALL_PREFIX:INTERNAL=/usr/local
 cmake_package_name:INTERNAL=GTest
 generated_dir:INTERNAL=/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-build/googletest/generated
 //ADVANCED property for variable: gmock_build_tests

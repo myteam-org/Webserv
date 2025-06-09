@@ -65,7 +65,6 @@ void ConfigParser::addServer_(size_t *i) {
                         updateDepth(text, lineNum);
                         if (this->depth_ == 0) break;
                 } else if (type >= LISTEN && type <= MAX_SIZE) {
-                        std::cout << "type = " << type << std::endl;
                         (this->*func_[type])(current, i);
                 } else {
                         continue;

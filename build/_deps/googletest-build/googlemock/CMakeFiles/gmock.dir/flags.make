@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/yotsurud/Desktop/42cursus/Webserv_yoshi/include -I/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-src/googlemock/include -I/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-src/googlemock -isystem /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-src/googletest/include -isystem /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-src/googletest
+CXX_INCLUDES = -I/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-src/googlemock/include -I/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-src/googlemock -isystem /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-src/googletest/include -isystem /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/_deps/googletest-src/googletest
 
 CXX_FLAGS = -Wall -Wshadow -Wconversion -Wundef -DGTEST_HAS_PTHREAD=1 -fexceptions -W -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wunused-parameter -Wcast-align -Winline -Wredundant-decls -Wchar-subscripts -std=c++17
 

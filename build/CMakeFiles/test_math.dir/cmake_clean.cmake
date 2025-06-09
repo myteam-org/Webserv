@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/test_math.dir/unit_test_sample/tests/test_math.cpp.o"
   "CMakeFiles/test_math.dir/unit_test_sample/tests/test_math.cpp.o.d"
-  "test/test_math"
-  "test/test_math.pdb"
+  "test_math"
+  "test_math.pdb"
   "test_math[1]_tests.cmake"
 )
 

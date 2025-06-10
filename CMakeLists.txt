@@ -38,6 +38,7 @@ add_executable(webserv
 
 add_custom_target(memcheck
 	COMMAND ${VALGRIND} --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1 $<TARGET_FILE:webserv>
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 	DEPENDS webserv
 )
 

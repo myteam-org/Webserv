@@ -26,7 +26,7 @@ class Config {
 		static std::string setFile(int argc, char** argv);
 		static void  checkFile(std::string& filename);
         void printParser();
-        void printServer(const std::vector<ServerContext>& server);
+        static void printServer(const std::vector<ServerContext>& server);
         ConfigTokenizer& getTokenizer();
         const ConfigParser& getParser() const;
 };

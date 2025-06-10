@@ -50,7 +50,7 @@ add_executable(webserv
 	src/config/Config.cpp
 	src/config/ConfigParser.cpp
 	src/config/ConfigTokenizer.cpp
-	src/config/ConfigNode.cpp
+	src/config/ServerContext.cpp
 	src/validator/Validator.cpp
 	src/main.cpp
 )

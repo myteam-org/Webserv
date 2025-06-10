@@ -4,20 +4,20 @@
 #include <map>
 
 enum TokenType {
-        SERVER,
-        LOCATION,
-        ERR_PAGE,
         LISTEN,
-        SERVER_NAME,
+        HOST,
+        ERR_PAGE,
+        MAX_SIZE,
+        LOCATION,
+        SERVER,
         ROOT,
         DIRECTORY,
         METHOD,
         ROOT_DIRECTORY,
         INDEX,
-        MAX_SIZE,
         AUTOINDEX,
         IS_CGI,
-        RETURN,
+        REDIRECT,
         VALUE,
         BRACE
 };

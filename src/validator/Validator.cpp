@@ -1,16 +1,19 @@
 #include "Validator.hpp"
 
 #include <stdexcept>
+#include "Token.hpp"
 
 // bool	Validation::validate()
 
-bool Validator::number(const std::string& number, int kind) {
+bool Validator::number(const std::string& number, int type) {
         char* endP;
         int num = strtod(number.c_str(), &endP);
 
-        if (*endP) return (false);
-        if (kind == LISTEN) return (num >= 0 && num <= 65535);
-        if (kind == MAX_SIZE) return (num > 0 && num < 1000000);
+        if ((type == LISTEN || type == MAX_SIZE) && *endP != ';') return (false);
+        if (type == ERR_PAGE && *endP) return (false);
+        if (type == LISTEN) return (num >= 0 && num <= 65535);
+        if (type == MAX_SIZE) return (num > 0 && num <= 1000000);
+        if (type == ERR_PAGE) return (num >= 100 && num <= 505);
         return (true);
 }
 
@@ -46,7 +49,7 @@ bool Validator::checkSyntaxErr(const Token& token, int depth) {
         if ((kind == SERVER && depth != 0) ||
             (kind == LOCATION && depth != 1) ||
             (kind == ERR_PAGE && depth == 0) ||
-            ((kind >= LISTEN && kind <= RETURN) && depth == 0))
+            ((kind >= LISTEN && kind <= REDIRECT) && depth == 0))
                 return (false);
         return (true);
 }

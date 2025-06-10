@@ -1,0 +1,5 @@
+if(EXISTS "/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/test_math[1]_tests.cmake")
+  include("/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/test_math[1]_tests.cmake")
+else()
+  add_test(test_math_NOT_BUILT test_math_NOT_BUILT)
+endif()

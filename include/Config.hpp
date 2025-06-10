@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ServerContext.hpp"
 class ConfigParser;
 class ConfigTokenizer;
 
@@ -7,7 +8,7 @@ class ConfigTokenizer;
 
 #include <string>
 
-#include "ConfigNode.hpp"
+// #include "ConfigNode.hpp"
 #include "ConfigParser.hpp"
 #include "ConfigTokenizer.hpp"
 
@@ -25,7 +26,8 @@ class Config {
 		static std::string setFile(int argc, char** argv);
 		static void  checkFile(std::string& filename);
         void printParser();
-        void printParserRecursion(ConfigNode* node, int depth = 0);
+        void printServer(const std::vector<ServerContext>& server);
+        // void printParserRecursion(ConfigNode* node, int depth = 0);
         ConfigTokenizer& getTokenizer();
         const ConfigParser& getParser() const;
 };

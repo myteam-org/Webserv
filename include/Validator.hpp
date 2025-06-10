@@ -1,12 +1,13 @@
 #pragma once
 
+class Token;
+
 #include <sys/stat.h>
 
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
-
-#include "ConfigNode.hpp"
+#include <vector>
 
 enum {
         // DIRECTORY,

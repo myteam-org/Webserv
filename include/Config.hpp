@@ -27,7 +27,6 @@ class Config {
 		static void  checkFile(std::string& filename);
         void printParser();
         void printServer(const std::vector<ServerContext>& server);
-        // void printParserRecursion(ConfigNode* node, int depth = 0);
         ConfigTokenizer& getTokenizer();
         const ConfigParser& getParser() const;
 };

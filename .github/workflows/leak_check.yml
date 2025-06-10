@@ -1,12 +1,13 @@
-name: Leak Check (Valgrind - Make)
+name: Leak Check (Valgrind - CMake)
 
 on:
+  workflow_dispatch:
   pull_request:
     paths:
       - '**.cpp'
       - '**.h'
-      - Makefile
-      - '**leak_check.yml'
+      - 'CMakeLists.txt'
+      - '.github/workflows/**.yml'
 
 jobs:
   leakcheck:
@@ -16,11 +17,13 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Install valgrind
-        run: sudo apt-get update && sudo apt-get install -y valgrind build-essential
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y valgrind build-essential cmake
 
-      - name: Build test runner
-        run: make 
+      - name: Configure and Build with CMake
+        run: |
+          cmake -B build
+          cmake --build build
 
-      - name: Run valgrind on test binary
-        run: valgrind --leak-check=full --error-exitcode=1 ./webserv config_file/default.conf
+      - name: Run memcheck with Valgrind
+        run: cmake --build build --target memcheck

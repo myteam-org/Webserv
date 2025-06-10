@@ -1,6 +1,7 @@
 #include "Validator.hpp"
 
 #include <stdexcept>
+#include "Token.hpp"
 
 #include "Token.hpp"
 

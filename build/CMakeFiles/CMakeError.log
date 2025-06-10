@@ -1,0 +1,61 @@
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
+Change Dir: /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_7e0aa/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_7e0aa.dir/build.make CMakeFiles/cmTC_7e0aa.dir/build
+gmake[1]: Entering directory '/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_7e0aa.dir/src.c.o
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-clang -DCMAKE_HAVE_LIBC_PTHREAD  -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/yotsurud/miniconda3/include  -MD -MT CMakeFiles/cmTC_7e0aa.dir/src.c.o -MF CMakeFiles/cmTC_7e0aa.dir/src.c.o.d -o CMakeFiles/cmTC_7e0aa.dir/src.c.o -c /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_7e0aa
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7e0aa.dir/link.txt --verbose=1
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-clang -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/yotsurud/miniconda3/include  -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/yotsurud/miniconda3/lib -Wl,-rpath-link,/home/yotsurud/miniconda3/lib -L/home/yotsurud/miniconda3/lib  CMakeFiles/cmTC_7e0aa.dir/src.c.o -o cmTC_7e0aa 
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-ld: CMakeFiles/cmTC_7e0aa.dir/src.c.o: in function `main':
+src.c:(.text.main+0x11): undefined reference to `pthread_create'
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-ld: src.c:(.text.main+0x1b): undefined reference to `pthread_detach'
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-ld: src.c:(.text.main+0x25): undefined reference to `pthread_cancel'
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-ld: src.c:(.text.main+0x31): undefined reference to `pthread_join'
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-ld: src.c:(.text.main+0x3d): undefined reference to `pthread_atfork'
+x86_64-conda-linux-gnu-clang: error: linker command failed with exit code 1 (use -v to see invocation)
+gmake[1]: *** [CMakeFiles/cmTC_7e0aa.dir/build.make:100: cmTC_7e0aa] Error 1
+gmake[1]: Leaving directory '/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_7e0aa/fast] Error 2
+
+
+Source file was:
+#include <pthread.h>
+
+static void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_cancel(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_902b8/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_902b8.dir/build.make CMakeFiles/cmTC_902b8.dir/build
+gmake[1]: Entering directory '/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_902b8.dir/CheckFunctionExists.c.o
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-clang   -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/yotsurud/miniconda3/include -DCHECK_FUNCTION_EXISTS=pthread_create -MD -MT CMakeFiles/cmTC_902b8.dir/CheckFunctionExists.c.o -MF CMakeFiles/cmTC_902b8.dir/CheckFunctionExists.c.o.d -o CMakeFiles/cmTC_902b8.dir/CheckFunctionExists.c.o -c /usr/share/cmake-3.22/Modules/CheckFunctionExists.c
+Linking C executable cmTC_902b8
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_902b8.dir/link.txt --verbose=1
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-clang -march=nocona -mtune=haswell -ftree-vectorize -fPIC -fstack-protector-strong -fno-plt -O2 -ffunction-sections -pipe -isystem /home/yotsurud/miniconda3/include -DCHECK_FUNCTION_EXISTS=pthread_create -Wl,-O2 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now -Wl,--disable-new-dtags -Wl,--gc-sections -Wl,--allow-shlib-undefined -Wl,-rpath,/home/yotsurud/miniconda3/lib -Wl,-rpath-link,/home/yotsurud/miniconda3/lib -L/home/yotsurud/miniconda3/lib  CMakeFiles/cmTC_902b8.dir/CheckFunctionExists.c.o -o cmTC_902b8  -lpthreads 
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-ld: cannot find -lpthreads: No such file or directory
+x86_64-conda-linux-gnu-clang: error: linker command failed with exit code 1 (use -v to see invocation)
+gmake[1]: *** [CMakeFiles/cmTC_902b8.dir/build.make:100: cmTC_902b8] Error 1
+gmake[1]: Leaving directory '/home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_902b8/fast] Error 2
+
+
+

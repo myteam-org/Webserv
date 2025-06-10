@@ -1,0 +1,2 @@
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-ar qc lib/libmy_math.a CMakeFiles/my_math.dir/unit_test_sample/srcs/math.cpp.o
+/home/yotsurud/miniconda3/bin/x86_64-conda-linux-gnu-ranlib lib/libmy_math.a

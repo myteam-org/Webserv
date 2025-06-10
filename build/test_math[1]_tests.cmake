@@ -1,0 +1,5 @@
+add_test( MathTest.Addition /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/test_math [==[--gtest_filter=MathTest.Addition]==] --gtest_also_run_disabled_tests)
+set_tests_properties( MathTest.Addition PROPERTIES WORKING_DIRECTORY /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test( MathTest.Subtraction /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build/test_math [==[--gtest_filter=MathTest.Subtraction]==] --gtest_also_run_disabled_tests)
+set_tests_properties( MathTest.Subtraction PROPERTIES WORKING_DIRECTORY /home/yotsurud/Desktop/42cursus/Webserv_yoshi/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+set( test_math_TESTS MathTest.Addition MathTest.Subtraction)

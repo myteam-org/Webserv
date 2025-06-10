@@ -36,7 +36,6 @@ int main(int argc, char** argv) {
         if (!Config::checkArgc(argc)) return (1);
         std::string confFile = Config::setFile(argc, argv);
 
-		int* leaked_memory = new int[100];
 		Config::checkFile(confFile);
 
         try {

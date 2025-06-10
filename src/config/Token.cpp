@@ -1,6 +1,6 @@
 #include "Token.hpp"
 
-Token::Token(const std::string& text, const int lineNumber)
+Token::Token(const std::string& text, int lineNumber)
     : text_(text), lineNumber_(lineNumber) {
         setType_(text);
 }

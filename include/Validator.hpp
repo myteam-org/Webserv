@@ -16,8 +16,8 @@ enum {
 
 namespace Validator {
 // bool	validate(const Config& config);
-bool number(const std::string& number, int kind);
-bool numberAndFile(const std::vector<std::string>& tokens, int i);
+bool number(const std::string& number, int type);
+bool numberAndFile(const std::vector<std::string>& tokens, int index);
 bool path(const std::string& path, int select);
 bool method(const std::string& method);
 bool onOff(const std::string& onOff);

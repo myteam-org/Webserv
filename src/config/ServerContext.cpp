@@ -1,7 +1,7 @@
 #include "ServerContext.hpp"
 
 ServerContext::ServerContext(const std::string& text)
-    : value_(text), listen_(0), host_(""), clientMaxBodySize_(0) {}
+    : value_(text), listen_(0), clientMaxBodySize_(0) {}
 
 ServerContext::~ServerContext() {}
 

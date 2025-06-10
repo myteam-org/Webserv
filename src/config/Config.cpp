@@ -2,8 +2,6 @@
 
 #include "ServerContext.hpp"
 
-#include "ServerContext.hpp"
-
 Config::Config(const std::string& filename)
     : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_) {
         // checkTree(); TODO
@@ -15,7 +13,7 @@ ConfigTokenizer& Config::getTokenizer() { return (this->tokenizer_); }
 
 const ConfigParser& Config::getParser() const { return (this->parser_); }
 
-void Config::printParser() { printServer(Config::getParser().getServr()); }
+void Config::printParser() const { printServer(Config::getParser().getServr()); }
 
 void Config::printServer(const std::vector<ServerContext>& server) {
         for (size_t i = 0; i < server.size(); ++i) {

@@ -8,7 +8,6 @@ class ConfigTokenizer;
 
 #include <string>
 
-// #include "ConfigNode.hpp"
 #include "ConfigParser.hpp"
 #include "ConfigTokenizer.hpp"
 
@@ -25,7 +24,7 @@ class Config {
 		static bool checkArgc(int argc);
 		static std::string setFile(int argc, char** argv);
 		static void  checkFile(std::string& filename);
-        void printParser();
+        void printParser() const;
         static void printServer(const std::vector<ServerContext>& server);
         ConfigTokenizer& getTokenizer();
         const ConfigParser& getParser() const;

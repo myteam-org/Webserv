@@ -34,7 +34,7 @@ void Token::setType_(const std::string& text) {
                 tokenMap.insert(std::make_pair("{", BRACE));
                 tokenMap.insert(std::make_pair("}", BRACE));
         }
-        std::map<std::string, TokenType>::const_iterator it =
+        const std::map<std::string, TokenType>::const_iterator it =
             tokenMap.find(text);
         if (it != tokenMap.end()) {
                 this->type_ = it->second;

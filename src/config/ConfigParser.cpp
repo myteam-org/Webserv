@@ -10,7 +10,7 @@
 #include "Validator.hpp"
 
 ConfigParser::ConfigParser(ConfigTokenizer &tokenizer)
-    : tokens(tokenizer.getTokens()), depth_(0) {
+    : tokens_(tokenizer.getTokens()), depth_(0) {
         this->func_[0] = &ConfigParser::setPort_;
         this->func_[1] = &ConfigParser::setHost_;
         this->func_[2] = &ConfigParser::setErrPage_;
@@ -22,22 +22,22 @@ ConfigParser::ConfigParser(ConfigTokenizer &tokenizer)
 ConfigParser::~ConfigParser() {}
 
 void ConfigParser::makeVectorServer_() {
-        for (size_t i = 0; i < this->tokens.size(); ++i) {
-                const TokenType type = this->tokens[i].getType();
-                const std::string token = this->tokens[i].getText();
-                const int lineNumber = this->tokens[i].getLineNumber();
+        for (size_t i = 0; i < this->tokens_.size(); ++i) {
+                const TokenType type = this->tokens_[i].getType();
+                const std::string token = this->tokens_[i].getText();
+                const int lineNumber = this->tokens_[i].getLineNumber();
 
                 if (type == BRACE) {
                         updateDepth(token, lineNumber);
 
                 } else if (type == SERVER) {
                         i++;
-                        if (i == this->tokens.size()) {
-                                throwErr(this->tokens[i].getText(),
+                        if (i == this->tokens_.size()) {
+                                throwErr(this->tokens_[i].getText(),
                                          ": Syntax error: line",
-                                         tokens[i].getLineNumber());
+                                         tokens_[i].getLineNumber());
                         }
-                        addServer_(&i);
+                        addServer_(i);
                 } else {
                         continue;
                 }
@@ -45,7 +45,6 @@ void ConfigParser::makeVectorServer_() {
 }
 
 void ConfigParser::updateDepth(const std::string &token, int lineNumber) {
-        const std::string num = ConfigTokenizer::numberToStr(lineNumber);
         if (token == "{") {
                 this->depth_++;
         } else if (token == "}") {
@@ -57,13 +56,14 @@ void ConfigParser::updateDepth(const std::string &token, int lineNumber) {
         }
 }
 
-void ConfigParser::addServer_(size_t *index) {
+void ConfigParser::addServer_(size_t& index) {
+        // NOLINTNEXTLINE(misc-const-correctness)
         ServerContext current("server");
 
-        for (; *index < this->tokens.size(); ++(*index)) {
-                const std::string text = this->tokens[*index].getText();
-                const int type = this->tokens[*index].getType();
-                const int lineNum = this->tokens[*index].getLineNumber();
+        for (; index < this->tokens_.size(); ++(index)) {
+                const std::string text = this->tokens_[index].getText();
+                const int type = this->tokens_[index].getType();
+                const int lineNum = this->tokens_[index].getLineNumber();
                 if (type == BRACE) {
                         updateDepth(text, lineNum);
                         if (this->depth_ == 0) break;
@@ -76,61 +76,61 @@ void ConfigParser::addServer_(size_t *index) {
         this->servers_.push_back(current);
 }
 
-void ConfigParser::setPort_(ServerContext &current, size_t *index) {
-        std::string portNumber = incrementAndCheckSize_(index);
+void ConfigParser::setPort_(ServerContext &current, size_t& index) {
+        const std::string portNumber = incrementAndCheckSize_(index);
 
-        if (this->tokens[*index].getType() == VALUE &&
+        if (this->tokens_[index].getType() == VALUE &&
             Validator::number(portNumber, LISTEN)) {
                     current.setListen(static_cast<u_int16_t>(atoi(portNumber.c_str())));
 
         } else {
                 throwErr(portNumber, ": Port value error: line",
-                         this->tokens[*index].getLineNumber());
+                         this->tokens_[index].getLineNumber());
         }
 }
 
-void ConfigParser::setHost_(ServerContext &current, size_t *index) {
+void ConfigParser::setHost_(ServerContext &current, size_t& index) {
         const std::string hostName = incrementAndCheckSize_(index);
-        if (this->tokens[*index].getType() == VALUE) {
+        if (this->tokens_[index].getType() == VALUE) {
                 current.setHost(hostName);
         } else {
                 throwErr(hostName, ": Host value error: line",
-                         this->tokens[*index].getLineNumber());
+                         this->tokens_[index].getLineNumber());
         }
 }
 
-void ConfigParser::setMaxBodySize_(ServerContext &current, size_t *index) {
+void ConfigParser::setMaxBodySize_(ServerContext &current, size_t& index) {
         const std::string maxBodySize = incrementAndCheckSize_(index);
 
-        if (this->tokens[*index].getType() == VALUE &&
+        if (this->tokens_[index].getType() == VALUE &&
             Validator::number(maxBodySize, MAX_SIZE)) {
                     current.setClientMaxBodySize(static_cast<size_t>(atoi(maxBodySize.c_str())));
         } else {
                 throwErr(maxBodySize, ": Port value error: line",
-                         this->tokens[*index].getLineNumber());
+                         this->tokens_[index].getLineNumber());
         }
 }
 
-void ConfigParser::setErrPage_(ServerContext &current, size_t *index) {
+void ConfigParser::setErrPage_(ServerContext &current, size_t& index) {
         const std::string errNumber = incrementAndCheckSize_(index);
 
-        if (this->tokens[*index].getType() == VALUE &&
+        if (this->tokens_[index].getType() == VALUE &&
             Validator::number(errNumber, ERR_PAGE)) {
                 const std::string pageName = incrementAndCheckSize_(index);
                 current.addMap(atoi(errNumber.c_str()), pageName);
         } else {
                 throwErr(errNumber, ": ErrorPage value error: line",
-                         this->tokens[*index].getLineNumber());
+                         this->tokens_[index].getLineNumber());
         }
 }
 
-std::string ConfigParser::incrementAndCheckSize_(size_t *index) {
-        (*index)++;
-        if (*index == this->tokens.size()) {
+std::string ConfigParser::incrementAndCheckSize_(size_t& index) {
+        index++;
+        if (index == this->tokens_.size()) {
                 throwErr("", "Syntax error: line",
-                         this->tokens[*index].getLineNumber());
+                         this->tokens_[index].getLineNumber());
         }
-        return (this->tokens[*index].getText());
+        return (this->tokens_[index].getText());
 }
 
 const std::vector<ServerContext> &ConfigParser::getServr() const {

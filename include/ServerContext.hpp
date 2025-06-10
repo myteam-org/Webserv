@@ -13,7 +13,7 @@ class ConfigTokenizer;
 
 class ServerContext {
        public:
-        ServerContext(const std::string& text);
+        explicit ServerContext(const std::string& text);
         ~ServerContext();
         void setListen(u_int16_t port);
         void setHost(const std::string& host);

@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 		Config::checkFile(confFile);
 
         try {
-                Config config(confFile);
+                const Config config(confFile);
                 config.printParser();
         } catch (const std::exception& e) {
                 std::cerr << e.what() << std::endl;

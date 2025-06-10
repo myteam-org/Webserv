@@ -14,10 +14,14 @@ enum {
         FILENAME
 };
 
+static const int MAX_PORT = 65535;
+static const int MAX_BODY_SIZE = 1000000;
+static const int MIN_PAGE_NUM = 100;
+static const int MAX_PAGE_NUM = 505;
+
 namespace Validator {
 // bool	validate(const Config& config);
 bool number(const std::string& number, int type);
-bool numberAndFile(const std::vector<std::string>& tokens, int index);
 bool path(const std::string& path, int select);
 bool method(const std::string& method);
 bool onOff(const std::string& onOff);

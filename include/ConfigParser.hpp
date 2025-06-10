@@ -15,24 +15,25 @@ class ConfigParser {
         explicit ConfigParser(ConfigTokenizer& tokenizer);
         ~ConfigParser();
 
-        std::vector<Token> tokens;
         const std::vector<ServerContext>& getServr() const;
-        void throwErr(const std::string& str1, const std::string& str2,
+        static void throwErr(const std::string& str1, const std::string& str2,
                       int lineNumber);
 
        private:
-        typedef void (ConfigParser::*funcPtr)(ServerContext& current, size_t* index);
-        funcPtr func_[5];
+        static const int FUNC_SIZE = 5;
+        typedef void (ConfigParser::*funcPtr)(ServerContext& current, size_t& index);
+        funcPtr func_[FUNC_SIZE];
+        std::vector<Token> tokens_;
         int depth_;
         std::vector<ServerContext> servers_;
         void makeVectorServer_();
         void updateDepth(const std::string& token, int lineNumber);
-        void addServer_(size_t* index);
-        void setPort_(ServerContext& current, size_t* index);
-        void setHost_(ServerContext& current, size_t* index);
-        void setErrPage_(ServerContext& current, size_t* index);
-        void setMaxBodySize_(ServerContext& current, size_t* index);
-        std::string incrementAndCheckSize_(size_t* index);
+        void addServer_(size_t& index);
+        void setPort_(ServerContext& current, size_t& index);
+        void setHost_(ServerContext& current, size_t& index);
+        void setErrPage_(ServerContext& current, size_t& index);
+        void setMaxBodySize_(ServerContext& current, size_t& index);
+        std::string incrementAndCheckSize_(size_t& index);
         // void addLocation();
 
         

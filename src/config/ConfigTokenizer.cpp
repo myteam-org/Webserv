@@ -60,6 +60,6 @@ void ConfigTokenizer::checkLineEnd(const std::string& line,
 std::string ConfigTokenizer::numberToStr(int number) {
         std::stringstream ss;
         ss << number;
-        std::string str = ss.str();
+        const std::string str = ss.str();
         return (str);
 }

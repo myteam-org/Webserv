@@ -1,4 +1,4 @@
-name: Leak Check (Valgrind - CMake with Cache)
+name: Leak Check (Valgrindhe)
 
 on:
   pull_request:

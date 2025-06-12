@@ -14,9 +14,9 @@ Checks: >
 
 
 CheckOptions:
-  # インデント幅を4スペースに設定
+  # return が1行の場合でも必ず {} を付ける
   - key: readability-braces-around-statements.ShortStatementLines
-    value: 1
+    value: 0
   
   # 関数の最大行数を30行に制限
   - key: readability-function-size.LineThreshold

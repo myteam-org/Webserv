@@ -18,16 +18,21 @@ jobs:
 
       - name: Set up CMake
         uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "~3.28.0"
+          ninjaVersion: "^1.11.1"
 
-      - name: Install dependencies (GoogleTest)
-        run: sudo apt-get update && sudo apt-get install -y cmake build-essential
+      - name: Set up ccach
+        uses: hendrikmuhs/ccache-action@v1.2
 
-      - name: Configure and build
-        run: |
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build --config Release
+      - name: Configure CMake
+        run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        
+      - name: Build
+        run: cmake --build build -j
 
-      - name: Run unit tests
-        run: |
-          cd build
-          ctest --output-on-failure
+      - name: Build
+        run: cmake --build build -j  # buildディレクトリでビルドを並列実行
+
+      - working-directory: build
+        run: ctest -j  # buildディレクトリでテストを並列実行

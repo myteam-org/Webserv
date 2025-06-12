@@ -36,7 +36,9 @@ void ConfigParser::makeVectorServer_() {
 
                 if (type == BRACE) {
                         updateDepth(token, lineNumber);
-                        if (this->depth_ == 0) return;
+                        if (this->depth_ == 0) {
+                                return;
+                        }
                 } else if (type == SERVER) {
                         i++;
                         if (i == this->tokens_.size()) {
@@ -73,7 +75,9 @@ void ConfigParser::addServer_(size_t& index) {
                 const int lineNum = this->tokens_[index].getLineNumber();
                 if (type == BRACE) {
                         updateDepth(text, lineNum);
-                        if (this->depth_ == 0) break;
+                        if (this->depth_ == 0) { 
+                                break;
+                        }
                 } else if (type >= LISTEN && type <= LOCATION) {
                         (this->*func_[type])(server, index);
                 } else {
@@ -147,7 +151,9 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
                 const int lineNum = this->tokens_[index].getLineNumber();
                 if (type == BRACE) {
                         updateDepth(text, lineNum);
-                        if (this->depth_ == 1) break;
+                        if (this->depth_ == 1) { 
+                                break;
+                        }
                 } else if (type >= ROOT && type <= REDIRECT) {
                         (this->*func_[type])(server, index);
                 } else {

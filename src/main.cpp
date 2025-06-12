@@ -1,7 +1,9 @@
 #include "Config.hpp"
 
 int main(int argc, char** argv) {
-        if (!Config::checkArgc(argc)) return (1);
+        if (!Config::checkArgc(argc)) {
+                return (1);
+        }
         std::string confFile = Config::setFile(argc, argv);
 
         Config::checkFile(confFile);

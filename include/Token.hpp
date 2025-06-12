@@ -9,15 +9,13 @@ enum TokenType {
         ERR_PAGE,
         MAX_SIZE,
         LOCATION,
-        SERVER,
         ROOT,
-        DIRECTORY,
         METHOD,
-        ROOT_DIRECTORY,
         INDEX,
         AUTOINDEX,
         IS_CGI,
         REDIRECT,
+        SERVER,
         VALUE,
         BRACE
 };

@@ -22,7 +22,8 @@ class ConfigTokenizer {
         static std::string numberToStr(int number);
 
        private:
+        std::vector<Token> tokens_;
+
         void makeTokenList_(std::ifstream& file);
         static void checkLineEnd(const std::string& line, int lineCount);
-        std::vector<Token> tokens_;
 };

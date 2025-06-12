@@ -13,18 +13,6 @@ add_subdirectory(test)
 # valgrindの設定
 # cmake --build build --target memcheck
 find_program(VALGRIND valgrind)
-
-add_executable(webserv
-	src/config/Token.cpp
-	src/config/Config.cpp
-	src/config/ConfigParser.cpp
-	src/config/ConfigTokenizer.cpp
-	src/config/ServerContext.cpp
-	src/config/LocationContext.cpp
-	src/validator/Validator.cpp
-	src/main.cpp
-)
-
 add_custom_target(memcheck
 	COMMAND ${VALGRIND} --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1 $<TARGET_FILE:webserv>
 	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}

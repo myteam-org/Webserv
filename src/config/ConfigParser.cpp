@@ -219,7 +219,7 @@ void ConfigParser::setIndex_(ServerContext& server, size_t& index) {
             getLocationLastNode_(server, index);
 
         if (this->tokens_[index].getType() == VALUE) {
-                last->setRoot(indexPage);
+                last->setIndex(indexPage);
         } else {
                 throwErr(this->tokens_[index].getText(),
                          ": Index page value error: line ",

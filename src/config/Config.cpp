@@ -7,8 +7,7 @@
 #include "data.hpp"
 
 Config::Config(const std::string& filename)
-    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_) {
-}
+    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_) {}
 
 Config::~Config() {}
 
@@ -48,15 +47,13 @@ void Config::printServer(const std::vector<ServerContext>& server) {
 }
 
 void Config::printLocation(const ServerContext& server) {
-        const std::vector<LocationContext>& location =
-            server.getLocation();
+        const std::vector<LocationContext>& location = server.getLocation();
         for (size_t k = 0; k < location.size(); ++k) {
                 std::cout << " |- location: " << location[k].getPath()
-                            << std::endl;
+                          << std::endl;
                 if (!location[k].getRoot().empty()) {
-                        std::cout
-                            << "     |- root: " << location[k].getRoot()
-                            << std::endl;
+                        std::cout << "     |- root: " << location[k].getRoot()
+                                  << std::endl;
                 }
                 std::cout << "     |- method: ";
                 const std::vector<AllowedMethod> method =
@@ -65,15 +62,16 @@ void Config::printLocation(const ServerContext& server) {
                         std::cout << method[l] << " ";
                 }
                 std::cout << std::endl;
+                std::cout << "     |- index: " << location[k].getIndex()
+                          << std::endl;
                 std::cout << "     |- auto_index: "
-                            << location[k].getAutoIndex() << std::endl;
-                std::cout
-                    << "     |- is_cgi: " << location[k].getIsCgi()
-                    << std::endl;
+                          << location[k].getAutoIndex() << std::endl;
+                std::cout << "     |- is_cgi: " << location[k].getIsCgi()
+                          << std::endl;
                 if (!location[k].getRedirect().empty()) {
-                        std::cout << "     |- redirect: "
-                                    << location[k].getRedirect()
-                                    << std::endl;
+                        std::cout
+                            << "     |- redirect: " << location[k].getRedirect()
+                            << std::endl;
                 }
         }
 }

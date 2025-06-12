@@ -25,15 +25,6 @@ bool Validator::number(const std::string& number, int type) {
         return (true);
 }
 
-bool Validator::path(const std::string& path, int select) {
-        struct stat sta;
-
-        if (stat(path.c_str(), &sta) != 0) { 
-                return (false);
-        }
-        return (select == FILENAME && (sta.st_mode & S_IFREG));
-}
-
 bool Validator::url(const std::string& url) {
         if (url.find("http://") != 0 && url.find("https://") != 0) {
                 return (false);

@@ -10,7 +10,7 @@ class Token;
 #include <vector>
 
 enum {
-        // DIRECTORY,
+        DIRECTORY,
         FILENAME
 };
 
@@ -21,7 +21,6 @@ static const int MAX_PAGE_NUM = 505;
 
 namespace Validator {
 bool number(const std::string& number, int type);
-bool path(const std::string& path, int select);
 bool url(const std::string& url);
 // bool	duplicate(const ConfigNode* root);
 }  // namespace Validator

@@ -15,8 +15,7 @@ class ConfigParser {
         explicit ConfigParser(ConfigTokenizer& tokenizer);
         ~ConfigParser();
 
-        std::vector<ServerContext>& getServr();
-        const std::vector<ServerContext>& getServr() const;
+        const std::vector<ServerContext>& getServer() const;
         static void throwErr(const std::string& str1, const std::string& str2,
                              int lineNumber);
 

@@ -1,6 +1,9 @@
-
 add_executable(ConfigParser_test ConfigParser_test.cpp)
-gtest_discover_tests(ConfigParser_test)
 
-target_link_libraries(ConfigParser_test PRIVATE webserv_lib gtest gtest_main)
-target_link_libraries(ConfigParser_test PRIVATE gmock_main)
+# 依存関係を追加
+add_dependencies(ConfigParser_test webserv_lib)
+
+# ライブラリをリンク
+target_link_libraries(ConfigParser_test PRIVATE webserv_lib gtest_main gmock_main)
+
+gtest_discover_tests(ConfigParser_test)

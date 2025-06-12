@@ -14,7 +14,7 @@ Config::~Config() {}
 const ConfigParser& Config::getParser() const { return (this->parser_); }
 
 void Config::printParser() const {
-        printServer(Config::getParser().getServr());
+        printServer(Config::getParser().getServer());
 }
 
 void Config::printServer(const std::vector<ServerContext>& server) {

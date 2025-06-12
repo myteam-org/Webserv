@@ -60,7 +60,7 @@ server {
     
     auto tokenizer = createTokenizerFromConfig(config);
     ConfigParser parser(*tokenizer);
-    const auto& servers = parser.getServr();
+    const auto& servers = parser.getServer();
     
     EXPECT_EQ(servers.size(), 1);
     // Note: You'll need to add a getter method in ServerContext to test error pages
@@ -76,7 +76,7 @@ server {
     
     auto tokenizer = createTokenizerFromConfig(config);
     ConfigParser parser(*tokenizer);
-    const auto& servers = parser.getServr();
+    const auto& servers = parser.getServer();
     
     EXPECT_EQ(servers.size(), 1);
     EXPECT_EQ(servers[0].getClientMaxBodySize(), 1024);
@@ -136,7 +136,7 @@ TEST_F(ConfigParserTest, ThrowErrMethod) {
 TEST_F(ConfigParserTest, EmptyConfiguration) {
     auto tokenizer = createTokenizerFromConfig("");
     ConfigParser parser(*tokenizer);
-    const auto& servers = parser.getServr();
+    const auto& servers = parser.getServer();
     
     EXPECT_EQ(servers.size(), 0);
 }

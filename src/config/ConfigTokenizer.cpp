@@ -36,6 +36,9 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
                 std::istringstream tokenStream(oneLine);
                 std::string token;
                 while (tokenStream >> token) {  // 空白区切りでtokenをset
+                        if (token[token.size() - 1] == ';') {
+                                token = token.substr(0, token.size() - 1);
+                        }
                         const Token newToken(token, lineCount);
                         this->tokens_.push_back(newToken);
                         tokenStream.clear();
@@ -44,10 +47,9 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
         file.close();
 }
 
-void ConfigTokenizer::checkLineEnd(const std::string& line,
-                                   int lineCount) {
+void ConfigTokenizer::checkLineEnd(const std::string& line, int lineCount) {
         if (line.empty()) {
-                return ;
+                return;
         }
         const char chara = line[line.size() - 1];
         if (chara != '{' && chara != '}' && chara != ';') {

@@ -19,8 +19,6 @@ void ServerContext::setClientMaxBodySize(size_t size) {
         this->clientMaxBodySize_ = size;
 }
 
-// void ServerContext::addLocation() {}
-
 const std::string& ServerContext::getValue() const { return (this->value_); }
 
 u_int16_t ServerContext::getListen() const { return (this->listen_); }
@@ -34,4 +32,12 @@ const std::vector<std::map<int, std::string> >& ServerContext::getErrorPage()
 
 size_t ServerContext::getClientMaxBodySize() const {
         return (this->clientMaxBodySize_);
+}
+
+std::vector<LocationContext>& ServerContext::getLocation() {
+        return (this->locations_);
+}
+
+const std::vector<LocationContext>& ServerContext::getLocation() const {
+        return (this->locations_);
 }

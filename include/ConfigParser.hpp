@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cstddef>
-class ConfigNode;
 class ConfigTokenizer;
+class LocationContext;
+class ServerContext;
 
 #include <vector>
 
 #include "ConfigTokenizer.hpp"
-#include "ServerContext.hpp"
 #include "Token.hpp"
 
 class ConfigParser {
@@ -15,47 +15,36 @@ class ConfigParser {
         explicit ConfigParser(ConfigTokenizer& tokenizer);
         ~ConfigParser();
 
+        std::vector<ServerContext>& getServr();
         const std::vector<ServerContext>& getServr() const;
         static void throwErr(const std::string& str1, const std::string& str2,
-                      int lineNumber);
+                             int lineNumber);
 
        private:
-        static const int FUNC_SIZE = 5;
-        typedef void (ConfigParser::*funcPtr)(ServerContext& current, size_t& index);
-        funcPtr func_[FUNC_SIZE];
+        static const int FUNC_SIZE = 11;
+        typedef void (ConfigParser::*funcPtr)(ServerContext& server,
+                                              size_t& index);
+        static funcPtr func_[FUNC_SIZE];
+
         std::vector<Token> tokens_;
         int depth_;
         std::vector<ServerContext> servers_;
+
         void makeVectorServer_();
         void updateDepth(const std::string& token, int lineNumber);
         void addServer_(size_t& index);
-        void setPort_(ServerContext& current, size_t& index);
-        void setHost_(ServerContext& current, size_t& index);
-        void setErrPage_(ServerContext& current, size_t& index);
-        void setMaxBodySize_(ServerContext& current, size_t& index);
+        void setPort_(ServerContext& server, size_t& index);
+        void setHost_(ServerContext& server, size_t& index);
+        void setMaxBodySize_(ServerContext& server, size_t& index);
+        void setErrPage_(ServerContext& server, size_t& index);
+        void addLocation_(ServerContext& server, size_t& index);
+        std::vector<LocationContext>::iterator getLocationLastNode_(
+            ServerContext& server, size_t& index);
+        void setRoot_(ServerContext& server, size_t& index);
+        void setMethod_(ServerContext& server, size_t& index);
+        void setIndex_(ServerContext& server, size_t& index);
+        void setAutoIndex_(ServerContext& server, size_t& index);
+        void setIsCgi_(ServerContext& server, size_t& index);
+        void setRedirect_(ServerContext& server, size_t& index);
         std::string incrementAndCheckSize_(size_t& index);
-        // void addLocation();
-
-        
-        //        public:
-        //         explicit ConfigParser(const ConfigTokenizer& tokenizer);
-        //         ~ConfigParser();
-
-        //         ConfigTokenizer tokens;
-        //         ConfigNode* getRoot() const;
-        //         static void deleteTree(ConfigNode* node);
-        //         void throwErr(const std::string& str1, const std::string&
-        //         str2,
-        //                       int number);
-
-        //        private:
-        //         int keyFlag_[16];
-        //         ConfigNode* layers_[5];
-
-        //         void makeConfTree_(const ConfigTokenizer& tokens);
-        //         void updateDepth_(const std::string& token, int
-        //         lineNumber); void resetKeyFlag_(int keyType); void
-        //         addChild_(const Token& token, ConfigNode*& current,
-        //                        ConfigNode* parent);
-        //         void setValue_(const Token& token, ConfigNode* node);
 };

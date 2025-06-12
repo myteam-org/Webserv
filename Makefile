@@ -6,6 +6,7 @@ INC_DIR	= include
 SRCS	= src/main.cpp \
 	  src/config/Config.cpp \
 	  src/config/ServerContext.cpp \
+	  src/config/LocationContext.cpp \
 	  src/validator/Validator.cpp \
 	  src/config/ConfigTokenizer.cpp \
 	  src/config/ConfigParser.cpp \

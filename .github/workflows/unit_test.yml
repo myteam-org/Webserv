@@ -27,9 +27,6 @@ jobs:
 
       - name: Configure CMake
         run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-        
-      - name: Build
-        run: cmake --build build -j
 
       - name: Build
         run: cmake --build build -j  # buildディレクトリでビルドを並列実行

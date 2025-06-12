@@ -19,4 +19,4 @@ jobs:
       - name: make build dirctory
         run: cmake -B build
       - name: clang-tidy parallel
-        run: git ls-files '*.cpp' '*.hpp' | grep -vE '(^unit_test_sample/|^build/|^buid/)' | parallel clang-tidy -p build -quiet
+        run: git ls-files '*.cpp' '*.hpp' | grep -vE '(^test/|^build/)' | parallel clang-tidy -p build -quiet

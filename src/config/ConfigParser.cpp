@@ -190,22 +190,24 @@ void ConfigParser::setRoot_(ServerContext& server, size_t& index) {
 }
 
 void ConfigParser::setMethod_(ServerContext& server, size_t& index) {
-        const std::string method = incrementAndCheckSize_(index);
+        incrementAndCheckSize_(index);
+        const std::vector<LocationContext>::iterator last =
+            getLocationLastNode_(server, index);        
 
         for (; index < this->tokens_.size(); ++index) {
-                const std::vector<LocationContext>::iterator last =
-                    getLocationLastNode_(server, index);
+                const std::string method = this->tokens_[index].getText();
                 const TokenType type = this->tokens_[index].getType();
 
+                if (type == BRACE || (type >= ROOT && type <= REDIRECT)) {
+                        index--;
+                        return ;
+                } 
                 if (type == VALUE && method == "GET") {
                         last->addMethod(GET);
-                } else if (type == VALUE && method == "PUT") {
-                        last->addMethod(PUT);
+                } else if (type == VALUE && method == "POST") {
+                        last->addMethod(POST);
                 } else if (type == VALUE && method == "DELETE") {
                         last->addMethod(DELETE);
-                } else if (type == BRACE ||
-                           (type >= ROOT && type < +REDIRECT)) {
-                        return;
                 } else {
                         throwErr(method, ": Method value error: line ",
                                  this->tokens_[index].getLineNumber());

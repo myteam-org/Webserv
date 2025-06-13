@@ -1,5 +1,5 @@
 #pragma once
 
-enum AllowedMethod { GET, PUT, DELETE };
+enum AllowedMethod { GET, POST, DELETE };
 
 enum OnOff { ON, OFF };

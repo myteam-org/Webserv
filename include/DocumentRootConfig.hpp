@@ -1,0 +1,28 @@
+#pragma once
+
+#include <iostream>
+
+#include "ConfigParser.hpp"
+#include "Token.hpp"
+#include "data.hpp"
+
+class DocumentRootConfig {
+       public:
+        explicit DocumentRootConfig();
+        ~DocumentRootConfig();
+
+        void setRoot(const std::string& root);
+        void setIndex(const std::string& index);
+        void setAutoIndex(OnOff autoIndex);
+        void setCgiExtensions(OnOff cgiExtensions);
+        const std::string& getRoot() const;
+        const std::string& getIndex() const;
+        OnOff getAutoIndex() const;
+        OnOff getCgiExtensions() const;
+
+       private:
+        std::string root_;
+        std::string index_;
+        OnOff autoIndex_;
+        OnOff cgiExtensions_;
+};

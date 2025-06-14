@@ -12,6 +12,7 @@ class LocationContext;
 
 #include "ConfigTokenizer.hpp"
 #include "LocationContext.hpp"
+#include "DocumentRootConfig.hpp"
 #include "Token.hpp"
 
 class ServerContext {

@@ -30,10 +30,10 @@ const std::string& LocationContext::getRedirect() const {
         return (this->redirect_);
 }
 
-DocumentRootConfig& LocationContext::getDocRootConfig() {
-        return (this->docRootConfig_);
+DocumentRootConfig& LocationContext::getDocumentRootConfig() {
+        return (this->documentRootConfig_);
 }
 
-const DocumentRootConfig& LocationContext::getDocRootConfig() const {
-        return (this->docRootConfig_);
+const DocumentRootConfig& LocationContext::getDocumentRootConfig() const {
+        return (this->documentRootConfig_);
 }

@@ -19,13 +19,13 @@ class LocationContext {
         std::vector<AllowedMethod> getMethod();
         const std::vector<AllowedMethod>& getMethod() const;
         const std::string& getRedirect() const;
-        DocumentRootConfig& getDocRootConfig();
-        const DocumentRootConfig& getDocRootConfig() const;
+        DocumentRootConfig& getDocumentRootConfig();
+        const DocumentRootConfig& getDocumentRootConfig() const;
 
        private:
         const std::string value_;
         std::string path_;
         std::vector<AllowedMethod> allowedMethod_;
         std::string redirect_;
-        DocumentRootConfig docRootConfig_;
+        DocumentRootConfig documentRootConfig_;
 };

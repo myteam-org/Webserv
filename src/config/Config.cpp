@@ -50,11 +50,11 @@ void Config::printServer(const std::vector<ServerContext>& server) {
 void Config::printLocation(const ServerContext& server) {
         const std::vector<LocationContext>& location = server.getLocation();
         for (size_t k = 0; k < location.size(); ++k) {
-                const DocumentRootConfig& docmentRoot = location[k].getDocRootConfig();
+                const DocumentRootConfig& documentRootConfig = location[k].getDocumentRootConfig();
                 std::cout << " |- location: " << location[k].getPath()
                           << std::endl;
-                if (!docmentRoot.getRoot().empty()) {
-                        std::cout << "     |- root: " << docmentRoot.getRoot()
+                if (!documentRootConfig.getRoot().empty()) {
+                        std::cout << "     |- root: " << documentRootConfig.getRoot()
                                   << std::endl;
                 }
                 std::cout << "     |- method: ";
@@ -64,11 +64,11 @@ void Config::printLocation(const ServerContext& server) {
                         std::cout << method[l] << " ";
                 }
                 std::cout << std::endl;
-                std::cout << "     |- index: " << docmentRoot.getIndex()
+                std::cout << "     |- index: " << documentRootConfig.getIndex()
                           << std::endl;
                 std::cout << "     |- auto_index: "
-                          << docmentRoot.getAutoIndex() << std::endl;
-                std::cout << "     |- is_cgi: " << docmentRoot.getCgiExtensions()
+                          << documentRootConfig.getAutoIndex() << std::endl;
+                std::cout << "     |- is_cgi: " << documentRootConfig.getCgiExtensions()
                           << std::endl;
                 if (!location[k].getRedirect().empty()) {
                         std::cout

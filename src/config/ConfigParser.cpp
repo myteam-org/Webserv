@@ -179,10 +179,10 @@ void ConfigParser::setRoot_(ServerContext& server, size_t& index) {
         const std::string root = incrementAndCheckSize_(index);
         const std::vector<LocationContext>::iterator last =
             getLocationLastNode_(server, index);
-        DocumentRootConfig& docmentRoot = last->getDocRootConfig();
+        DocumentRootConfig& documentRootConfig = last->getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
-                docmentRoot.setRoot(root);
+                documentRootConfig.setRoot(root);
         } else {
                 throwErr(this->tokens_[index].getText(),
                          ": Root value error: line ",
@@ -219,10 +219,10 @@ void ConfigParser::setIndex_(ServerContext& server, size_t& index) {
         const std::string indexPage = incrementAndCheckSize_(index);
         const std::vector<LocationContext>::iterator last =
             getLocationLastNode_(server, index);
-        DocumentRootConfig& docmentRoot = last->getDocRootConfig();
+        DocumentRootConfig& documentRootConfig = last->getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
-                docmentRoot.setIndex(indexPage);
+                documentRootConfig.setIndex(indexPage);
         } else {
                 throwErr(this->tokens_[index].getText(),
                          ": Index page value error: line ",
@@ -234,13 +234,13 @@ void ConfigParser::setAutoIndex_(ServerContext& server, size_t& index) {
         const std::string select = incrementAndCheckSize_(index);
         const std::vector<LocationContext>::iterator last =
             getLocationLastNode_(server, index);
-        DocumentRootConfig& docmentRoot = last->getDocRootConfig();
+        DocumentRootConfig& documentRootConfig = last->getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 if (select == "ON") {
-                        docmentRoot.setAutoIndex(ON);
+                        documentRootConfig.setAutoIndex(ON);
                 } else if (select == "OFF") {
-                        docmentRoot.setAutoIndex(OFF);
+                        documentRootConfig.setAutoIndex(OFF);
                 } else {
                         throwErr(select, ": Unknown select error: line ",
                                  this->tokens_[index].getLineNumber());
@@ -252,13 +252,13 @@ void ConfigParser::setIsCgi_(ServerContext& server, size_t& index) {
         const std::string select = incrementAndCheckSize_(index);
         const std::vector<LocationContext>::iterator last =
             getLocationLastNode_(server, index);
-        DocumentRootConfig& docmentRoot = last->getDocRootConfig();
+        DocumentRootConfig& documentRootConfig = last->getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 if (select == "ON") {
-                        docmentRoot.setCgiExtensions(ON);
+                        documentRootConfig.setCgiExtensions(ON);
                 } else if (select == "OFF") {
-                        docmentRoot.setCgiExtensions(OFF);
+                        documentRootConfig.setCgiExtensions(OFF);
                 } else {
                         throwErr(select, ": Unknown select error: line ",
                                  this->tokens_[index].getLineNumber());

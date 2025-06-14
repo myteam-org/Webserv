@@ -57,7 +57,7 @@ void Config::printLocation(const ServerContext& server) {
                         std::cout << "     |- root: " << documentRootConfig.getRoot()
                                   << std::endl;
                 }
-                const OnOff* method = location[k].getMethodArray();
+                const OnOff* method = location[k].getAllowedMethod();
                 std::cout << "     |- method: GET = " << method[GET] << " POST = " << method[POST] 
                           << " DELETE = " << method[DELETE] << std::endl;
                 std::cout << "     |- index: " << documentRootConfig.getIndex()

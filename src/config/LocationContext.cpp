@@ -23,9 +23,9 @@ void LocationContext::setRedirect(const std::string& redirect) {
 
 const std::string& LocationContext::getPath() const { return (this->path_); }
 
-OnOff* LocationContext::getMethod() { return (this->allowedMethod_); }
+OnOff* LocationContext::getMutableAllowedMethod() { return (this->allowedMethod_); }
 
-const OnOff* LocationContext::getMethodArray() const {
+const OnOff* LocationContext::getAllowedMethod() const {
         return (this->allowedMethod_);        
 }
 

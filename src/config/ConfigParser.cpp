@@ -157,7 +157,7 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
                 if (type == BRACE) {
                         updateDepth(text, lineNum);
                         if (this->depth_ == 1) { 
-                                OnOff* method = location.getMethod();
+                                OnOff* method = location.getMutableAllowedMethod();
                                 if (method[GET] == OFF && method[POST] == OFF && method[DELETE] == OFF) {
                                         location.setMethod(GET);
                                         location.setMethod(POST);
@@ -197,11 +197,11 @@ void ConfigParser::setMethod_(LocationContext& location, size_t& index) {
                         index--;
                         return ;
                 } 
-                if (method == "GET" && location.getMethod()[GET] == OFF) {
+                if (method == "GET" && location.getMutableAllowedMethod()[GET] == OFF) {
                         location.setMethod(GET);
-                } else if (method == "POST" && location.getMethod()[POST] == OFF) {
+                } else if (method == "POST" && location.getMutableAllowedMethod()[POST] == OFF) {
                         location.setMethod(POST);
-                } else if (method == "DELETE" && location.getMethod()[DELETE] == OFF) {
+                } else if (method == "DELETE" && location.getMutableAllowedMethod()[DELETE] == OFF) {
                         location.setMethod(DELETE);
                 } else {
                         throwErr(method, ": Method value error: line ",

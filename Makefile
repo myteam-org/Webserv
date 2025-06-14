@@ -7,6 +7,7 @@ SRCS	= src/main.cpp \
 	  src/config/Config.cpp \
 	  src/config/ServerContext.cpp \
 	  src/config/LocationContext.cpp \
+	  src/config/DocumentRootConfig.cpp \
 	  src/validator/Validator.cpp \
 	  src/config/ConfigTokenizer.cpp \
 	  src/config/ConfigParser.cpp \

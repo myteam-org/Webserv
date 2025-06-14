@@ -16,6 +16,7 @@ add_library(webserv_lib STATIC
     config/ConfigTokenizer.cpp
     config/ServerContext.cpp
 	config/LocationContext.cpp
+    config/DocumentRootConfig.cpp
     validator/Validator.cpp
 )
 

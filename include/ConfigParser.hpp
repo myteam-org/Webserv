@@ -20,10 +20,14 @@ class ConfigParser {
                              int lineNumber);
 
        private:
-        static const int FUNC_SIZE = 11;
-        typedef void (ConfigParser::*funcPtr)(ServerContext& server,
-                                              size_t& index);
-        static funcPtr func_[FUNC_SIZE];
+        static const int FUNC_SERVER_SIZE = 5;
+        static const int FUNC_LOCATION_SIZE = 6;
+        typedef void (ConfigParser::*funcServerPtr)
+                                (ServerContext& server, size_t& index);
+        static funcServerPtr funcServer_[FUNC_SERVER_SIZE];
+        typedef void (ConfigParser::*funcLocationPtr)
+                                (LocationContext& location, size_t& index);
+        static funcLocationPtr funcLocation_[FUNC_LOCATION_SIZE];
 
         std::vector<Token> tokens_;
         int depth_;
@@ -37,13 +41,11 @@ class ConfigParser {
         void setMaxBodySize_(ServerContext& server, size_t& index);
         void setErrPage_(ServerContext& server, size_t& index);
         void addLocation_(ServerContext& server, size_t& index);
-        std::vector<LocationContext>::iterator getLocationLastNode_(
-            ServerContext& server, size_t& index);
-        void setRoot_(ServerContext& server, size_t& index);
-        void setMethod_(ServerContext& server, size_t& index);
-        void setIndex_(ServerContext& server, size_t& index);
-        void setAutoIndex_(ServerContext& server, size_t& index);
-        void setIsCgi_(ServerContext& server, size_t& index);
-        void setRedirect_(ServerContext& server, size_t& index);
+        void setRoot_(LocationContext& location, size_t& index);
+        void setMethod_(LocationContext& location, size_t& index);
+        void setIndex_(LocationContext& location, size_t& index);
+        void setAutoIndex_(LocationContext& location, size_t& index);
+        void setIsCgi_(LocationContext& location, size_t& index);
+        void setRedirect_(LocationContext& location, size_t& index);
         std::string incrementAndCheckSize_(size_t& index);
 };

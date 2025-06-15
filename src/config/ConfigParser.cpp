@@ -12,13 +12,19 @@
 #include "Token.hpp"
 #include "Validator.hpp"
 
-void (ConfigParser::* ConfigParser::func_[FUNC_SIZE])(ServerContext&,
+void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(ServerContext&,
                                                       size_t&) = {
     &ConfigParser::setPort_,      &ConfigParser::setHost_,
     &ConfigParser::setErrPage_,   &ConfigParser::setMaxBodySize_,
-    &ConfigParser::addLocation_,  &ConfigParser::setRoot_,
-    &ConfigParser::setMethod_,    &ConfigParser::setIndex_,
-    &ConfigParser::setAutoIndex_, &ConfigParser::setIsCgi_,
+    &ConfigParser::addLocation_};
+
+void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(LocationContext&,
+                                                        size_t&) = {
+    &ConfigParser::setRoot_,
+    &ConfigParser::setMethod_,
+    &ConfigParser::setIndex_,
+    &ConfigParser::setAutoIndex_,
+    &ConfigParser::setIsCgi_,
     &ConfigParser::setRedirect_};
 
 ConfigParser::ConfigParser(ConfigTokenizer& tokenizer)
@@ -79,7 +85,7 @@ void ConfigParser::addServer_(size_t& index) {
                                 break;
                         }
                 } else if (type >= LISTEN && type <= LOCATION) {
-                        (this->*func_[type])(server, index);
+                        (this->*funcServer_[type])(server, index);
                 } else {
                         continue;
                 }
@@ -144,7 +150,6 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
         const std::string path = incrementAndCheckSize_(index);
 
         location.setPath(path);
-        server.getLocation().push_back(location);
         for (; index < this->tokens_.size(); ++(index)) {
                 const std::string text = this->tokens_[index].getText();
                 const int type = this->tokens_[index].getType();
@@ -152,34 +157,26 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
                 if (type == BRACE) {
                         updateDepth(text, lineNum);
                         if (this->depth_ == 1) { 
+                                OnOff* method = location.getMutableAllowedMethod();
+                                if (method[GET] == OFF && method[POST] == OFF && method[DELETE] == OFF) {
+                                        location.setMethod(GET);
+                                        location.setMethod(POST);
+                                        location.setMethod(DELETE);
+                                }
+                                server.getLocation().push_back(location);
                                 break;
                         }
                 } else if (type >= ROOT && type <= REDIRECT) {
-                        (this->*func_[type])(server, index);
+                        (this->*funcLocation_[type - FUNC_SERVER_SIZE])(location, index);
                 } else {
                         continue;
                 }
         }
 }
 
-std::vector<LocationContext>::iterator ConfigParser::getLocationLastNode_(
-    ServerContext& server, size_t& index) {
-        std::vector<LocationContext>& locations = server.getLocation();
-
-        if (locations.empty()) {
-                throwErr(this->tokens_[index].getText(),
-                         ": No location node: line ",
-                         this->tokens_[index].getLineNumber());
-        }
-        const std::vector<LocationContext>::iterator last = locations.end() - 1;
-        return (last);
-}
-
-void ConfigParser::setRoot_(ServerContext& server, size_t& index) {
+void ConfigParser::setRoot_(LocationContext& location, size_t& index) {
         const std::string root = incrementAndCheckSize_(index);
-        const std::vector<LocationContext>::iterator last =
-            getLocationLastNode_(server, index);
-        DocumentRootConfig& documentRootConfig = last->getDocumentRootConfig();
+        DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 documentRootConfig.setRoot(root);
@@ -190,10 +187,8 @@ void ConfigParser::setRoot_(ServerContext& server, size_t& index) {
         }
 }
 
-void ConfigParser::setMethod_(ServerContext& server, size_t& index) {
+void ConfigParser::setMethod_(LocationContext& location, size_t& index) {
         incrementAndCheckSize_(index);
-        const std::vector<LocationContext>::iterator last =
-            getLocationLastNode_(server, index);
 
         for (; index < this->tokens_.size(); ++index) {
                 const std::string method = this->tokens_[index].getText();
@@ -202,12 +197,12 @@ void ConfigParser::setMethod_(ServerContext& server, size_t& index) {
                         index--;
                         return ;
                 } 
-                if (type == VALUE && method == "GET") {
-                        last->addMethod(GET);
-                } else if (type == VALUE && method == "POST") {
-                        last->addMethod(POST);
-                } else if (type == VALUE && method == "DELETE") {
-                        last->addMethod(DELETE);
+                if (method == "GET" && location.getMutableAllowedMethod()[GET] == OFF) {
+                        location.setMethod(GET);
+                } else if (method == "POST" && location.getMutableAllowedMethod()[POST] == OFF) {
+                        location.setMethod(POST);
+                } else if (method == "DELETE" && location.getMutableAllowedMethod()[DELETE] == OFF) {
+                        location.setMethod(DELETE);
                 } else {
                         throwErr(method, ": Method value error: line ",
                                  this->tokens_[index].getLineNumber());
@@ -215,11 +210,10 @@ void ConfigParser::setMethod_(ServerContext& server, size_t& index) {
         }
 }
 
-void ConfigParser::setIndex_(ServerContext& server, size_t& index) {
+void ConfigParser::setIndex_(LocationContext& location, size_t& index) {
         const std::string indexPage = incrementAndCheckSize_(index);
-        const std::vector<LocationContext>::iterator last =
-            getLocationLastNode_(server, index);
-        DocumentRootConfig& documentRootConfig = last->getDocumentRootConfig();
+
+        DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 documentRootConfig.setIndex(indexPage);
@@ -230,11 +224,9 @@ void ConfigParser::setIndex_(ServerContext& server, size_t& index) {
         }
 }
 
-void ConfigParser::setAutoIndex_(ServerContext& server, size_t& index) {
+void ConfigParser::setAutoIndex_(LocationContext& location, size_t& index) {
         const std::string select = incrementAndCheckSize_(index);
-        const std::vector<LocationContext>::iterator last =
-            getLocationLastNode_(server, index);
-        DocumentRootConfig& documentRootConfig = last->getDocumentRootConfig();
+        DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 if (select == "ON") {
@@ -248,11 +240,9 @@ void ConfigParser::setAutoIndex_(ServerContext& server, size_t& index) {
         }
 }
 
-void ConfigParser::setIsCgi_(ServerContext& server, size_t& index) {
+void ConfigParser::setIsCgi_(LocationContext& location, size_t& index) {
         const std::string select = incrementAndCheckSize_(index);
-        const std::vector<LocationContext>::iterator last =
-            getLocationLastNode_(server, index);
-        DocumentRootConfig& documentRootConfig = last->getDocumentRootConfig();
+        DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 if (select == "ON") {
@@ -266,13 +256,11 @@ void ConfigParser::setIsCgi_(ServerContext& server, size_t& index) {
         }
 }
 
-void ConfigParser::setRedirect_(ServerContext& server, size_t& index) {
+void ConfigParser::setRedirect_(LocationContext& location, size_t& index) {
         const std::string redirect = incrementAndCheckSize_(index);
-        const std::vector<LocationContext>::iterator last =
-            getLocationLastNode_(server, index);
 
         if (this->tokens_[index].getType() == VALUE) {
-                last->setRedirect(redirect);
+                location.setRedirect(redirect);
         } else {
                 throwErr(this->tokens_[index].getText(),
                          ": Redirect value error: line ",

@@ -13,19 +13,20 @@ class LocationContext {
         ~LocationContext();
 
         void setPath(const std::string& path);
-        void addMethod(AllowedMethod method);
+        void setMethod(AllowedMethod method);
         void setRedirect(const std::string& redirect);
         const std::string& getPath() const;
-        std::vector<AllowedMethod> getMethod();
-        const std::vector<AllowedMethod>& getMethod() const;
+        OnOff* getMutableAllowedMethod();
+        const OnOff* getAllowedMethod() const;
         const std::string& getRedirect() const;
         DocumentRootConfig& getDocumentRootConfig();
         const DocumentRootConfig& getDocumentRootConfig() const;
 
        private:
+        static const int METHOD_COUNT = 3;
         const std::string value_;
         std::string path_;
-        std::vector<AllowedMethod> allowedMethod_;
+        OnOff allowedMethod_[METHOD_COUNT];
         std::string redirect_;
         DocumentRootConfig documentRootConfig_;
 };

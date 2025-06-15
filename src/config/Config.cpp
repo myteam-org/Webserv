@@ -57,13 +57,9 @@ void Config::printLocation(const ServerContext& server) {
                         std::cout << "     |- root: " << documentRootConfig.getRoot()
                                   << std::endl;
                 }
-                std::cout << "     |- method: ";
-                const std::vector<AllowedMethod> method =
-                    location[k].getMethod();
-                for (size_t l = 0; l < method.size(); ++l) {
-                        std::cout << method[l] << " ";
-                }
-                std::cout << std::endl;
+                const OnOff* method = location[k].getAllowedMethod();
+                std::cout << "     |- method: GET = " << method[GET] << " POST = " << method[POST] 
+                          << " DELETE = " << method[DELETE] << std::endl;
                 std::cout << "     |- index: " << documentRootConfig.getIndex()
                           << std::endl;
                 std::cout << "     |- auto_index: "

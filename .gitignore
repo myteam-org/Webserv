@@ -4,3 +4,6 @@ build/
 CTestTestfile.cmake
 *.o
 *.json
+.editorconfig
+.vscode/
+webserv

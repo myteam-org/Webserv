@@ -1,3 +1,4 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions")
 # set c++98
 set(CMAKE_CXX_STANDARD 98)
 # c++98完全準拠
@@ -10,18 +11,22 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 # webserv実行ファイルの定義
 add_library(webserv_lib STATIC
-    config/Token.cpp
-    config/Config.cpp
-    config/ConfigParser.cpp
-    config/ConfigTokenizer.cpp
-    config/ServerContext.cpp
-	config/LocationContext.cpp
-    config/DocumentRootConfig.cpp
-    validator/Validator.cpp
+    config/token.cpp
+    config/config.cpp
+    config/parser.cpp
+    config/tokenizer.cpp
+    config/context/server.cpp
+	config/context/location.cpp
+    config/context/document_root.cpp
+	config/validator.cpp
 )
 
 # includeディレクトリの設定（ターゲットベース）
-target_include_directories(webserv_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(webserv_lib PUBLIC 
+	${PROJECT_SOURCE_DIR}/include
+	${PROJECT_SOURCE_DIR}/include/config
+	${PROJECT_SOURCE_DIR}/include/config/context
+)
 
 # 実行ファイルの生成
 add_executable(webserv main.cpp)

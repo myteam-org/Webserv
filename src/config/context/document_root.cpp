@@ -1,4 +1,4 @@
-#include "DocumentRootConfig.hpp"
+#include "document_root.hpp"
 
 DocumentRootConfig::DocumentRootConfig() 
     : autoIndex_(OFF), cgiExtensions_(OFF) {}

@@ -10,10 +10,10 @@ class LocationContext;
 #include <map>
 #include <vector>
 
-#include "ConfigTokenizer.hpp"
-#include "LocationContext.hpp"
-#include "DocumentRootConfig.hpp"
-#include "Token.hpp"
+#include "tokenizer.hpp"
+#include "location.hpp"
+#include "document_root.hpp"
+#include "token.hpp"
 
 class ServerContext {
        public:

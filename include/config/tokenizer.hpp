@@ -9,7 +9,7 @@ class Token;
 #include <string>
 #include <vector>
 
-#include "Token.hpp"
+#include "token.hpp"
 
 #define FILE_NAME "./config_file/default.conf"
 

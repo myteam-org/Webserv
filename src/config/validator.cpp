@@ -1,8 +1,8 @@
-#include "Validator.hpp"
+#include "validator.hpp"
 
 #include <stdexcept>
 
-#include "Token.hpp"
+#include "token.hpp"
 
 bool Validator::number(const std::string& number, int type) {
         for (size_t i = 0; i < number.size(); ++i) {

@@ -2,9 +2,9 @@
 
 #include <iostream>
 
-#include "ConfigParser.hpp"
-#include "DocumentRootConfig.hpp"
-#include "Token.hpp"
+#include "parser.hpp"
+#include "document_root.hpp"
+#include "token.hpp"
 #include "data.hpp"
 
 class LocationContext {

@@ -1,10 +1,10 @@
-#include "Config.hpp"
+#include "config/config.hpp"
 
 #include <cstddef>
 
-#include "LocationContext.hpp"
-#include "ServerContext.hpp"
-#include "DocumentRootConfig.hpp"
+#include "location.hpp"
+#include "server.hpp"
+#include "document_root.hpp"
 #include "data.hpp"
 
 Config::Config(const std::string& filename)

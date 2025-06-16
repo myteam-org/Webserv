@@ -1,4 +1,4 @@
-#include "Token.hpp"
+#include "config/token.hpp"
 
 Token::Token(const std::string& text, int lineNumber)
     : text_(text), lineNumber_(lineNumber) {

@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include "ConfigParser.hpp"
-#include "Token.hpp"
+#include "parser.hpp"
+#include "token.hpp"
 #include "data.hpp"
 
 class DocumentRootConfig {

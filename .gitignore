@@ -7,3 +7,4 @@ CTestTestfile.cmake
 .editorconfig
 .vscode/
 webserv
+compile_flags.txt

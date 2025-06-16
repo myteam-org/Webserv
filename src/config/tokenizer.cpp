@@ -1,4 +1,4 @@
-#include "ConfigTokenizer.hpp"
+#include "tokenizer.hpp"
 
 #include <fstream>
 #include <iterator>

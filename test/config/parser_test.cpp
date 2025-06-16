@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
 #include <fstream>
 #include <sstream>
-#include "ConfigParser.hpp"
-#include "ConfigTokenizer.hpp"
-#include "ServerContext.hpp"
-#include "Token.hpp"
+#include "parser.hpp"
+#include "tokenizer.hpp"
+#include "server.hpp"
+#include "token.hpp"
 
 class ConfigParserTest : public ::testing::Test {
 protected:

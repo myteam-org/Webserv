@@ -2,9 +2,9 @@
 
 class ConfigParser;
 class ConfigTokenizer;
-#include "ServerContext.hpp"
-#include "LocationContext.hpp"
-#include "ConfigParser.hpp"
+#include "server.hpp"
+#include "location.hpp"
+#include "parser.hpp"
 
 #include <sys/stat.h>
 #include <string>

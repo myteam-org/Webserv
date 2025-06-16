@@ -1,16 +1,16 @@
-#include "ConfigParser.hpp"
+#include "parser.hpp"
 
 #include <sys/types.h>
 
 #include <cstddef>
 #include <stdexcept>
 
-#include "Config.hpp"
-#include "ConfigTokenizer.hpp"
-#include "LocationContext.hpp"
-#include "ServerContext.hpp"
-#include "Token.hpp"
-#include "Validator.hpp"
+#include "config.hpp"
+#include "tokenizer.hpp"
+#include "location.hpp"
+#include "server.hpp"
+#include "token.hpp"
+#include "validator.hpp"
 
 void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(ServerContext&,
                                                       size_t&) = {

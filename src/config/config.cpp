@@ -7,12 +7,12 @@
 #include "document_root.hpp"
 #include "data.hpp"
 
-struct ConfigDependentEraser{
+struct ConfigServerValueErrorEraser{
        private:
         const Config* config;
 
        public:
-        explicit ConfigDependentEraser(const Config* cfg) : config(cfg) {}
+        explicit ConfigServerValueErrorEraser(const Config* cfg) : config(cfg) {}
 
         bool operator()(const ServerContext& server) const {
                 return (server.getHost().empty()
@@ -22,17 +22,18 @@ struct ConfigDependentEraser{
         }
 };
 
-struct Remover {
+struct ConfigServerDuplicateErrorEraser {
         private:
         std::vector<int>* seenListenValue;
 
         public:
-        explicit Remover(std::vector<int>* seen) : seenListenValue(seen) {}
+        explicit ConfigServerDuplicateErrorEraser(std::vector<int>* seen) : seenListenValue(seen) {}
 
         bool operator()(const ServerContext& server) {
                 const int listen = server.getListen();
 
                 for (std::vector<int>::iterator it = seenListenValue->begin(); it != seenListenValue->end(); ++it) {
+                        std::cerr << "[ server removed: listen port duplicate error ]" << std::endl;
                         if (*it == listen) {
                                 return (true);
                         }
@@ -49,6 +50,62 @@ Config::Config(const std::string& filename)
     }
 
 Config::~Config() {}
+
+bool Config::checkArgc(int argc) {
+        if (argc > 2) {
+                std::cerr << "Argument error" << std::endl;
+                return (false);
+        }
+        return (true);
+}
+
+std::string Config::setFile(int argc, char** argv) {
+        std::string confFile;
+        if (argc == 1) {
+                confFile = FILE_NAME;
+        } else {
+                confFile = argv[1];
+        }
+        return (confFile);
+}
+
+void Config::checkFile(std::string& filename) {
+        struct stat status;
+
+        if (stat(filename.c_str(), &status) != 0) {
+                std::cerr << "Failed to stat file: " << filename << std::endl;
+                std::exit(1);
+        }
+        if (status.st_mode & S_IFDIR) {
+                std::cerr << filename << ": is a directory" << std::endl;
+                std::exit(1);
+        }
+}
+
+void Config::checkAndEraseServerNode() {
+        std::vector<ServerContext>& servers = this->parser_.getServer();
+
+        servers.erase(
+                std::remove_if(servers.begin(), servers.end(), 
+                        ConfigServerValueErrorEraser(this)), servers.end());
+}
+
+bool Config::checkAndEraseLocationNode(const ServerContext& server) {
+        for (std::vector<LocationContext>::const_iterator it = server.getLocation().begin();
+                it != server.getLocation().end(); ++it) {
+                        return (it->getPath().empty() 
+                                || it->getDocumentRootConfig().getRoot().empty());
+                }
+        return (false);
+}
+
+void Config::removeDuplicateListenServers(std::vector<ServerContext>& servers) {
+        std::vector<int> seenListenValue;
+
+        servers.erase(
+                std::remove_if(servers.begin(), servers.end(), ConfigServerDuplicateErrorEraser(&seenListenValue)),
+                        servers.end());
+}
 
 const ConfigParser& Config::getParser() const { return (this->parser_); }
 
@@ -110,60 +167,4 @@ void Config::printLocation(const ServerContext& server) {
                             << std::endl;
                 }
         }
-}
-
-bool Config::checkArgc(int argc) {
-        if (argc > 2) {
-                std::cerr << "Argument error" << std::endl;
-                return (false);
-        }
-        return (true);
-}
-
-std::string Config::setFile(int argc, char** argv) {
-        std::string confFile;
-        if (argc == 1) {
-                confFile = FILE_NAME;
-        } else {
-                confFile = argv[1];
-        }
-        return (confFile);
-}
-
-void Config::checkFile(std::string& filename) {
-        struct stat status;
-
-        if (stat(filename.c_str(), &status) != 0) {
-                std::cerr << "Failed to stat file: " << filename << std::endl;
-                std::exit(1);
-        }
-        if (status.st_mode & S_IFDIR) {
-                std::cerr << filename << ": is a directory" << std::endl;
-                std::exit(1);
-        }
-}
-
-void Config::checkAndEraseServerNode() {
-        std::vector<ServerContext>& servers = this->parser_.getServer();
-
-        servers.erase(
-                std::remove_if(servers.begin(), servers.end(), 
-                        ConfigDependentEraser(this)), servers.end());
-}
-
-bool Config::checkAndEraseLocationNode(const ServerContext& server) {
-        for (std::vector<LocationContext>::const_iterator it = server.getLocation().begin();
-                it != server.getLocation().end(); ++it) {
-                        return (it->getPath().empty() 
-                                || it->getDocumentRootConfig().getRoot().empty());
-                }
-        return (false);
-}
-
-void Config::removeDuplicateListenServers(std::vector<ServerContext>& servers) {
-        std::vector<int> seenListenValue;
-
-        servers.erase(
-                std::remove_if(servers.begin(), servers.end(), Remover(&seenListenValue)),
-                        servers.end());
 }

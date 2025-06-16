@@ -7,8 +7,46 @@
 #include "document_root.hpp"
 #include "data.hpp"
 
+struct ConfigDependentEraser{
+       private:
+        const Config* config;
+
+       public:
+        explicit ConfigDependentEraser(const Config* cfg) : config(cfg) {}
+
+        bool operator()(const ServerContext& server) const {
+                return (server.getHost().empty()
+                        || server.getListen() == 0
+                        || Config::checkAndEraseLocationNode(server)
+			|| server.getLocation().empty());
+        }
+};
+
+struct Remover {
+        private:
+        std::vector<int>* seenListenValue;
+
+        public:
+        explicit Remover(std::vector<int>* seen) : seenListenValue(seen) {}
+
+        bool operator()(const ServerContext& server) {
+                const int listen = server.getListen();
+
+                for (std::vector<int>::iterator it = seenListenValue->begin(); it != seenListenValue->end(); ++it) {
+                        if (*it == listen) {
+                                return (true);
+                        }
+                }
+                seenListenValue->push_back(listen);
+                return (false);
+        }
+};
+
 Config::Config(const std::string& filename)
-    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_) {}
+    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_) {
+        checkAndEraseServerNode();
+        removeDuplicateListenServers(this->parser_.getServer());
+    }
 
 Config::~Config() {}
 
@@ -103,4 +141,29 @@ void Config::checkFile(std::string& filename) {
                 std::cerr << filename << ": is a directory" << std::endl;
                 std::exit(1);
         }
+}
+
+void Config::checkAndEraseServerNode() {
+        std::vector<ServerContext>& servers = this->parser_.getServer();
+
+        servers.erase(
+                std::remove_if(servers.begin(), servers.end(), 
+                        ConfigDependentEraser(this)), servers.end());
+}
+
+bool Config::checkAndEraseLocationNode(const ServerContext& server) {
+        for (std::vector<LocationContext>::const_iterator it = server.getLocation().begin();
+                it != server.getLocation().end(); ++it) {
+                        return (it->getPath().empty() 
+                                || it->getDocumentRootConfig().getRoot().empty());
+                }
+        return (false);
+}
+
+void Config::removeDuplicateListenServers(std::vector<ServerContext>& servers) {
+        std::vector<int> seenListenValue;
+
+        servers.erase(
+                std::remove_if(servers.begin(), servers.end(), Remover(&seenListenValue)),
+                        servers.end());
 }

@@ -8,6 +8,7 @@ class ConfigTokenizer;
 
 #include <sys/stat.h>
 #include <string>
+#include <algorithm>
 
 #define FILE_NAME "./config_file/default.conf"
 
@@ -23,6 +24,9 @@ class Config {
         static void printServer(const std::vector<ServerContext>& server);
         static void printLocation(const ServerContext& server);
         const ConfigParser& getParser() const;
+        static bool checkAndEraseLocationNode(const ServerContext& server);
+        void checkAndEraseServerNode();
+        static void removeDuplicateListenServers(std::vector<ServerContext>& servers);
 
        private:
         ConfigTokenizer tokenizer_;

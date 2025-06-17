@@ -24,7 +24,7 @@ class LocationContext {
 
        private:
         static const int METHOD_COUNT = 3;
-        const std::string value_;
+        std::string value_;
         std::string path_;
         OnOff allowedMethod_[METHOD_COUNT];
         std::string redirect_;

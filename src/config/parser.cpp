@@ -277,6 +277,10 @@ std::string ConfigParser::incrementAndCheckSize_(size_t& index) {
         return (this->tokens_[index].getText());
 }
 
+std::vector<ServerContext>& ConfigParser::getServer() {
+        return (this->servers_);
+}
+
 const std::vector<ServerContext>& ConfigParser::getServer() const {
         return (this->servers_);
 }

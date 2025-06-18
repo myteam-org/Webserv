@@ -38,6 +38,9 @@ CheckOptions:
   - key: readability-identifier-length.MinimumLoopCounterNameLength
     value: 1
 
+  - key: readability-identifier-length.MinimumParameterNameLength
+    value: 2  # 1文字の引数名を許可
+
 # 警告をエラーとして扱うかどうか
 WarningsAsErrors: '*'
 

@@ -39,7 +39,7 @@ CheckOptions:
     value: 1
 
   - key: readability-identifier-length.MinimumParameterNameLength
-    value: 2  # 1文字の引数名を許可
+    value: 2
 
 # 警告をエラーとして扱うかどうか
 WarningsAsErrors: '*'

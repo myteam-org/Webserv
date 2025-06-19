@@ -1,6 +1,5 @@
 #pragma once
 #include <stdexcept>
-
 namespace types {
     template<typename T>
     struct Some {
@@ -18,15 +17,19 @@ namespace types {
     class Option {
         Some<T>* some_;
         bool is_none_;
+        
+        Option(const Option&);
+        Option& operator=(const Option&);
+        
     public:
         // NOLINTNEXTLINE(google-explicit-constructor)
         Option(types::Some<T> some) : some_(new types::Some<T>(some)), is_none_(false) {}
         
         // NOLINTNEXTLINE(google-explicit-constructor)
-		Option(types::None none_val) : some_(NULL), is_none_(true) {
-            (void)none_val; // 未使用変数の警告を回避
+        Option(types::None none_val) : some_(NULL), is_none_(true) {
+            (void)none_val;
         }
-
+        
         ~Option() {
             delete some_;
         }
@@ -47,7 +50,6 @@ namespace types {
             }
             return default_val;
         }
-        
     };
     
     template<typename T>

@@ -1,5 +1,0 @@
-if(EXISTS "/home/tkitahar/projects/webserv/test/config/parser_test[1]_tests.cmake")
-  include("/home/tkitahar/projects/webserv/test/config/parser_test[1]_tests.cmake")
-else()
-  add_test(parser_test_NOT_BUILT parser_test_NOT_BUILT)
-endif()

@@ -19,6 +19,8 @@ add_library(webserv_lib STATIC
 	config/context/location.cpp
     config/context/document_root.cpp
 	config/validator.cpp
+	utils/logger.cpp
+
 )
 
 # includeディレクトリの設定（ターゲットベース）
@@ -26,6 +28,7 @@ target_include_directories(webserv_lib PUBLIC
 	${PROJECT_SOURCE_DIR}/include
 	${PROJECT_SOURCE_DIR}/include/config
 	${PROJECT_SOURCE_DIR}/include/config/context
+	${PROJECT_SOURCE_DIR}/include/utils
 )
 
 # 実行ファイルの生成

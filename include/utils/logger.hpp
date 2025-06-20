@@ -30,6 +30,7 @@ public:
     void log(LogLevel level, const std::string &message) const;
 
 private:
+	const std::size_t kTimestampBufferSize = 32;
     enum LogColor {
         kColorReset = 0,
         kColorRed = 31,

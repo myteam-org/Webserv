@@ -119,7 +119,7 @@ std::string Logger::levelToStringNoColor(const LogLevel level) {
 std::string Logger::getTimestamp() {
     const std::time_t nowTime = std::time(NULL);
     const tm *nowLocal = std::localtime(&nowTime);
-    char buffer[32];
+	char buffer[kTimestampBufferSize];
     std::strftime(buffer, sizeof(buffer), "%Y/%m/%d %H:%M:%S%z", nowLocal);
     return std::string(buffer);
 }

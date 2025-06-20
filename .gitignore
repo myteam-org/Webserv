@@ -8,3 +8,4 @@ CTestTestfile.cmake
 .vscode/
 webserv
 compile_flags.txt
+myapp.log

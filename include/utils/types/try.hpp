@@ -1,5 +1,5 @@
-#ifndef SRC_LIB_UTILS_TYPES_TRY_HPP
-#define SRC_LIB_UTILS_TYPES_TRY_HPP
+#ifndef UTILS_TYPES_TRY_HPP
+#define UTILS_TYPES_TRY_HPP
 
 #include "result.hpp"
 #include "option.hpp"

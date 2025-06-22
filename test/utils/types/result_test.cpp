@@ -14,16 +14,16 @@ int Tracer::count = 0;
 
 TEST(ResultTest, OkConstruction) {
     types::Result<int, std::string> result(types::ok(42));
-    EXPECT_TRUE(result.is_ok());
-    EXPECT_FALSE(result.is_err());
+    EXPECT_TRUE(result.isOk());
+    EXPECT_FALSE(result.isErr());
     EXPECT_EQ(42, result.unwrap());
 }
 
 TEST(ResultTest, ErrConstruction) {
     types::Result<int, std::string> result(types::err(std::string("error")));
-    EXPECT_FALSE(result.is_ok());
-    EXPECT_TRUE(result.is_err());
-    EXPECT_EQ("error", result.unwrap_err());
+    EXPECT_FALSE(result.isOk());
+    EXPECT_TRUE(result.isErr());
+    EXPECT_EQ("error", result.unwrapErr());
 }
 
 TEST(ResultTest, UnwrapOnErrThrows) {
@@ -33,7 +33,7 @@ TEST(ResultTest, UnwrapOnErrThrows) {
 
 TEST(ResultTest, UnwrapErrOnOkThrows) {
     types::Result<int, std::string> result(types::ok(42));
-    EXPECT_THROW(result.unwrap_err(), std::runtime_error);
+    EXPECT_THROW(result.unwrapErr(), std::runtime_error);
 }
 
 TEST(ResultTest, OkDestruction) {

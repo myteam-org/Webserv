@@ -6,6 +6,7 @@
 enum TokenType {
         LISTEN,
         HOST,
+        SERVER_NAMES,
         ERR_PAGE,
         MAX_SIZE,
         LOCATION,

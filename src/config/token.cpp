@@ -24,6 +24,7 @@ void Token::setType_(const std::string& text) {
                 tokenMap.insert(std::make_pair("error_page", ERR_PAGE));
                 tokenMap.insert(std::make_pair("listen", LISTEN));
                 tokenMap.insert(std::make_pair("host", HOST));
+                tokenMap.insert(std::make_pair("server_names", SERVER_NAMES));
                 tokenMap.insert(std::make_pair("allow_method", METHOD));
                 tokenMap.insert(std::make_pair("index", INDEX));
                 tokenMap.insert(

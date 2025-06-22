@@ -7,8 +7,8 @@ class ServerContext;
 
 #include <vector>
 
-#include "tokenizer.hpp"
 #include "token.hpp"
+#include "tokenizer.hpp"
 
 class ConfigParser {
        public:
@@ -21,13 +21,13 @@ class ConfigParser {
                              int lineNumber);
 
        private:
-        static const int FUNC_SERVER_SIZE = 5;
+        static const int FUNC_SERVER_SIZE = 6;
         static const int FUNC_LOCATION_SIZE = 6;
-        typedef void (ConfigParser::*funcServerPtr)
-                                (ServerContext& server, size_t& index);
+        typedef void (ConfigParser::*funcServerPtr)(ServerContext& server,
+                                                    size_t& index);
         static funcServerPtr funcServer_[FUNC_SERVER_SIZE];
-        typedef void (ConfigParser::*funcLocationPtr)
-                                (LocationContext& location, size_t& index);
+        typedef void (ConfigParser::*funcLocationPtr)(LocationContext& location,
+                                                      size_t& index);
         static funcLocationPtr funcLocation_[FUNC_LOCATION_SIZE];
 
         std::vector<Token> tokens_;
@@ -39,9 +39,11 @@ class ConfigParser {
         void addServer_(size_t& index);
         void setPort_(ServerContext& server, size_t& index);
         void setHost_(ServerContext& server, size_t& index);
+        void setServerNames_(ServerContext& server, size_t& index);
         void setMaxBodySize_(ServerContext& server, size_t& index);
         void setErrPage_(ServerContext& server, size_t& index);
         void addLocation_(ServerContext& server, size_t& index);
+        static void setDefaultMethod_(LocationContext& location);
         void setRoot_(LocationContext& location, size_t& index);
         void setMethod_(LocationContext& location, size_t& index);
         void setIndex_(LocationContext& location, size_t& index);

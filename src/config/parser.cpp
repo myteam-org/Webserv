@@ -1,4 +1,4 @@
-#include "parser.hpp"
+#include "config/parser.hpp"
 
 #include <sys/types.h>
 
@@ -6,26 +6,23 @@
 #include <stdexcept>
 
 #include "config.hpp"
-#include "tokenizer.hpp"
 #include "location.hpp"
 #include "server.hpp"
 #include "token.hpp"
+#include "tokenizer.hpp"
 #include "validator.hpp"
 
-void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(ServerContext&,
-                                                      size_t&) = {
-    &ConfigParser::setPort_,      &ConfigParser::setHost_,
-    &ConfigParser::setErrPage_,   &ConfigParser::setMaxBodySize_,
-    &ConfigParser::addLocation_};
+void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(
+    ServerContext&, size_t&) = {
+    &ConfigParser::setPort_,        &ConfigParser::setHost_,
+    &ConfigParser::setServerNames_, &ConfigParser::setErrPage_,
+    &ConfigParser::setMaxBodySize_, &ConfigParser::addLocation_};
 
-void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(LocationContext&,
-                                                        size_t&) = {
-    &ConfigParser::setRoot_,
-    &ConfigParser::setMethod_,
-    &ConfigParser::setIndex_,
-    &ConfigParser::setAutoIndex_,
-    &ConfigParser::setIsCgi_,
-    &ConfigParser::setRedirect_};
+void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(
+    LocationContext&, size_t&) = {
+    &ConfigParser::setRoot_,  &ConfigParser::setMethod_,
+    &ConfigParser::setIndex_, &ConfigParser::setAutoIndex_,
+    &ConfigParser::setIsCgi_, &ConfigParser::setRedirect_};
 
 ConfigParser::ConfigParser(ConfigTokenizer& tokenizer)
     : tokens_(tokenizer.getTokens()), depth_(0) {
@@ -81,7 +78,7 @@ void ConfigParser::addServer_(size_t& index) {
                 const int lineNum = this->tokens_[index].getLineNumber();
                 if (type == BRACE) {
                         updateDepth(text, lineNum);
-                        if (this->depth_ == 0) { 
+                        if (this->depth_ == 0) {
                                 break;
                         }
                 } else if (type >= LISTEN && type <= LOCATION) {
@@ -114,6 +111,17 @@ void ConfigParser::setHost_(ServerContext& server, size_t& index) {
                 server.setHost(hostName);
         } else {
                 throwErr(hostName, ": Host value error: line",
+                         this->tokens_[index].getLineNumber());
+        }
+}
+
+void ConfigParser::setServerNames_(ServerContext& server, size_t& index) {
+        const std::string serverName = incrementAndCheckSize_(index);
+
+        if (this->tokens_[index].getType() == VALUE) {
+                server.setServerNames(serverName);
+        } else {
+                throwErr(serverName, ": server_name value error: line",
                          this->tokens_[index].getLineNumber());
         }
 }
@@ -156,27 +164,34 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
                 const int lineNum = this->tokens_[index].getLineNumber();
                 if (type == BRACE) {
                         updateDepth(text, lineNum);
-                        if (this->depth_ == 1) { 
-                                OnOff* method = location.getMutableAllowedMethod();
-                                if (method[GET] == OFF && method[POST] == OFF && method[DELETE] == OFF) {
-                                        location.setMethod(GET);
-                                        location.setMethod(POST);
-                                        location.setMethod(DELETE);
-                                }
+                        if (this->depth_ == 1) {
+                                setDefaultMethod_(location);
                                 server.getLocation().push_back(location);
                                 break;
                         }
                 } else if (type >= ROOT && type <= REDIRECT) {
-                        (this->*funcLocation_[type - FUNC_SERVER_SIZE])(location, index);
+                        (this->*funcLocation_[type - FUNC_SERVER_SIZE])(
+                            location, index);
                 } else {
                         continue;
                 }
         }
 }
 
+void ConfigParser::setDefaultMethod_(LocationContext& location) {
+        OnOff* method = location.getMutableAllowedMethod();
+        if (method[GET] == OFF && method[POST] == OFF &&
+            method[DELETE] == OFF) {
+                location.setMethod(GET);
+                location.setMethod(POST);
+                location.setMethod(DELETE);
+        }
+}
+
 void ConfigParser::setRoot_(LocationContext& location, size_t& index) {
         const std::string root = incrementAndCheckSize_(index);
-        DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
+        DocumentRootConfig& documentRootConfig =
+            location.getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 documentRootConfig.setRoot(root);
@@ -195,13 +210,16 @@ void ConfigParser::setMethod_(LocationContext& location, size_t& index) {
                 const TokenType type = this->tokens_[index].getType();
                 if (type == BRACE || (type >= ROOT && type <= REDIRECT)) {
                         index--;
-                        return ;
-                } 
-                if (method == "GET" && location.getMutableAllowedMethod()[GET] == OFF) {
+                        return;
+                }
+                if (method == "GET" &&
+                    location.getMutableAllowedMethod()[GET] == OFF) {
                         location.setMethod(GET);
-                } else if (method == "POST" && location.getMutableAllowedMethod()[POST] == OFF) {
+                } else if (method == "POST" &&
+                           location.getMutableAllowedMethod()[POST] == OFF) {
                         location.setMethod(POST);
-                } else if (method == "DELETE" && location.getMutableAllowedMethod()[DELETE] == OFF) {
+                } else if (method == "DELETE" &&
+                           location.getMutableAllowedMethod()[DELETE] == OFF) {
                         location.setMethod(DELETE);
                 } else {
                         throwErr(method, ": Method value error: line ",
@@ -213,7 +231,8 @@ void ConfigParser::setMethod_(LocationContext& location, size_t& index) {
 void ConfigParser::setIndex_(LocationContext& location, size_t& index) {
         const std::string indexPage = incrementAndCheckSize_(index);
 
-        DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
+        DocumentRootConfig& documentRootConfig =
+            location.getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 documentRootConfig.setIndex(indexPage);
@@ -226,7 +245,8 @@ void ConfigParser::setIndex_(LocationContext& location, size_t& index) {
 
 void ConfigParser::setAutoIndex_(LocationContext& location, size_t& index) {
         const std::string select = incrementAndCheckSize_(index);
-        DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
+        DocumentRootConfig& documentRootConfig =
+            location.getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 if (select == "ON") {
@@ -242,7 +262,8 @@ void ConfigParser::setAutoIndex_(LocationContext& location, size_t& index) {
 
 void ConfigParser::setIsCgi_(LocationContext& location, size_t& index) {
         const std::string select = incrementAndCheckSize_(index);
-        DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
+        DocumentRootConfig& documentRootConfig =
+            location.getDocumentRootConfig();
 
         if (this->tokens_[index].getType() == VALUE) {
                 if (select == "ON") {

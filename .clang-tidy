@@ -41,6 +41,38 @@ CheckOptions:
   - key: readability-identifier-length.MinimumParameterNameLength
     value: 2
 
+  # 早期リターンとガード節に関するチェック
+  - key:             readability-else-after-return.WarnOnConditionVariables
+    value:           'true'
+  - key:             misc-redundant-expression.WarnOnConditionVariables
+    value:           'true'
+  - key:             readability-simplify-boolean-expr.ChainedConditionalReturn
+    value:           'true'
+  - key:             bugprone-branch-clone.MinSimilarity
+    value:           '70'
+  - key:             readability-implicit-bool-conversion.AllowIntegerConditions
+    value:           'false'
+
+# 早期リターンを推奨するカスタムチェック
+  - key:             readability-early-return.Enable
+    value:           'true'
+  - key:             readability-early-return.MaxNestedBlocks
+    value:           '3'
+  - key:             readability-early-return.AllowReturnInElse
+    value:           'false'
+
+# C++98互換性設定
+  - key:             modernize-use-nullptr.Cpp98Compat
+    value:           'true'
+  - key:             modernize-use-override.Cpp98Compat
+    value:           'true'
+
+# メモリ管理関連
+  - key:             cppcoreguidelines-owning-memory.Cpp98Compat
+    value:           'true'
+  - key:             cppcoreguidelines-no-malloc.Cpp98Compat
+    value:           'true'
+
 # 警告をエラーとして扱うかどうか
 WarningsAsErrors: '*'
 

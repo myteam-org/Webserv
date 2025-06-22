@@ -25,8 +25,8 @@ namespace types {
 
     template<typename T, typename E>
     class Result {
-        Ok<T>* ok_;   // Ok 状態の場合はここに値が入る
-        Err<E>* err_; // Err 状態の場合はここに値が入る
+        Ok<T>* ok_;
+        Err<E>* err_;
 
     public:
         // NOLINTNEXTLINE(google-explicit-constructor)
@@ -39,22 +39,26 @@ namespace types {
             delete err_;
         }
 
-        bool is_ok() const { return ok_ != NULL; }
-        bool is_err() const { return err_ != NULL; }
+        bool isOk() const { return ok_ != NULL; }
+        bool isErr() const { return err_ != NULL; }
 
         T unwrap() const {
-            if (!is_ok()) {
+            if (!isOk()) {
                 throw std::runtime_error("Called unwrap on Err");
             }
-            return ok_->value(); // getter を使用
+            return ok_->value();
         }
 
-        E unwrap_err() const {
-            if (!is_err()) {
+        E unwrapErr() const {
+            if (!isErr()) {
                  throw std::runtime_error("Called unwrap_err on Ok");
             }
-            return err_->error(); // getter を使用
+            return err_->error();
         }
+
+	    bool canUnwrap() const {
+			return isOk();
+		}
     };
 
     template<typename T>

@@ -1,6 +1,8 @@
 #pragma once
 #include <stdexcept>
+
 namespace types {
+
     template<typename T>
     struct Some {
     private:
@@ -9,52 +11,67 @@ namespace types {
         explicit Some(T val) : val_(val) {}
         T value() const { return val_; }
     };
-    
+
     struct None {
+        // もし必要であれば、canUnwrap/unwrap を追加しておくことも可能ですが、
+        // 通常はラッパー型で扱うため不要です。
     };
-    
+
     template<typename T>
     class Option {
         Some<T>* some_;
-        bool is_none_;
-        
-        Option(const Option&);
-        Option& operator=(const Option&);
-        
     public:
-        // NOLINTNEXTLINE(google-explicit-constructor)
-        Option(types::Some<T> some) : some_(new types::Some<T>(some)), is_none_(false) {}
-        
-        // NOLINTNEXTLINE(google-explicit-constructor)
-        Option(types::None none_val) : some_(NULL), is_none_(true) {
-            (void)none_val;
+        // コピーコンストラクタを public にしておく
+        Option(const Option& other)
+            : some_(other.some_ ? new Some<T>(*other.some_) : 0)
+        {}
+
+        Option& operator=(const Option& other) {
+            if (this != &other) {
+                delete some_;
+                some_ = other.some_ ? new Some<T>(*other.some_) : 0;
+            }
+            return *this;
         }
-        
+   
+		explicit Option(types::Some<T> some) : some_(new types::Some<T>(some)) {}
+
+		explicit Option(types::None none_val) : some_(0) {
+			(void)none_val;
+		}
+
         ~Option() {
             delete some_;
         }
-        
-        bool is_some() const { return !is_none_; }
-        bool is_none() const { return is_none_; }
-        
+
+        bool isSome() const {
+            return some_ != 0;
+        }
+        bool isNone() const {
+            return some_ == 0;
+        }
         T unwrap() const {
-            if (is_none()) {
+            if (isNone()) {
                 throw std::runtime_error("Called unwrap on None");
             }
             return some_->value();
         }
-        
-        T unwrap_or(const T& default_val) const {
-            if (is_some()) {
+        T unwrapOr(const T& default_val) const {
+            if (isSome()) {
                 return some_->value();
             }
             return default_val;
         }
+        // TRYマクロ用のメソッド
+        bool canUnwrap() const {
+            return isSome();
+        }
     };
-    
+
     template<typename T>
     Some<T> some(const T& val) { return Some<T>(val); }
-    
+
     const None none = None();
-    
+
 } // namespace types
+

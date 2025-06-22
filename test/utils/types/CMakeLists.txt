@@ -16,6 +16,13 @@ target_link_libraries(option_test
 	PRIVATE webserv_lib gtest
 )
 
+# Option用のテスト実行ファイル
+add_executable(try_test try_test.cpp)
+target_link_libraries(try_test
+	PRIVATE webserv_lib gtest
+)
+
 # テストディスカバリー
 gtest_discover_tests(result_test)
 gtest_discover_tests(option_test)
+gtest_discover_tests(try_test)

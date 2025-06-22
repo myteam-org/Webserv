@@ -13,8 +13,8 @@ void ServerContext::setListen(u_int16_t port) { this->listen_ = port; }
 
 void ServerContext::setHost(const std::string& host) { this->host_ = host; }
 
-void ServerContext::setServerNames(const std::string& serverName) {
-        this->serverNames_ = serverName;
+void ServerContext::setserverName(const std::string& serverName) {
+        this->serverName_ = serverName;
 }
 
 void ServerContext::addMap(int number, const std::string& fileName) {
@@ -33,7 +33,7 @@ u_int16_t ServerContext::getListen() const { return (this->listen_); }
 
 const std::string& ServerContext::getHost() const { return (this->host_); }
 
-const std::string& ServerContext::getServerNames() const { return (this->serverNames_); }
+const std::string& ServerContext::getserverName() const { return (this->serverName_); }
 
 const std::vector<std::map<int, std::string> >& ServerContext::getErrorPage()
     const {

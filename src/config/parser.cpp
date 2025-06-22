@@ -15,7 +15,7 @@
 void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(
     ServerContext&, size_t&) = {
     &ConfigParser::setPort_,        &ConfigParser::setHost_,
-    &ConfigParser::setServerNames_, &ConfigParser::setErrPage_,
+    &ConfigParser::setserverName_, &ConfigParser::setErrPage_,
     &ConfigParser::setMaxBodySize_, &ConfigParser::addLocation_};
 
 void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(
@@ -115,11 +115,11 @@ void ConfigParser::setHost_(ServerContext& server, size_t& index) {
         }
 }
 
-void ConfigParser::setServerNames_(ServerContext& server, size_t& index) {
+void ConfigParser::setserverName_(ServerContext& server, size_t& index) {
         const std::string serverName = incrementAndCheckSize_(index);
 
         if (this->tokens_[index].getType() == VALUE) {
-                server.setServerNames(serverName);
+                server.setserverName(serverName);
         } else {
                 throwErr(serverName, ": server_name value error: line",
                          this->tokens_[index].getLineNumber());

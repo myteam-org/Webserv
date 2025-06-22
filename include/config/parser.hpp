@@ -39,7 +39,7 @@ class ConfigParser {
         void addServer_(size_t& index);
         void setPort_(ServerContext& server, size_t& index);
         void setHost_(ServerContext& server, size_t& index);
-        void setServerNames_(ServerContext& server, size_t& index);
+        void setserverName_(ServerContext& server, size_t& index);
         void setMaxBodySize_(ServerContext& server, size_t& index);
         void setErrPage_(ServerContext& server, size_t& index);
         void addLocation_(ServerContext& server, size_t& index);

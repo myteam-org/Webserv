@@ -9,10 +9,7 @@ class Token;
 #include <stdexcept>
 #include <vector>
 
-enum {
-        DIRECTORY,
-        FILENAME
-};
+enum { DIRECTORY, FILENAME };
 
 static const int MAX_PORT = 65535;
 static const int MAX_BODY_SIZE = 1000000;

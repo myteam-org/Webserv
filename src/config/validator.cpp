@@ -6,17 +6,17 @@
 
 bool Validator::number(const std::string& number, int type) {
         for (size_t i = 0; i < number.size(); ++i) {
-                if (!isdigit(number[i])) { 
+                if (!isdigit(number[i])) {
                         return (false);
                 }
         }
 
         const int num = atoi(number.c_str());
 
-        if (type == LISTEN) { 
+        if (type == LISTEN) {
                 return (num >= 0 && num <= MAX_PORT);
         }
-        if (type == MAX_SIZE) { 
+        if (type == MAX_SIZE) {
                 return (num > 0 && num <= MAX_BODY_SIZE);
         }
         if (type == ERR_PAGE) {

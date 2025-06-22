@@ -2,9 +2,9 @@
 
 #include <iostream>
 
+#include "data.hpp"
 #include "parser.hpp"
 #include "token.hpp"
-#include "data.hpp"
 
 class DocumentRootConfig {
        public:

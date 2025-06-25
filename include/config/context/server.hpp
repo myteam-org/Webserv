@@ -31,7 +31,7 @@ class ServerContext {
     const std::string& getValue() const;
     u_int16_t getListen() const;
     const std::string& getHost() const;
-    const std::string& getserverName() const;
+    const std::string& getServerName() const;
     const std::vector<std::map<int, std::string> >& getErrorPage() const;
     size_t getClientMaxBodySize() const;
     std::vector<LocationContext>& getLocation();

@@ -12,7 +12,7 @@ void Config::printServer(const std::vector<ServerContext>& server) {
         std::cout << " |- listen: " << static_cast<int>(server[i].getListen())
                   << std::endl;
         std::cout << " |- host: " << server[i].getHost() << std::endl;
-        std::cout << " |- server_name: " << server[i].getserverName()
+        std::cout << " |- server_name: " << server[i].getServerName()
                   << std::endl;
         if (server[i].getClientMaxBodySize()) {
             std::cout << " |- client_max_body_size: "

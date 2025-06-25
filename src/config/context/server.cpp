@@ -33,7 +33,7 @@ u_int16_t ServerContext::getListen() const { return (this->listen_); }
 
 const std::string& ServerContext::getHost() const { return (this->host_); }
 
-const std::string& ServerContext::getserverName() const {
+const std::string& ServerContext::getServerName() const {
     return (this->serverName_);
 }
 

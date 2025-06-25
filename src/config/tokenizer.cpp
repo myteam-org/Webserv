@@ -1,10 +1,8 @@
 #include "tokenizer.hpp"
 
 #include <fstream>
-// #include <iterator>
 #include <sstream>
 #include <stdexcept>
-// #include "gtest/gtest.h"
 
 ConfigTokenizer::ConfigTokenizer(std::string& filename) {
     std::ifstream file(filename.c_str());
@@ -46,7 +44,6 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
             Token newToken(token, lineCount, position);
             stringCount++;
             this->tokens_.push_back(newToken);
-            tokenStream.clear();
         }
     }
     file.close();

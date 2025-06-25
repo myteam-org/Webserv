@@ -3,7 +3,6 @@
 #include <sys/types.h>
 
 #include <cstddef>
-#include <iostream>
 #include <stdexcept>
 
 #include "config.hpp"

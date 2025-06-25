@@ -14,23 +14,23 @@ class ConfigTokenizer;
 #define FILE_NAME "./config_file/default.conf"
 
 class Config {
-       public:
-        explicit Config(const std::string& filename);
-        ~Config();
+   public:
+    explicit Config(const std::string& filename);
+    ~Config();
 
-        static bool checkArgc(int argc);
-        static std::string setFile(int argc, char** argv);
-        static void checkFile(std::string& filename);
-        static bool checkAndEraseLocationNode(const ServerContext& server);
-        void checkAndEraseServerNode();
-        static void removeDuplicateListenServers(
-            std::vector<ServerContext>& servers);
-        const ConfigParser& getParser() const;
-        void printParser() const;
-        static void printServer(const std::vector<ServerContext>& server);
-        static void printLocation(const ServerContext& server);
+    static bool checkArgc(int argc);
+    static std::string setFile(int argc, char** argv);
+    static void checkFile(std::string& filename);
+    static bool checkAndEraseLocationNode(const ServerContext& server);
+    void checkAndEraseServerNode();
+    static void removeDuplicateListenServers(
+        std::vector<ServerContext>& servers);
+    const ConfigParser& getParser() const;
+    void printParser() const;
+    static void printServer(const std::vector<ServerContext>& server);
+    static void printLocation(const ServerContext& server);
 
-       private:
-        ConfigTokenizer tokenizer_;
-        ConfigParser parser_;
+   private:
+    ConfigTokenizer tokenizer_;
+    ConfigParser parser_;
 };

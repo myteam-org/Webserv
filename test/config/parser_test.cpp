@@ -82,10 +82,8 @@ server {
     EXPECT_EQ(servers[0].getClientMaxBodySize(), 1024);
 }
 
-
-
-// Test error handling - unmatched braces
-TEST_F(ConfigParserTest, UnmatchedBracesError) {
+// Test error handling - unmatched braces1
+TEST_F(ConfigParserTest, UnmatchedBracesError1) {
     std::string config = R"(
 server {
     listen 8080;
@@ -99,6 +97,22 @@ server {
         ConfigParser parser(*tokenizer);
     }, std::runtime_error);
 }
+
+// Test error handling - unmatched braces2
+TEST_F(ConfigParserTest, UnmatchedBracesError2) {
+    std::string config = R"(
+{ server {
+    listen 8080;
+}
+)"; // Extra closing brace
+    
+    auto tokenizer = createTokenizerFromConfig(config);
+    
+    EXPECT_THROW({
+        ConfigParser parser(*tokenizer);
+    }, std::runtime_error);
+}
+
 
 
 

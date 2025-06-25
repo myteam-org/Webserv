@@ -1,9 +1,10 @@
 #include "tokenizer.hpp"
 
 #include <fstream>
-#include <iterator>
+// #include <iterator>
 #include <sstream>
 #include <stdexcept>
+// #include "gtest/gtest.h"
 
 ConfigTokenizer::ConfigTokenizer(std::string& filename) {
         std::ifstream file(filename.c_str());
@@ -25,21 +26,25 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
         while (std::getline(file, line)) {
                 std::istringstream iss(line);
                 std::string oneLine;
-
                 std::getline(iss, oneLine, '#');  // #以降を削除
                 oneLine.erase(0, oneLine.find_first_not_of(" \t"));
                 oneLine.erase(oneLine.find_last_not_of(" \t") + 1);
                 lineCount++;
-
                 checkLineEnd(oneLine, lineCount);
-
                 std::istringstream tokenStream(oneLine);
                 std::string token;
+                int stringCount = 0;
                 while (tokenStream >> token) {  // 空白区切りでtokenをset
+                        TokenPosition position = MIDDLE;
                         if (token[token.size() - 1] == ';') {
                                 token = token.substr(0, token.size() - 1);
+                                position = END;
                         }
-                        const Token newToken(token, lineCount);
+                        if (stringCount == 0) {
+                                position = BEGINNING;
+                        }
+                        Token newToken(token, lineCount, position);
+                        stringCount++;
                         this->tokens_.push_back(newToken);
                         tokenStream.clear();
                 }
@@ -56,6 +61,10 @@ void ConfigTokenizer::checkLineEnd(const std::string& line, int lineCount) {
                 throw(std::runtime_error(
                     line + ": Syntax error at the end of the line: line " +
                     numberToStr(lineCount)));
+        }
+        if (line[0] == '}' && line.size() > 1) {
+                throw(std::runtime_error(line + ": Syntax error : line " +
+                                         numberToStr(lineCount)));
         }
 }
 

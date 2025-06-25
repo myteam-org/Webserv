@@ -35,7 +35,7 @@ class ConfigParser {
         std::vector<ServerContext> servers_;
 
         void makeVectorServer_();
-        void updateDepth(const std::string& token, int lineNumber);
+        void updateDepth(const Token& token, int lineNumber);
         void addServer_(size_t& index);
         void setPort_(ServerContext& server, size_t& index);
         void setHost_(ServerContext& server, size_t& index);

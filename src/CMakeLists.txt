@@ -21,7 +21,8 @@ add_library(webserv_lib STATIC
     config/context/document_root.cpp
 	config/validator.cpp
 	utils/logger.cpp
-
+	io/read/reader_fd.cpp
+	io/read/buffer.cpp
 )
 
 # includeディレクトリの設定（ターゲットベース）
@@ -30,6 +31,7 @@ target_include_directories(webserv_lib PUBLIC
 	${PROJECT_SOURCE_DIR}/include/config
 	${PROJECT_SOURCE_DIR}/include/config/context
 	${PROJECT_SOURCE_DIR}/include/utils
+	${PROJECT_SOURCE_DIR}/include/io
 )
 
 # 実行ファイルの生成

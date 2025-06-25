@@ -3,8 +3,8 @@
 #include <sys/types.h>
 
 #include <cstddef>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 #include "config.hpp"
 #include "location.hpp"
@@ -36,7 +36,6 @@ void ConfigParser::makeVectorServer_() {
     for (size_t i = 0; i < this->tokens_.size(); ++i) {
         const TokenType type = this->tokens_[i].getType();
         const int lineNumber = this->tokens_[i].getLineNumber();
-
         if (type == BRACE) {
             updateDepth(tokens_[i], lineNumber);
             if (this->depth_ == 0) {
@@ -77,7 +76,10 @@ void ConfigParser::addServer_(size_t& index) {
     for (; index < this->tokens_.size(); ++(index)) {
         const int type = this->tokens_[index].getType();
         const int lineNum = this->tokens_[index].getLineNumber();
-        if (type == BRACE) {
+        if (type == SERVER) {
+            throwErr(tokens_[index].getText(), ": server in server error: line",
+                     lineNum);
+        } else if (type == BRACE) {
             updateDepth(this->tokens_[index], lineNum);
             if (this->depth_ == 0) {
                 break;
@@ -159,10 +161,13 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
 
     location.setPath(path);
     for (; index < this->tokens_.size(); ++(index)) {
-        // const std::string text = this->tokens_[index].getText();
+        const std::string text = this->tokens_[index].getText();
         const int type = this->tokens_[index].getType();
         const int lineNum = this->tokens_[index].getLineNumber();
-        if (type == BRACE) {
+        if (type == SERVER || type == LOCATION) {
+            throwErr(text, ": server or location in location error: line",
+                     lineNum);
+        } else if (type == BRACE) {
             updateDepth(tokens_[index], lineNum);
             if (this->depth_ == 1) {
                 setDefaultMethod_(location);

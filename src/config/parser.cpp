@@ -166,8 +166,8 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
         const std::string text = this->tokens_[index].getText();
         const int type = this->tokens_[index].getType();
         const int lineNum = this->tokens_[index].getLineNumber();
-        if (type == SERVER || type == LOCATION) {
-            throwErr(text, ": server or location in location error: line",
+        if (type == SERVER || type == LOCATION || (type >= LISTEN && type <= MAX_BODY_SIZE)) {
+            throwErr(text, ": location block member error: line",
                      lineNum);
         } else if (type == BRACE) {
             updateDepth(tokens_[index], lineNum);

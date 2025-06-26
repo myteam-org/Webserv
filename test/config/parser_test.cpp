@@ -295,6 +295,112 @@ server {
     EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
 }
 
+// Test error handling - invalid location block member error1
+TEST_F(ConfigParserTest, InvalidLocationBlockMemberError1) {
+    std::string config = R"(
+server {
+    location / {
+        location /;
+    }
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid location block member error2
+TEST_F(ConfigParserTest, InvalidLocationBlockMemberError2) {
+    std::string config = R"(
+server {
+    location / {
+        server {
+        }
+    }
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid location block member error3
+TEST_F(ConfigParserTest, InvalidLocationBlockMemberError3) {
+    std::string config = R"(
+server {
+    location / {
+        listen 80;
+    }
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid location block member error4
+TEST_F(ConfigParserTest, InvalidLocationBlockMemberError4) {
+    std::string config = R"(
+server {
+    location / {
+        host localhost;
+    }
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid location block member error5
+TEST_F(ConfigParserTest, InvalidLocationBlockMemberError5) {
+    std::string config = R"(
+server {
+    location / {
+        server_names www;
+    }
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid location block member error6
+TEST_F(ConfigParserTest, InvalidLocationBlockMemberError6) {
+    std::string config = R"(
+server {
+    location / {
+        error_page 500 500.html;
+    }
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid location block member error7
+TEST_F(ConfigParserTest, InvalidLocationBlockMemberError7) {
+    std::string config = R"(
+server {
+    location / {
+        client_max_body_size 1000000;
+    }
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
 // Test static throwErr method
 TEST_F(ConfigParserTest, ThrowErrMethod) {
     EXPECT_THROW(

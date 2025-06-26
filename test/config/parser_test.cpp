@@ -87,6 +87,32 @@ server {
     EXPECT_EQ(servers[0].getClientMaxBodySize(), 1024);
 }
 
+// Test max body size - invalid number
+TEST_F(ConfigParserTest, ParseMaxBodySizeConfiguration2) {
+    std::string config = R"(
+server {
+    client_max_body_size -100;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test max body size - invalid number
+TEST_F(ConfigParserTest, ParseMaxBodySizeConfiguration3) {
+    std::string config = R"(
+server {
+    client_max_body_size 999999999999999999;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
 // Test error handling - unmatched braces
 TEST_F(ConfigParserTest, UnmatchedBracesError) {
     std::string config = R"(

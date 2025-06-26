@@ -1,7 +1,7 @@
 #pragma once
 
-#include "utils/types/result.hpp"  // この行を追加
-#include "utils/types/error.hpp"     // error::AppErrorを使用している場合
+#include "result.hpp"
+#include "error.hpp"
 
 namespace io {
     class IReader {
@@ -11,5 +11,6 @@ namespace io {
         virtual ~IReader() {}
         
         virtual ReadResult read(char *buf, std::size_t nbyte) = 0;
+		virtual bool eof();
     };
-}
+} // namespace io

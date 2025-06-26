@@ -19,9 +19,8 @@ types::Option<T> tryDefault(const types::Option<T> &opt) {
 // それにより、exprが複数回実行されることを防ぐ。
 #define TRY(expr)                                                                \
     ({                                                                           \
-        __typeof__(expr) e = (expr); /* NOLINT(*-unnecessary-copy-initialization) */ \
-        if (!(e).canUnwrap()) return tryDefault(e);                              \
-        (e).unwrap();                                                            \
+        const __typeof__(expr) e = (expr); /* NOLINT(readability-identifier-length) */ \
+        if (!e.canUnwrap()) return tryDefault(e);                                \
+        e.unwrap();                                                              \
     })
-
 #endif

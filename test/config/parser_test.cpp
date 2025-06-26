@@ -165,6 +165,32 @@ server {
     EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
 }
 
+// Test error handling - invalid port number
+TEST_F(ConfigParserTest, InvalidPortNumberError2) {
+    std::string config = R"(
+server {
+    listen -100;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid port number
+TEST_F(ConfigParserTest, InvalidPortNumberError3) {
+    std::string config = R"(
+server {
+    listen 70000;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
 // Test static throwErr method
 TEST_F(ConfigParserTest, ThrowErrMethod) {
     EXPECT_THROW(

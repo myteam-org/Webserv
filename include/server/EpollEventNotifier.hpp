@@ -17,8 +17,7 @@ class EpollEventNotifier : public IEventNotifier {
 		EpollEventNotifier() {}
     	~EpollEventNotifier() {}
 
-   	 	virtual types::Result<int, int> registerFd(int fd, ISockt socketData);
+   	 	virtual types::Result<int, int> registerFd(int fd, ISocket socket);
     	virtual types::Result<int, int> unregisterFd(int fd);
     	virtual types::Result<int, int> wait(int timeoutMillis);
 };
-

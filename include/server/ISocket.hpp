@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cstddef>
+#include "FileDescriptor.hpp"
 
 class ISocket {
-	virtual ~ISocket();
-	virtual int getFD()=0;
-}
+	public:
+		virtual ~ISocket();
+
+};

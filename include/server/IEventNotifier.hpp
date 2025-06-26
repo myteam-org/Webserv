@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../utils/types/result.hpp"
-#include "EpollEvent"
+#include "result.hpp"
+#include "EpollEvent.hpp"
 
 class IEventNotifier {
 public:

@@ -41,7 +41,7 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
             if (stringCount == 0) {
                 position = BEGINNING;
             }
-            Token newToken(token, lineCount, position);
+            const Token newToken(token, lineCount, position);
             stringCount++;
             this->tokens_.push_back(newToken);
         }

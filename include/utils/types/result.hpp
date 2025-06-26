@@ -2,27 +2,27 @@
 
 #include <stdexcept> // std::runtime_error 用
 
+template<typename T>
+struct Ok {
+private:
+	T val_;
+
+public:
+	explicit Ok(T val) : val_(val) {}
+	T value() const { return val_; } // getter
+};
+
+template<typename E>
+struct Err {
+private:
+	E err_;
+
+public:
+	explicit Err(E err) : err_(err) {}
+	E error() const { return err_; } // getter
+};
+
 namespace types {
-    template<typename T>
-    struct Ok {
-    private:
-        T val_;
-
-    public:
-        explicit Ok(T val) : val_(val) {}
-        T value() const { return val_; } // getter
-    };
-
-    template<typename E>
-    struct Err {
-    private:
-        E err_;
-
-    public:
-        explicit Err(E err) : err_(err) {}
-        E error() const { return err_; } // getter
-    };
-
     template<typename T, typename E>
     class Result {
         Ok<T>* ok_;
@@ -30,9 +30,9 @@ namespace types {
 
     public:
         // NOLINTNEXTLINE(google-explicit-constructor)
-        Result(types::Ok<T> ok) : ok_(new types::Ok<T>(ok)), err_(NULL) {}
+        Result(Ok<T> ok) : ok_(new Ok<T>(ok)), err_(NULL) {}
         // NOLINTNEXTLINE(google-explicit-constructor)
-        Result(types::Err<E> err) : ok_(NULL), err_(new types::Err<E>(err)) {}
+        Result(Err<E> err) : ok_(NULL), err_(new Err<E>(err)) {}
 
         ~Result() {
             delete ok_;
@@ -67,3 +67,5 @@ namespace types {
     template<typename E>
     Err<E> err(const E& error) { return Err<E>(error); }
 } // namespace types
+#define OK(val) ::types::ok(val)
+#define ERR(e) ::types::err(e)

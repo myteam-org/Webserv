@@ -5,7 +5,7 @@
 #include "option.hpp"
 
 template <typename T, typename E>
-types::Err<E> tryDefault(const types::Result<T, E> &res) {
+Err<E> tryDefault(const types::Result<T, E> &res) {
 	return types::err(res.unwrapErr());
 }
 

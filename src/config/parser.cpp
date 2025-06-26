@@ -47,6 +47,9 @@ void ConfigParser::makeVectorServer_() {
                          tokens_[i].getLineNumber());
             }
             addServer_(i);
+        } else if ((type >= LISTEN && type <= REDIRECT) && this->depth_ == 0) {
+            throwErr(this->tokens_[i].getText(), ": Syntax error: line",
+                     tokens_[i].getLineNumber());
         } else {
             continue;
         }

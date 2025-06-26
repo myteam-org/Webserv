@@ -135,6 +135,23 @@ TEST_F(ConfigParserTest, UnmatchedBracesError3) {
     }
 }
 
+// Test error handling - config beginning error
+TEST_F(ConfigParserTest, ConfigFileBeginningError) {
+    std::string config = R"(
+    listen {
+    )";  // Extra closing brace
+
+    try {
+        auto tokenizer = createTokenizerFromConfig(config);
+        ConfigParser parser(*tokenizer);
+        FAIL() << "Expected std::runtime_error";
+    } catch (const std::runtime_error& e) {
+        EXPECT_STREQ(e.what(), "listen: Syntax error: line1");
+    } catch (...) {
+        FAIL() << "Caught unknown exception type";
+    }
+}
+
 // Test error handling - invalid port number
 TEST_F(ConfigParserTest, InvalidPortNumberError) {
     std::string config = R"(

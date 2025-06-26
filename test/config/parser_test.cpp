@@ -1,6 +1,7 @@
 #include "parser.hpp"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <fstream>
 #include <sstream>
@@ -98,6 +99,40 @@ server {
     auto tokenizer = createTokenizerFromConfig(config);
 
     EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - unmatched braces2
+TEST_F(ConfigParserTest, UnmatchedBracesError2) {
+    std::string config = R"(
+    } server {
+    )";  // Extra closing brace
+
+    try {
+        auto tokenizer = createTokenizerFromConfig(config);
+        ConfigParser parser(*tokenizer);
+        FAIL() << "Expected std::runtime_error";
+    } catch (const std::runtime_error& e) {
+        EXPECT_STREQ(e.what(), "} server {: Syntax error : line 1");
+    } catch (...) {
+        FAIL() << "Caught unknown exception type";
+    }
+}
+
+// Test error handling - unmatched braces3
+TEST_F(ConfigParserTest, UnmatchedBracesError3) {
+    std::string config = R"(
+    { server {
+    )";  // Extra closing brace
+
+    try {
+        auto tokenizer = createTokenizerFromConfig(config);
+        ConfigParser parser(*tokenizer);
+        FAIL() << "Expected std::runtime_error";
+    } catch (const std::runtime_error& e) {
+        EXPECT_STREQ(e.what(), "{: Config brace close error: line1");
+    } catch (...) {
+        FAIL() << "Caught unknown exception type";
+    }
 }
 
 // Test error handling - invalid port number

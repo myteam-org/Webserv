@@ -27,6 +27,9 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
         std::getline(iss, oneLine, '#');  // #以降を削除
         oneLine.erase(0, oneLine.find_first_not_of(" \t"));
         oneLine.erase(oneLine.find_last_not_of(" \t") + 1);
+        if (oneLine.empty()) {
+            continue;
+        }
         lineCount++;
         checkLineEnd(oneLine, lineCount);
         std::istringstream tokenStream(oneLine);

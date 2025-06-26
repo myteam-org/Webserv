@@ -217,6 +217,84 @@ server {
     EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
 }
 
+// Test error handling - invalid server block member error1
+TEST_F(ConfigParserTest, InvalidSeerverBlockMemberError1) {
+    std::string config = R"(
+server {
+    root /;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid server block member error2
+TEST_F(ConfigParserTest, InvalidSeerverBlockMemberError2) {
+    std::string config = R"(
+server {
+    allow_method GET;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid server block member error3
+TEST_F(ConfigParserTest, InvalidSeerverBlockMemberError3) {
+    std::string config = R"(
+server {
+    index index.html index.htm;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid server block member error4
+TEST_F(ConfigParserTest, InvalidSeerverBlockMemberError4) {
+    std::string config = R"(
+server {
+    autoindex ON;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid server block member error5
+TEST_F(ConfigParserTest, InvalidSeerverBlockMemberError5) {
+    std::string config = R"(
+server {
+    is_cgi ON;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
+// Test error handling - invalid server block member error6
+TEST_F(ConfigParserTest, InvalidSeerverBlockMemberError6) {
+    std::string config = R"(
+server {
+    redirect http://localhost:8080/;
+}
+)";
+
+    auto tokenizer = createTokenizerFromConfig(config);
+
+    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+}
+
 // Test static throwErr method
 TEST_F(ConfigParserTest, ThrowErrMethod) {
     EXPECT_THROW(

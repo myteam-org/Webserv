@@ -78,8 +78,8 @@ void ConfigParser::addServer_(size_t& index) {
     for (; index < this->tokens_.size(); ++(index)) {
         const int type = this->tokens_[index].getType();
         const int lineNum = this->tokens_[index].getLineNumber();
-        if (type == SERVER) {
-            throwErr(tokens_[index].getText(), ": server in server error: line",
+        if (type == SERVER || (type >= ROOT && type <= REDIRECT)) {
+            throwErr(tokens_[index].getText(), ": invalid block member: line",
                      lineNum);
         } else if (type == BRACE) {
             updateDepth(this->tokens_[index], lineNum);

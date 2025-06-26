@@ -27,11 +27,8 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
         std::getline(iss, oneLine, '#');  // #以降を削除
         oneLine.erase(0, oneLine.find_first_not_of(" \t"));
         oneLine.erase(oneLine.find_last_not_of(" \t") + 1);
-        if (oneLine.empty()) {
-            continue;
-        }
-        lineCount++;
         checkLineEnd(oneLine, lineCount);
+        lineCount++;
         std::istringstream tokenStream(oneLine);
         std::string token;
         int stringCount = 0;
@@ -42,7 +39,7 @@ void ConfigTokenizer::makeTokenList_(std::ifstream& file) {
                 position = END;
             }
             if (stringCount == 0) {
-                position = BEGINNING;
+                    position = BEGINNING;
             }
             const Token newToken(token, lineCount, position);
             stringCount++;
@@ -64,9 +61,9 @@ void ConfigTokenizer::checkLineEnd(const std::string& line, int lineCount) {
     }
     if (line[0] == '}' && line.size() > 1) {
         throw(std::runtime_error(line + ": Syntax error : line " +
-                                 numberToStr(lineCount)));
+            numberToStr(lineCount)));
     }
-}
+}        
 
 std::string ConfigTokenizer::numberToStr(int number) {
     std::stringstream ss;

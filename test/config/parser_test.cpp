@@ -155,7 +155,7 @@ TEST_F(ConfigParserTest, UnmatchedBracesError3) {
         ConfigParser parser(*tokenizer);
         FAIL() << "Expected std::runtime_error";
     } catch (const std::runtime_error& e) {
-        EXPECT_STREQ(e.what(), "{: Config brace close error: line1");
+        EXPECT_STREQ(e.what(), "{: Config brace close error: line2");
     } catch (...) {
         FAIL() << "Caught unknown exception type";
     }
@@ -172,7 +172,7 @@ TEST_F(ConfigParserTest, ConfigFileBeginningError) {
         ConfigParser parser(*tokenizer);
         FAIL() << "Expected std::runtime_error";
     } catch (const std::runtime_error& e) {
-        EXPECT_STREQ(e.what(), "listen: Syntax error: line1");
+        EXPECT_STREQ(e.what(), "listen: Syntax error: line2");
     } catch (...) {
         FAIL() << "Caught unknown exception type";
     }

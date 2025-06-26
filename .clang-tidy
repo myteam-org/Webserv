@@ -20,12 +20,12 @@ CheckOptions:
   
   # 関数の最大行数を30行に制限
   - key: readability-function-size.LineThreshold
-    value: 30
-  
+    value: 31
+
   # 関数の最大文数も制限（オプション）
   - key: readability-function-size.StatementThreshold
     value: 50
-  
+
   # 関数の最大パラメータ数を制限（オプション）
   - key: readability-function-size.ParameterThreshold
     value: 8

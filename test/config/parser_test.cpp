@@ -436,7 +436,7 @@ server {
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server block member error ]"), std::string::npos)
+    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
         << "Expected error message not found. Actual output:\n[" << output << "]";
 
     std::remove(confFile.c_str());
@@ -474,12 +474,11 @@ server {
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server block member error ]"), std::string::npos)
+    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
         << "Expected error message not found. Actual output:\n[" << output << "]";
 
     std::remove(confFile.c_str());
 }
-
 
 // Test error handling - no location in server block
 TEST_F(ConfigParserTest, NoLocationInServerError) {
@@ -510,12 +509,87 @@ server {
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server block member error ]"), std::string::npos)
+    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
         << "Expected error message not found. Actual output:\n[" << output << "]";
 
     std::remove(confFile.c_str());
 }
 
+// Test error handling - no root in location block
+TEST_F(ConfigParserTest, NoRootInLocationError) {
+    std::string configText = R"(
+server {
+    listen 80;
+    host localhost;
+    location / {
+        index index.html;
+    }
+}
+)";
+
+    const std::string dir = "./config_file";
+    const std::string confFile = dir + "/temp_test.conf";
+    static const int NUMBER = 700;
+
+    // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
+    mkdir(dir.c_str(), NUMBER);
+
+    std::ofstream ofs(confFile.c_str());
+    ASSERT_TRUE(ofs.is_open()) << "Failed to open config file for writing";
+    ofs << configText;
+    ofs.close();
+
+    testing::internal::CaptureStderr();
+    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    std::string output = testing::internal::GetCapturedStderr();
+
+    // デバッグ表示
+    std::cerr << "Captured stderr:\n" << output << std::endl;
+
+    // エラー文の一部を検出
+    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output << "]";
+
+    std::remove(confFile.c_str());
+}
+
+// Test error handling - no index in location block
+TEST_F(ConfigParserTest, NoIndexInLocationError) {
+    std::string configText = R"(
+server {
+    listen 80;
+    host localhost;
+    location / {
+        root /;
+    }
+}
+)";
+
+    const std::string dir = "./config_file";
+    const std::string confFile = dir + "/temp_test.conf";
+    static const int NUMBER = 700;
+
+    // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
+    mkdir(dir.c_str(), NUMBER);
+
+    std::ofstream ofs(confFile.c_str());
+    ASSERT_TRUE(ofs.is_open()) << "Failed to open config file for writing";
+    ofs << configText;
+    ofs.close();
+
+    testing::internal::CaptureStderr();
+    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    std::string output = testing::internal::GetCapturedStderr();
+
+    // デバッグ表示
+    std::cerr << "Captured stderr:\n" << output << std::endl;
+
+    // エラー文の一部を検出
+    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output << "]";
+
+    std::remove(confFile.c_str());
+}
 
 // Test static throwErr method
 TEST_F(ConfigParserTest, ThrowErrMethod) {

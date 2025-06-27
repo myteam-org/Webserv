@@ -91,7 +91,7 @@ void Config::checkAndEraseServerNode() {
     servers.erase(std::remove_if(servers.begin(), servers.end(),
                                  ConfigServerValueErrorEraser(this)),
                   servers.end());
-    std::cerr << "[ server removed: server block member error ]"
+    std::cerr << "[ server removed: server or location block member error ]"
               << std::endl;
 }
 

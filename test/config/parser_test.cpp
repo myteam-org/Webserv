@@ -418,10 +418,9 @@ server {
 
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
-    static const int NUMBER = 700;
 
     // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
-    mkdir(dir.c_str(), NUMBER);
+    mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
     ASSERT_TRUE(ofs.is_open()) << "Failed to open config file for writing";
@@ -456,10 +455,9 @@ server {
 
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
-    static const int NUMBER = 700;
 
     // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
-    mkdir(dir.c_str(), NUMBER);
+    mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
     ASSERT_TRUE(ofs.is_open()) << "Failed to open config file for writing";
@@ -491,10 +489,9 @@ server {
 
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
-    static const int NUMBER = 700;
 
     // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
-    mkdir(dir.c_str(), NUMBER);
+    mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
     ASSERT_TRUE(ofs.is_open()) << "Failed to open config file for writing";
@@ -529,10 +526,9 @@ server {
 
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
-    static const int NUMBER = 700;
 
     // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
-    mkdir(dir.c_str(), NUMBER);
+    mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
     ASSERT_TRUE(ofs.is_open()) << "Failed to open config file for writing";
@@ -567,10 +563,9 @@ server {
 
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
-    static const int NUMBER = 700;
 
     // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
-    mkdir(dir.c_str(), NUMBER);
+    mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
     ASSERT_TRUE(ofs.is_open()) << "Failed to open config file for writing";

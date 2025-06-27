@@ -9,7 +9,11 @@ namespace io {
 FdReader::FdReader(int fd)
     : fd_(fd), eof_(false) {}
 
-FdReader::~FdReader() {}
+FdReader::~FdReader() {
+    if (fd_ >= 0) {
+        ::close(fd_);
+    }
+}
 
 FdReader::ReadResult FdReader::read(char *buf, std::size_t nbyte) {
     if (eof_) {

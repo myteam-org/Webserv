@@ -17,7 +17,7 @@ ReadBuffer::LoadResult ReadBuffer::load() {
 
     char tmp[ReadBuffer::kLoadSize];
     const std::size_t bytesRead = TRY(reader_.read(tmp, ReadBuffer::kLoadSize));
-    buf_.insert(buf_.begin(), tmp, tmp + bytesRead);
+    buf_.insert(buf_.end(), tmp, tmp + bytesRead);
     return OK(bytesRead);
 }
 

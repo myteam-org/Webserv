@@ -71,7 +71,7 @@ namespace types {
     template<typename T>
     Some<T> some(const T& val) { return Some<T>(val); }
 
-    const None none = None();
-
+	template<typename T>
+	Option<T> makeNone() { return Option<T>(None()); }
 } // namespace types
 

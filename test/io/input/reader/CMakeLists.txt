@@ -1,6 +1,6 @@
 include_directories(
     ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/io/input/read
+    ${CMAKE_SOURCE_DIR}/include/io/input/reader
 )
 
 add_executable(fd_test fd_test.cpp)

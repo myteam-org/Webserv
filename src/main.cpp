@@ -4,7 +4,7 @@ int main(int argc, char** argv) {
         if (!Config::checkArgc(argc)) {
                 return (1);
         }
-        std::string confFile = Config::setFile(argc, argv);
+        const std::string confFile = Config::setFile(argc, argv);
 
         Config::checkFile(confFile);
 

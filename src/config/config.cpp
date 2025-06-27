@@ -72,7 +72,7 @@ std::string Config::setFile(int argc, char** argv) {
     return (confFile);
 }
 
-void Config::checkFile(std::string& filename) {
+void Config::checkFile(const std::string& filename) {
     struct stat status;
 
     if (stat(filename.c_str(), &status) != 0) {
@@ -91,7 +91,7 @@ void Config::checkAndEraseServerNode() {
     servers.erase(std::remove_if(servers.begin(), servers.end(),
                                  ConfigServerValueErrorEraser(this)),
                   servers.end());
-    std::cerr << "[ server removed: location block member value error ]"
+    std::cerr << "[ server removed: server block member error ]"
               << std::endl;
 }
 

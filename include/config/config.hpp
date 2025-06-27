@@ -20,7 +20,7 @@ class Config {
 
     static bool checkArgc(int argc);
     static std::string setFile(int argc, char** argv);
-    static void checkFile(std::string& filename);
+    static void checkFile(const std::string& filename);
     static bool checkAndEraseLocationNode(const ServerContext& server);
     void checkAndEraseServerNode();
     static void removeDuplicateListenServers(

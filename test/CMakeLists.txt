@@ -15,3 +15,4 @@ set(BUILD_GMOCK ON CACHE BOOL "" FORCE)
 
 add_subdirectory(config)
 add_subdirectory(utils)
+add_subdirectory(io)

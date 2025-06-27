@@ -11,6 +11,6 @@ namespace io {
         virtual ~IReader() {}
         
         virtual ReadResult read(char *buf, std::size_t nbyte) = 0;
-		virtual bool eof();
+		virtual bool eof() = 0;
     };
 } // namespace io

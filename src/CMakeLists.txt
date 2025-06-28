@@ -17,7 +17,7 @@ add_library(webserv_lib STATIC
     config/tokenizer.cpp
     config/testPrint.cpp
     config/context/serverContext.cpp
-	config/context/locationContext.cpp
+    config/context/locationContext.cpp
     config/context/documentRootConfig.cpp
 	config/validator.cpp
 	utils/logger.cpp

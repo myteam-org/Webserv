@@ -9,6 +9,7 @@ class FileDescriptor {
 		~FileDescriptor();
 		types::Option<int> getFd() const;
 		void setFd(int fd);
+		static const int kInvalidFD = -1;
 	private:
 		int fd;
 };

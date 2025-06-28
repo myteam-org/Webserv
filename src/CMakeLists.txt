@@ -23,6 +23,8 @@ add_library(webserv_lib STATIC
 	utils/logger.cpp
 	io/input/read/buffer.cpp
 	io/input/reader/fd.cpp
+	server/epollEvent.cpp
+	server/epollEventNotifier.cpp
 )
 
 # includeディレクトリの設定（ターゲットベース）
@@ -35,6 +37,7 @@ target_include_directories(webserv_lib PUBLIC
 	${PROJECT_SOURCE_DIR}/include/io
 	${PROJECT_SOURCE_DIR}/include/io/input/read
 	${PROJECT_SOURCE_DIR}/include/io/input/reader
+	${PROJECT_SOURCE_DIR}/include/server
 )
 
 # 実行ファイルの生成

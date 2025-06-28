@@ -2,9 +2,9 @@
 
 #include "config/config.hpp"
 #include "data.hpp"
-#include "document_root.hpp"
-#include "location.hpp"
-#include "server.hpp"
+#include "documentRootConfig.hpp"
+#include "locationContext.hpp"
+#include "serverContext.hpp"
 
 void Config::printServer(const std::vector<ServerContext>& server) {
     for (size_t i = 0; i < server.size(); ++i) {

@@ -16,12 +16,13 @@ add_library(webserv_lib STATIC
     config/parser.cpp
     config/tokenizer.cpp
     config/testPrint.cpp
-    config/context/server.cpp
-	config/context/location.cpp
-    config/context/document_root.cpp
+    config/context/serverContext.cpp
+    config/context/locationContext.cpp
+    config/context/documentRootConfig.cpp
 	config/validator.cpp
 	utils/logger.cpp
-
+	io/input/read/buffer.cpp
+	io/input/reader/fd.cpp
 )
 
 # includeディレクトリの設定（ターゲットベース）
@@ -30,6 +31,10 @@ target_include_directories(webserv_lib PUBLIC
 	${PROJECT_SOURCE_DIR}/include/config
 	${PROJECT_SOURCE_DIR}/include/config/context
 	${PROJECT_SOURCE_DIR}/include/utils
+	${PROJECT_SOURCE_DIR}/include/utils/types
+	${PROJECT_SOURCE_DIR}/include/io
+	${PROJECT_SOURCE_DIR}/include/io/input/read
+	${PROJECT_SOURCE_DIR}/include/io/input/reader
 )
 
 # 実行ファイルの生成

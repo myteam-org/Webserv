@@ -7,7 +7,7 @@
 #include <sys/stat.h>  // mkdir
 #include <sys/types.h> // mode_t
 
-#include "server.hpp"
+#include "serverContext.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
 #include "config.hpp"

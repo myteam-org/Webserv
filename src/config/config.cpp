@@ -3,9 +3,9 @@
 #include <cstddef>
 
 #include "data.hpp"
-#include "document_root.hpp"
-#include "location.hpp"
-#include "server.hpp"
+#include "documentRootConfig.hpp"
+#include "locationContext.hpp"
+#include "serverContext.hpp"
 
 struct ConfigServerValueErrorEraser {
    private:

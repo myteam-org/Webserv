@@ -11,6 +11,8 @@ Checks: >
   -performance-avoid-endl,
   -misc-include-cleaner,
   -performance-enum-size,
+  -google-runtime-int,
+  -readability-uppercase-literal-suffix,
 
 
 CheckOptions:

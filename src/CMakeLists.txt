@@ -18,7 +18,7 @@ add_library(webserv_lib STATIC
     config/testPrint.cpp
     config/context/serverContext.cpp
 	config/context/locationContext.cpp
-    config/context/documentRootContext.cpp
+    config/context/documentRootConfig.cpp
 	config/validator.cpp
 	utils/logger.cpp
 

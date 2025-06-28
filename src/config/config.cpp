@@ -3,7 +3,7 @@
 #include <cstddef>
 
 #include "data.hpp"
-#include "documentRootContext.hpp"
+#include "documentRootConfig.hpp"
 #include "locationContext.hpp"
 #include "serverContext.hpp"
 

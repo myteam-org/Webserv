@@ -6,8 +6,8 @@
 #include <stdexcept>
 
 #include "config.hpp"
-#include "location.hpp"
-#include "server.hpp"
+#include "locationContext.hpp"
+#include "serverContext.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
 #include "validator.hpp"

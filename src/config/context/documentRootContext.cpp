@@ -1,4 +1,4 @@
-#include "document_root.hpp"
+#include "documentRootContext.hpp"
 
 DocumentRootConfig::DocumentRootConfig()
     : autoIndex_(OFF), cgiExtensions_(OFF), index_("wildCard") {}

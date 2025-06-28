@@ -7,9 +7,9 @@ class ConfigTokenizer;
 #include <algorithm>
 #include <string>
 
-#include "location.hpp"
+#include "locationContext.hpp"
 #include "parser.hpp"
-#include "server.hpp"
+#include "serverContext.hpp"
 
 #define FILE_NAME "./config_file/default.conf"
 

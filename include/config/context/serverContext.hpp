@@ -10,8 +10,8 @@ class LocationContext;
 #include <map>
 #include <vector>
 
-#include "document_root.hpp"
-#include "location.hpp"
+#include "documentRootContext.hpp"
+#include "locationContext.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
 

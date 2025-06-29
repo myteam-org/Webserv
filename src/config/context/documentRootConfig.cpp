@@ -1,7 +1,7 @@
 #include "documentRootConfig.hpp"
 
 DocumentRootConfig::DocumentRootConfig()
-    : autoIndex_(OFF), cgiExtensions_(OFF), index_("wildCard") {}
+    : autoIndex_(OFF), cgiExtensions_(OFF), index_("index.html") {}
 
 DocumentRootConfig::~DocumentRootConfig() {}
 

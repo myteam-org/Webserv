@@ -18,6 +18,7 @@ class LocationContext;
 class ServerContext {
    public:
     static const int PAGE_NUMBER = 404;
+    static const int MAX_BODY_SIZE = 1048576;
     explicit ServerContext(const std::string& text);
     ~ServerContext();
 

@@ -12,14 +12,10 @@ ReadingRequestLineState::ReadingRequestLineState() {}
 
 ReadingRequestLineState::~ReadingRequestLineState() {}
 
-TransitionResult ReadingRequestLineState::handle(const ReadBuffer& buf) const {
-  return const_cast<ReadingRequestLineState*>(this)->handle(buf);
-}
-
 TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
   TransitionResult tr;
 
-  GetLineResult result = getLine(buf);
+  const GetLineResult result = getLine(buf);
   if (!result.canUnwrap()) {
     tr.status = types::Result<IState::HandleStatus, error::AppError>(
         Err<error::AppError>(result.unwrapErr()));

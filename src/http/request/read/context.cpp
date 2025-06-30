@@ -19,22 +19,22 @@ HandleResult ReadContext::handle(ReadBuffer& buf) {
 
   const TransitionResult tr = state_->handle(buf);
 
-  if (tr.requestLine.isSome()) {
-    requestLine_ = tr.requestLine.unwrap();
+  if (tr.getRequestLine().isSome()) {
+    requestLine_ = tr.getRequestLine().unwrap();
   }
-  if (tr.headers.isSome()) {
-    headers_ = tr.headers.unwrap();
+  if (tr.getHeaders().isSome()) {
+    headers_ = tr.getHeaders().unwrap();
   }
-  if (tr.body.isSome()) {
-    body_ = tr.body.unwrap();
+  if (tr.getBody().isSome()) {
+    body_ = tr.getBody().unwrap();
   }
 
-  if (tr.nextState != NULL) {
+  if (tr.getNextState() != NULL) {
     delete state_;
-    state_ = tr.nextState;
+    state_ = tr.getNextState();
   }
 
-  return tr.status;
+  return tr.getStatus();
 }
 
 void ReadContext::changeState(IState* next) {

@@ -17,28 +17,28 @@ TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
 
   const GetLineResult result = getLine(buf);
   if (!result.canUnwrap()) {
-    tr.status = types::Result<IState::HandleStatus, error::AppError>(
-        Err<error::AppError>(result.unwrapErr()));
+    tr.setStatus(types::Result<IState::HandleStatus, error::AppError>(
+        Err<error::AppError>(result.unwrapErr())));
     return tr;
   }
 
   const types::Option<std::string> lineOpt = result.unwrap();
   if (lineOpt.isNone()) {
-    tr.status = types::ok(IState::kSuspend);
+    tr.setStatus(types::ok(IState::kSuspend));
     return tr;
   }
 
   const std::string line = lineOpt.unwrap();
 
   if (line.empty()) {
-    tr.status = types::Result<IState::HandleStatus, error::AppError>(
-        Err<error::AppError>(error::kIOUnknown));
+    tr.setStatus(types::Result<IState::HandleStatus, error::AppError>(
+        Err<error::AppError>(error::kIOUnknown)));
     return tr;
   }
 
-  tr.requestLine = types::Option<std::string>(types::some(line));
-  // tr.nextState = new ReadingHeadersState();
-  tr.status = types::ok(IState::kDone);
+  tr.setRequestLine(types::Option<std::string>(types::some(line)));
+  // tr.setNextState(new ReadingHeadersState());
+  tr.setStatus(types::ok(IState::kDone));
   return tr;
 }
 

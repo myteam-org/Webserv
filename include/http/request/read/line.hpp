@@ -9,6 +9,7 @@ class ReadingRequestLineState : public IState {
   ReadingRequestLineState();
   virtual ~ReadingRequestLineState();
   virtual TransitionResult handle(const ReadBuffer& buf) const;
+	virtual TransitionResult handle(ReadBuffer& buf) const;
 };
 
 }  // namespace http

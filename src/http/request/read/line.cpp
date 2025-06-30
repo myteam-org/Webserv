@@ -1,5 +1,8 @@
 #include "buffer.hpp"
+#include "try.hpp"
 #include "request/read/line.hpp"
+#include "request/read/utils.hpp"
+#include "request/read/state.hpp"  // [must] ReadingHeadersState のヘッダを追加
 
 namespace http {
 
@@ -10,21 +13,19 @@ ReadingRequestLineState::~ReadingRequestLineState() {
 }
 
 TransitionResult ReadingRequestLineState::handle(
-    const ReadBuffer& buf) const {
+    ReadBuffer& buf) const { // [must] constを外す（getLineに合わせる）
   TransitionResult tr;
-	types::Option<std::string> line = TRY(getLine(buf));
+  types::Result<types::Option<std::string>, error::AppError> result = http::getLine(buf);
 
-  if (line.isNone()) {
-    tr.status = types::ok(
-        IState::kSuspend);
+  if (!result.canUnwrap() || result.unwrap().isNone()) { // [must] getLine失敗または行なし
+    tr.status = types::ok(IState::kSuspend);
     return tr;
   }
 
-  tr.requestLine = line;
+  tr.requestLine = result.unwrap(); // Option<std::string>型
   tr.nextState   = new ReadingHeadersState();
-  tr.status       = types::ok(IState::kSuspend);
+  tr.status      = types::ok(IState::kSuspend);
   return tr;
 }
 
 }  // namespace http
-

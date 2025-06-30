@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.14)
+project(getline_test CXX)
+
+include_directories(
+    ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include/utils/types
+    ${CMAKE_SOURCE_DIR}/include/io/input/read
+    ${CMAKE_SOURCE_DIR}/include/io/input/reader
+    ${CMAKE_SOURCE_DIR}/include/http/request/read
+    ${CMAKE_SOURCE_DIR}/include/config
+    ${CMAKE_SOURCE_DIR}/include/http/request
+)
+
+add_executable(getline_test utils_test.cpp)
+target_link_libraries(getline_test
+    PRIVATE webserv_lib gtest
+)
+
+add_executable(reader_test reader_test.cpp)
+target_link_libraries(reader_test
+    PRIVATE webserv_lib gtest
+)
+
+
+# テストディスカバリー
+include(GoogleTest)
+gtest_discover_tests(getline_test)
+gtest_discover_tests(reader_test)

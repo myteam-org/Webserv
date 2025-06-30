@@ -1,6 +1,7 @@
 #pragma once
 
 #include "state.hpp"
+#include "http/request/read/raw_headers.hpp"
 
 namespace http {
 

@@ -5,6 +5,7 @@
 #include "utils/types/error.hpp"
 #include "buffer.hpp"
 #include "utils.hpp"
+#include "http/request/read/raw_headers.hpp"
 
 namespace http {
 

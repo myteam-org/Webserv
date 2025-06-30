@@ -1,10 +1,14 @@
 #pragma once
-#include <iostream>
-#include <vector>
+
+#include "io/input/read/buffer.hpp"
 #include "utils/types/option.hpp"
-#include "buffer.hpp"
+#include "utils/types/result.hpp"
+#include <string>
+
 namespace http {
-    typedef std::vector<std::string> RawHeaders;
-    typedef types::Result<types::Option<std::string>, error::AppError> GetLineResult;
-    GetLineResult getLine(ReadBuffer &readBuf);
-}
+
+typedef types::Result<types::Option<std::string>, error::AppError> GetLineResult;
+
+GetLineResult getLine(ReadBuffer& readBuffer);
+
+} // namespace http

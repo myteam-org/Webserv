@@ -26,13 +26,13 @@ TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
     return tr;
   }
 
-  types::Option<std::string> lineOpt = result.unwrap();
+  const types::Option<std::string> lineOpt = result.unwrap();
   if (lineOpt.isNone()) {
     tr.status = types::ok(IState::kSuspend);
     return tr;
   }
 
-  std::string line = lineOpt.unwrap();
+  const std::string line = lineOpt.unwrap();
 
   if (line.empty()) {
     tr.status = types::Result<IState::HandleStatus, error::AppError>(

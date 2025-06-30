@@ -10,7 +10,7 @@
 #include "header.hpp"
 #include "body.hpp"
 #include "utils/types/try.hpp"
-#include "http/request/request.hpp"  // ← パスを修正！
+#include "http/request/request.hpp"
 
 namespace http {
 
@@ -21,11 +21,10 @@ RequestReader::RequestReader(IConfigResolver& resolver)
 RequestReader::ReadRequestResult RequestReader::readRequest(
     ReadBuffer& buf) {
 
-  std::size_t loaded = TRY(buf.load());
+  const std::size_t loaded = TRY(buf.load());
 
   while (ctx_.getState() != NULL) {
-    // r → handleResult にリネーム
-    types::Result<IState::HandleStatus, error::AppError> handleResult =
+    const types::Result<IState::HandleStatus, error::AppError> handleResult =
         ctx_.handle(buf);
 
     if (handleResult.isErr()) {

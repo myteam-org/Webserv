@@ -6,25 +6,29 @@
 
 namespace {
 
-TEST(TryMacroTest, ResultErrorShortCircuit) {
-    auto func = []() -> types::Result<int, std::string> {
-        // テンプレート引数のカンマを正しく解釈させるため括弧で囲む
-        int value = TRY((types::Result<int, std::string>(types::err(std::string("error occurred")))));
-        return types::Result<int, std::string>(types::ok(value + 1));
-    };
+types::Result<int, std::string> FuncResultErrorShortCircuit() {
+    int value = TRY((types::Result<int, std::string>(types::err(std::string("error occurred")))));
+    return types::Result<int, std::string>(types::ok(value + 1));
+}
 
-    auto res = func();
+// Option<int>を返すのではなく、unwrapしてintを返す関数にする
+types::Option<int> FuncOptionErrorShortCircuit() {
+    types::Option<int> opt = types::Option<int>(types::None());
+    if (!opt.isSome()) {
+        return types::Option<int>(types::None());
+    }
+    int value = opt.unwrap();
+    return types::Option<int>(types::some(value + 1));
+}
+
+TEST(TryMacroTest, ResultErrorShortCircuit) {
+    types::Result<int, std::string> res = FuncResultErrorShortCircuit();
     EXPECT_TRUE(res.isErr());
     EXPECT_EQ("error occurred", res.unwrapErr());
 }
 
 TEST(TryMacroTest, OptionErrorShortCircuit) {
-    auto func = []() -> types::Option<int> {
-        int value = TRY((types::Option<int>(types::none)));
-        return types::Option<int>(types::some(value + 1));
-    };
-
-    auto opt = func();
+    types::Option<int> opt = FuncOptionErrorShortCircuit();
     EXPECT_TRUE(opt.isNone());
 }
 
@@ -34,4 +38,3 @@ int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-

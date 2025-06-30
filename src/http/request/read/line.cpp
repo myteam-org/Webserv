@@ -1,30 +1,48 @@
-#include "buffer.hpp"
-#include "try.hpp"
-#include "request/read/line.hpp"
-#include "request/read/utils.hpp"
-#include "request/read/state.hpp"  // [must] ReadingHeadersState のヘッダを追加
+#include "line.hpp"
+#include "state.hpp"
+#include "header.hpp"
+#include "utils/types/try.hpp"
+#include "utils/types/result.hpp"
+#include "utils/types/option.hpp"
+#include "utils/types/error.hpp"
 
 namespace http {
 
-ReadingRequestLineState::ReadingRequestLineState() {
+ReadingRequestLineState::ReadingRequestLineState() {}
+
+ReadingRequestLineState::~ReadingRequestLineState() {}
+
+TransitionResult ReadingRequestLineState::handle(const ReadBuffer& buf) const {
+  return const_cast<ReadingRequestLineState*>(this)->handle(buf);
 }
 
-ReadingRequestLineState::~ReadingRequestLineState() {
-}
-
-TransitionResult ReadingRequestLineState::handle(
-    ReadBuffer& buf) const { // [must] constを外す（getLineに合わせる）
+TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
   TransitionResult tr;
-  types::Result<types::Option<std::string>, error::AppError> result = http::getLine(buf);
 
-  if (!result.canUnwrap() || result.unwrap().isNone()) { // [must] getLine失敗または行なし
+  GetLineResult result = getLine(buf);
+  if (!result.canUnwrap()) {
+    tr.status = types::Result<IState::HandleStatus, error::AppError>(
+        Err<error::AppError>(result.unwrapErr()));
+    return tr;
+  }
+
+  types::Option<std::string> lineOpt = result.unwrap();
+  if (lineOpt.isNone()) {
     tr.status = types::ok(IState::kSuspend);
     return tr;
   }
 
-  tr.requestLine = result.unwrap(); // Option<std::string>型
-  tr.nextState   = new ReadingHeadersState();
-  tr.status      = types::ok(IState::kSuspend);
+  std::string line = lineOpt.unwrap();
+
+  if (line.empty()) {
+    tr.status = types::Result<IState::HandleStatus, error::AppError>(
+        Err<error::AppError>(error::kIOUnknown));
+    return tr;
+  }
+
+  tr.requestLine = types::Option<std::string>(types::some(line));
+  // tr.nextState = new ReadingHeadersState();
+  tr.status = types::ok(IState::kDone);
   return tr;
 }
 

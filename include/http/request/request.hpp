@@ -2,7 +2,6 @@
 
 #include "option.hpp"
 #include "method.hpp"
-#include "types.hpp"
 #include <map>
 #include <vector>
 #include <string>
@@ -16,7 +15,7 @@ namespace http {
             HttpMethod method,
             const std::string &requestTarget,
             const std::string &httpVersion = "HTTP/1.1",
-            const Headers &headers = Headers(),
+            // const Headers &headers = Headers(),
             const std::string &body = ""
         );
 
@@ -32,7 +31,7 @@ namespace http {
         HttpMethod method_;
         std::string requestTarget_;
         std::string httpVersion_;
-        Headers headers_;
+        // Headers headers_;
         std::string body_;
     };
 } // namespace http

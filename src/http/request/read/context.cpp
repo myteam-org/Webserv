@@ -5,10 +5,8 @@ namespace http {
 
 ReadContext::ReadContext(IConfigResolver& resolver, IState* initial)
     : state_(initial),
-      resolver_(resolver),
-      requestLine_(),
-      headers_(),
-      body_() {}
+      resolver_(resolver)
+      {}
 
 ReadContext::~ReadContext() {
   delete state_;

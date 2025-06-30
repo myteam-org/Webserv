@@ -24,23 +24,28 @@ RequestReader::ReadRequestResult RequestReader::readRequest(
   std::size_t loaded = TRY(buf.load());
 
   while (ctx_.getState() != NULL) {
-    types::Result<IState::HandleStatus, error::AppError> r = ctx_.handle(buf);
+    // r → handleResult にリネーム
+    types::Result<IState::HandleStatus, error::AppError> handleResult =
+        ctx_.handle(buf);
 
-    if (r.isErr()) {
-      return types::Result<types::Option<Request>, error::AppError>(types::err(r.unwrapErr()));
+    if (handleResult.isErr()) {
+      return types::Result<types::Option<Request>, error::AppError>(
+          types::err(handleResult.unwrapErr()));
     }
-    if (r.unwrap() == IState::kSuspend) {
+
+    if (handleResult.unwrap() == IState::kSuspend) {
       if (loaded == 0) {
-        return types::Result<types::Option<Request>, error::AppError>(types::err(error::kIOUnknown));
+        return types::Result<types::Option<Request>, error::AppError>(
+            types::err(error::kIOUnknown));
       }
-      return types::Result<types::Option<Request>, error::AppError>(types::ok(types::Option<Request>(types::None())));
+      return types::Result<types::Option<Request>, error::AppError>(
+          types::ok(types::Option<Request>(types::None())));
     }
   }
 
-  // Request req = TRY(RequestParser::parseRequest(
-  //     ctx_.getRequestLine(), ctx_.getHeaders(), ctx_.getBody()));
-  // return types::Result<types::Option<Request>, error::AppError>(types::ok(types::Some(req)));
-  return types::Result<types::Option<Request>, error::AppError>(types::ok(types::Option<Request>(types::None())));
+  return types::Result<types::Option<Request>, error::AppError>(
+      types::ok(types::Option<Request>(types::None())));
 }
 
 }  // namespace http
+

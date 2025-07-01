@@ -14,7 +14,7 @@ public:
     types::Result<types::Option<std::string>, error::AppError>
     consumeUntil(const std::string &delimiter);
 
-    std::string consume(const std::size_t nbyte);
+    std::string consume(std::size_t nbyte);
 
     typedef types::Result<std::size_t, error::AppError> LoadResult;
     LoadResult load();

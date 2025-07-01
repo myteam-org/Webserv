@@ -27,9 +27,9 @@ class TransitionResult {
  public:
   TransitionResult()
       : nextState_(NULL),
-        requestLine_(types::makeNone<std::string>()),
-        headers_(types::makeNone<RawHeaders>()),
-        body_(types::makeNone<std::string>()),
+        requestLine_(types::none<std::string>()),
+        headers_(types::none<RawHeaders>()),
+        body_(types::none<std::string>()),
         status_(types::ok(IState::kSuspend)) {}
 
   IState* getNextState() const { return nextState_; }

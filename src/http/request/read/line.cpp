@@ -17,8 +17,7 @@ TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
 
   const GetLineResult result = getLine(buf);
   if (!result.canUnwrap()) {
-    tr.setStatus(types::Result<IState::HandleStatus, error::AppError>(
-        Err<error::AppError>(result.unwrapErr())));
+    tr.setStatus(types::err(result.unwrapErr()));
     return tr;
   }
 
@@ -31,8 +30,7 @@ TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
   const std::string line = lineOpt.unwrap();
 
   if (line.empty()) {
-    tr.setStatus(types::Result<IState::HandleStatus, error::AppError>(
-        Err<error::AppError>(error::kIOUnknown)));
+    tr.setStatus(types::err(error::kIOUnknown));
     return tr;
   }
 

@@ -5,6 +5,7 @@
 typedef struct epoll_event epoll_event_t;
 
 class EpollEvent {
+private:
     epoll_event_t ev_;
 public:
     explicit EpollEvent(const epoll_event_t& ev);

@@ -18,15 +18,15 @@ EpollEventNotifier::~EpollEventNotifier() {
 }
 
 types::Result<int, int> EpollEventNotifier::registerFd(FileDescriptor &fd, EpollEvent &ev) {
-    types::Option<int> epfdOpt = epoll_fd_.getFd();
+    const types::Option<int> epfdOpt = epoll_fd_.getFd();
     if (!epfdOpt.canUnwrap()) {
         return ERR(EINVAL);
     }
-    types::Option<int> targetFdOpt = fd.getFd();
+    const types::Option<int> targetFdOpt = fd.getFd();
     if (!targetFdOpt.canUnwrap()) {
         return ERR(EINVAL);
     }
-    int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_ADD, targetFdOpt.unwrap(), ev.raw());
+    const int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_ADD, targetFdOpt.unwrap(), ev.raw());
     if (ret == kEpollError) {
         return ERR(errno);
     }
@@ -34,15 +34,15 @@ types::Result<int, int> EpollEventNotifier::registerFd(FileDescriptor &fd, Epoll
 }
 
 types::Result<int, int> EpollEventNotifier::unregisterFd(FileDescriptor &fd) {
-    types::Option<int> epfdOpt = epoll_fd_.getFd();
+    const types::Option<int> epfdOpt = epoll_fd_.getFd();
     if (!epfdOpt.canUnwrap()) {
         return ERR(EINVAL);
     }
-    types::Option<int> targetFdOpt = fd.getFd();
+    const types::Option<int> targetFdOpt = fd.getFd();
     if (!targetFdOpt.canUnwrap()) {
         return ERR(EINVAL);
     }
-    int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_DEL, targetFdOpt.unwrap(), NULL);
+    const int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_DEL, targetFdOpt.unwrap(), NULL);
     if (ret == kEpollError) {
         return ERR(errno);
     }
@@ -50,29 +50,28 @@ types::Result<int, int> EpollEventNotifier::unregisterFd(FileDescriptor &fd) {
 }
 
 types::Result<int, int> EpollEventNotifier::modifyFd(FileDescriptor &fd, EpollEvent &ev) {
-    types::Option<int> epfdOpt = epoll_fd_.getFd();
+    const types::Option<int> epfdOpt = epoll_fd_.getFd();
     if (!epfdOpt.canUnwrap()) {
         return ERR(EINVAL);
     }
-    types::Option<int> targetFdOpt = fd.getFd();
+    const types::Option<int> targetFdOpt = fd.getFd();
     if (!targetFdOpt.canUnwrap()) {
         return ERR(EINVAL);
     }
-    int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_MOD, targetFdOpt.unwrap(), ev.raw());
+    const int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_MOD, targetFdOpt.unwrap(), ev.raw());
     if (ret == kEpollError) {
-	    std::cout << "coming error" << strerror(errno) << std::endl;
         return ERR(errno);
     }
     return OK(ret);
 }
 
 types::Result<std::vector<EpollEvent>, int> EpollEventNotifier::wait() {
-    types::Option<int> epfdOpt = epoll_fd_.getFd();
+    const types::Option<int> epfdOpt = epoll_fd_.getFd();
     if (!epfdOpt.canUnwrap()) {
         return ERR(EINVAL);
     }
     std::vector<struct epoll_event> events(kMaxAssociatedFD);
-    int num_of_events = epoll_wait(epfdOpt.unwrap(), events.data(), kMaxAssociatedFD, kTimeoutImmediate);
+    const int num_of_events = epoll_wait(epfdOpt.unwrap(), events.data(), kMaxAssociatedFD, kTimeoutImmediate);
     if (num_of_events <= kEpollError) {
         return ERR(errno);
     }

@@ -6,7 +6,6 @@
 #include <vector>
 #include "try.hpp"
 #include <cerrno> 
-#include <iostream>
 EpollEventNotifier::EpollEventNotifier()
     : epoll_fd_(epoll_create(kMaxAssociatedFD)) {
     if (!epoll_fd_.getFd().canUnwrap()) {

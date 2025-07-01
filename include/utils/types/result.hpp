@@ -67,5 +67,7 @@ namespace types {
     template<typename E>
     Err<E> err(const E& error) { return Err<E>(error); }
 } // namespace types
-#define OK(val) ::types::ok(val)
-#define ERR(e) ::types::err(e)
+// #define OK(val) ::types::ok(val)
+// #define ERR(e) ::types::err(e)
+#define OK(val) (::types::ok(val))
+#define ERR(e)  (::types::err(e))

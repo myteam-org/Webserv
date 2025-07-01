@@ -4,45 +4,82 @@
 #include <sys/epoll.h>
 #include <string.h>
 #include <vector>
-
-EpollEventNotifier::EpollEventNotifier() {
-	epoll_fd_ = epoll_create(kMaxAssociatedFD);
+#include "try.hpp"
+#include <cerrno> 
+#include <iostream>
+EpollEventNotifier::EpollEventNotifier()
+    : epoll_fd_(epoll_create(kMaxAssociatedFD)) {
+    if (!epoll_fd_.getFd().canUnwrap()) {
+        throw std::runtime_error("epoll_create failed");
+    }
 }
 
 EpollEventNotifier::~EpollEventNotifier() {
-	if (epoll_fd_ >= 0) {
-		close(epoll_fd_);
-	}
 }
 
-types::Result<int, int> EpollEventNotifier::registerFd(int fd, EpollEvent &ev) {
-    int ret = epoll_ctl(epoll_fd_, EPOLL_CTL_ADD, fd, ev.raw());
-	if (ret == kEpollError) {
-		return ERR(errno);
-	}
+types::Result<int, int> EpollEventNotifier::registerFd(FileDescriptor &fd, EpollEvent &ev) {
+    types::Option<int> epfdOpt = epoll_fd_.getFd();
+    if (!epfdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    types::Option<int> targetFdOpt = fd.getFd();
+    if (!targetFdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_ADD, targetFdOpt.unwrap(), ev.raw());
+    if (ret == kEpollError) {
+        return ERR(errno);
+    }
     return OK(ret);
 }
 
-types::Result<int, int> EpollEventNotifier::unregisterFd(int fd) {
-	int ret = epoll_ctl(epoll_fd_, EPOLL_CTL_DEL, fd, NULL);
-	if (ret == kEpollError) {
-		return ERR(errno);
-	}
+types::Result<int, int> EpollEventNotifier::unregisterFd(FileDescriptor &fd) {
+    types::Option<int> epfdOpt = epoll_fd_.getFd();
+    if (!epfdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    types::Option<int> targetFdOpt = fd.getFd();
+    if (!targetFdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_DEL, targetFdOpt.unwrap(), NULL);
+    if (ret == kEpollError) {
+        return ERR(errno);
+    }
+    return OK(ret);
+}
+
+types::Result<int, int> EpollEventNotifier::modifyFd(FileDescriptor &fd, EpollEvent &ev) {
+    types::Option<int> epfdOpt = epoll_fd_.getFd();
+    if (!epfdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    types::Option<int> targetFdOpt = fd.getFd();
+    if (!targetFdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    int ret = epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_MOD, targetFdOpt.unwrap(), ev.raw());
+    if (ret == kEpollError) {
+	    std::cout << "coming error" << strerror(errno) << std::endl;
+        return ERR(errno);
+    }
     return OK(ret);
 }
 
 types::Result<std::vector<EpollEvent>, int> EpollEventNotifier::wait() {
-	std::vector<struct epoll_event> events(kMaxAssociatedFD);
-	int num_of_events = epoll_wait(epoll_fd_, events.data(), kMaxAssociatedFD, kNonBlockingTimeout);
-	if (num_of_events <= kEpollError) {
-		return ERR(errno);
-	}
-	std::vector<EpollEvent> ep_events;
-	ep_events.reserve(num_of_events);
-	for (int i = 0; i < num_of_events; i++) {
-		EpollEvent e;
-		*e.raw() = events[i];
-		ep_events.push_back(e);
-	}
-	return OK(ep_events);
+    types::Option<int> epfdOpt = epoll_fd_.getFd();
+    if (!epfdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    std::vector<struct epoll_event> events(kMaxAssociatedFD);
+    int num_of_events = epoll_wait(epfdOpt.unwrap(), events.data(), kMaxAssociatedFD, kTimeoutImmediate);
+    if (num_of_events <= kEpollError) {
+        return ERR(errno);
+    }
+    std::vector<EpollEvent> ep_events;
+    ep_events.reserve(num_of_events);
+    for (int i = 0; i < num_of_events; i++) {
+        ep_events.push_back(EpollEvent(events[i]));
+    }
+    return OK(ep_events);
 }

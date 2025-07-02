@@ -10,9 +10,9 @@ FileDescriptor::~FileDescriptor() {
 
 types::Option<int> FileDescriptor::getFd() const {
     if (fd_ == kInvalidFD) {
-        return types::Option<int>(types::none);
+        return types::none<int>();
     }
-    return types::Option<int>(types::some(fd_));
+    return types::some<int>(fd_);
 }
 
 void FileDescriptor::setFd(int fd) {

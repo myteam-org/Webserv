@@ -18,6 +18,4 @@ static const int MAX_PAGE_NUM = 505;
 
 namespace Validator {
 bool number(const std::string& number, int type);
-bool url(const std::string& url);
-// bool	duplicate(const ConfigNode* root);
 }  // namespace Validator

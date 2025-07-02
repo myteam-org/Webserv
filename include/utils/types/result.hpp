@@ -5,21 +5,21 @@
 template<typename T>
 struct Ok {
 private:
-	T val_;
+    T val_;
 
 public:
-	explicit Ok(T val) : val_(val) {}
-	T value() const { return val_; } // getter
+    explicit Ok(T val) : val_(val) {}
+    T value() const { return val_; } // getter
 };
 
 template<typename E>
 struct Err {
 private:
-	E err_;
+    E err_;
 
 public:
-	explicit Err(E err) : err_(err) {}
-	E error() const { return err_; } // getter
+    explicit Err(E err) : err_(err) {}
+    E error() const { return err_; } // getter
 };
 
 namespace types {
@@ -29,6 +29,22 @@ namespace types {
         Err<E>* err_;
 
     public:
+        // コピーコンストラクタ
+        Result(const Result& other)
+            : ok_(other.ok_ ? new Ok<T>(*other.ok_) : NULL),
+              err_(other.err_ ? new Err<E>(*other.err_) : NULL) {}
+
+        // 代入演算子
+        Result& operator=(const Result& other) {
+            if (this != &other) {
+                delete ok_;
+                delete err_;
+                ok_ = other.ok_ ? new Ok<T>(*other.ok_) : NULL;
+                err_ = other.err_ ? new Err<E>(*other.err_) : NULL;
+            }
+            return *this;
+        }
+
         // NOLINTNEXTLINE(google-explicit-constructor)
         Result(Ok<T> ok) : ok_(new Ok<T>(ok)), err_(NULL) {}
         // NOLINTNEXTLINE(google-explicit-constructor)
@@ -51,14 +67,14 @@ namespace types {
 
         E unwrapErr() const {
             if (!isErr()) {
-                 throw std::runtime_error("Called unwrap_err on Ok");
+                throw std::runtime_error("Called unwrap_err on Ok");
             }
             return err_->error();
         }
 
-	    bool canUnwrap() const {
-			return isOk();
-		}
+        bool canUnwrap() const {
+            return isOk();
+        }
     };
 
     template<typename T>

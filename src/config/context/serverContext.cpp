@@ -1,7 +1,7 @@
 #include "serverContext.hpp"
 
 ServerContext::ServerContext(const std::string& text)
-    : value_(text), listen_(0), clientMaxBodySize_(0) {
+    : value_(text), listen_(0), clientMaxBodySize_(MAX_BODY_SIZE) {
     std::map<int, std::string> errPage;
     errPage.insert(std::make_pair(PAGE_NUMBER, "404.html"));
     this->errorPage_.push_back(errPage);

@@ -9,4 +9,11 @@ CTestTestfile.cmake
 webserv
 compile_flags.txt
 *.log
+
+CMake/*
+_deps/*
+*.bin
+*.cmake
+CMakeCache.txt
+
 Testing/

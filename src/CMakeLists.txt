@@ -19,32 +19,36 @@ add_library(webserv_lib STATIC
     config/context/serverContext.cpp
     config/context/locationContext.cpp
     config/context/documentRootConfig.cpp
-	config/validator.cpp
-	utils/logger.cpp
-	io/input/read/buffer.cpp
-	io/input/reader/fd.cpp
-	http/request/read/body.cpp
-	http/request/read/chunked_body.cpp
-	http/request/read/context.cpp
-	http/request/read/header.cpp
-	http/request/read/line.cpp
-	http/request/read/reader.cpp
-	http/request/read/utils.cpp
-	http/method.cpp
+    config/validator.cpp
+    utils/logger.cpp
+    io/input/read/buffer.cpp
+    io/input/reader/fd.cpp
+    io/base/fileDescriptor.cpp
+    server/epollEvent.cpp
+    server/epollEventNotifier.cpp
+		http/request/read/body.cpp
+	  http/request/read/chunked_body.cpp
+	  http/request/read/context.cpp
+	  http/request/read/header.cpp
+	  http/request/read/line.cpp
+	  http/request/read/reader.cpp
+	  http/request/read/utils.cpp
+	  http/method.cpp
 )
 
 # includeディレクトリの設定（ターゲットベース）
 target_include_directories(webserv_lib PUBLIC 
-	${PROJECT_SOURCE_DIR}/include
-	${PROJECT_SOURCE_DIR}/include/config
-	${PROJECT_SOURCE_DIR}/include/config/context
-	${PROJECT_SOURCE_DIR}/include/utils
-	${PROJECT_SOURCE_DIR}/include/utils/types
-	${PROJECT_SOURCE_DIR}/include/io
-	${PROJECT_SOURCE_DIR}/include/io/input/read
-	${PROJECT_SOURCE_DIR}/include/io/input/reader
-	${PROJECT_SOURCE_DIR}/include/http
-	${PROJECT_SOURCE_DIR}/include/http/request/read
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/config
+    ${PROJECT_SOURCE_DIR}/include/config/context
+    ${PROJECT_SOURCE_DIR}/include/utils
+    ${PROJECT_SOURCE_DIR}/include/utils/types
+    ${PROJECT_SOURCE_DIR}/include/io
+    ${PROJECT_SOURCE_DIR}/include/io/input/read
+    ${PROJECT_SOURCE_DIR}/include/io/input/reader
+    ${PROJECT_SOURCE_DIR}/include/server
+		${PROJECT_SOURCE_DIR}/include/http
+	  ${PROJECT_SOURCE_DIR}/include/http/request/read
 )
 
 # 実行ファイルの生成

@@ -8,7 +8,7 @@ ReadBuffer::ReadBuffer(io::IReader &reader) : reader_(reader) {}
 types::Result<types::Option<std::string>, error::AppError>
 ReadBuffer::consumeUntil(const std::string &delimiter) {
     if (delimiter.empty()) {
-        return types::ok(types::Option<std::string>(types::None()));
+        return types::ok(types::none<std::string>());
     }
     for (;;) {
         const std::string buf_str(buf_.begin(), buf_.end());
@@ -16,10 +16,10 @@ ReadBuffer::consumeUntil(const std::string &delimiter) {
         if (pos != std::string::npos) {
             const std::string result = buf_str.substr(0, pos + delimiter.size());
             buf_.erase(buf_.begin(), buf_.begin() + static_cast<long>(pos + delimiter.size()));
-            return types::ok(types::Option<std::string>(types::Some<std::string>(result)));
+			return types::ok(types::some<std::string>(result));
         }
         if (reader_.eof()) {
-            return types::ok(types::Option<std::string>(types::None()));
+            return types::ok(types::none<std::string>());
         }
         const types::Result<std::size_t, error::AppError> loadResult = this->load();
         if (loadResult.isErr()) {
@@ -27,7 +27,7 @@ ReadBuffer::consumeUntil(const std::string &delimiter) {
         }
         const std::size_t loaded = loadResult.unwrap();
         if (loaded == 0) {
-            return types::ok(types::Option<std::string>(types::None()));
+            return types::ok(types::none<std::string>());
         }
     }
 }

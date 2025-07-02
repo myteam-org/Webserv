@@ -38,12 +38,12 @@ RequestReader::ReadRequestResult RequestReader::readRequest(
             types::err(error::kIOUnknown));
       }
       return types::Result<types::Option<Request>, error::AppError>(
-          types::ok(types::Option<Request>(types::None())));
+          types::ok(types::none<Request>()));
     }
   }
 
   return types::Result<types::Option<Request>, error::AppError>(
-      types::ok(types::Option<Request>(types::None())));
+      types::ok(types::none<Request>()));
 }
 
 }  // namespace http

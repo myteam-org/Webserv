@@ -13,15 +13,12 @@ namespace types {
     };
 
     struct None {
-        // もし必要であれば、canUnwrap/unwrap を追加しておくことも可能ですが、
-        // 通常はラッパー型で扱うため不要です。
     };
 
     template<typename T>
     class Option {
         Some<T>* some_;
     public:
-        // コピーコンストラクタを public にしておく
         Option(const Option& other)
             : some_(other.some_ ? new Some<T>(*other.some_) : 0)
         {}
@@ -69,7 +66,7 @@ namespace types {
     };
 
     template<typename T>
-    Some<T> some(const T& val) { return Some<T>(val); }
+	Option<T> some(const T& val) { return Option<T>(Some<T>(val)); }
 
 	template<typename T>
 	Option<T> none() { return Option<T>(None()); }

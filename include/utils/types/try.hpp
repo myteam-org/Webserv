@@ -12,7 +12,7 @@ Err<E> tryDefault(const types::Result<T, E> &res) {
 template <typename T>
 types::Option<T> tryDefault(const types::Option<T> &opt) {
 	(void)opt;
-    return types::Option<T>(types::none);
+    return types::Option<T>(types::none<T>());
 }
 
 // typeof(expr) e = (expr); の箇所で明示的に一度実行する。

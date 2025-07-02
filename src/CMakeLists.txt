@@ -23,6 +23,14 @@ add_library(webserv_lib STATIC
 	utils/logger.cpp
 	io/input/read/buffer.cpp
 	io/input/reader/fd.cpp
+	http/request/read/body.cpp
+	http/request/read/chunked_body.cpp
+	http/request/read/context.cpp
+	http/request/read/header.cpp
+	http/request/read/line.cpp
+	http/request/read/reader.cpp
+	http/request/read/utils.cpp
+	http/method.cpp
 )
 
 # includeディレクトリの設定（ターゲットベース）
@@ -35,6 +43,8 @@ target_include_directories(webserv_lib PUBLIC
 	${PROJECT_SOURCE_DIR}/include/io
 	${PROJECT_SOURCE_DIR}/include/io/input/read
 	${PROJECT_SOURCE_DIR}/include/io/input/reader
+	${PROJECT_SOURCE_DIR}/include/http
+	${PROJECT_SOURCE_DIR}/include/http/request/read
 )
 
 # 実行ファイルの生成

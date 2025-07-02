@@ -21,13 +21,13 @@ TEST(OptionTest, SomeConstruction) {
 }
 
 TEST(OptionTest, NoneConstruction) {
-    types::Option<int> option(types::none);
+    types::Option<int> option = types::Option<int>(types::None());
     EXPECT_FALSE(option.isSome());
     EXPECT_TRUE(option.isNone());
 }
 
 TEST(OptionTest, UnwrapOnNoneThrows) {
-    types::Option<int> option(types::none);
+    types::Option<int> option = types::Option<int>(types::None());
     EXPECT_THROW(option.unwrap(), std::runtime_error);
 }
 
@@ -37,7 +37,7 @@ TEST(OptionTest, UnwrapOrWithSome) {
 }
 
 TEST(OptionTest, UnwrapOrWithNone) {
-    types::Option<int> option(types::none);
+    types::Option<int> option = types::Option<int>(types::None());
     EXPECT_EQ(0, option.unwrapOr(0));
 }
 
@@ -51,7 +51,7 @@ TEST(OptionTest, SomeDestruction) {
 
 TEST(OptionTest, NoneDestruction) {
     {
-        types::Option<Tracer> option(types::none);
+        types::Option<Tracer> option = types::Option<Tracer>(types::None());
         EXPECT_EQ(0, Tracer::count);
     }
     EXPECT_EQ(0, Tracer::count);
@@ -59,7 +59,7 @@ TEST(OptionTest, NoneDestruction) {
 
 TEST(OptionTest, StringOption) {
     types::Option<std::string> some_option(types::some(std::string("hello")));
-    types::Option<std::string> none_option(types::none);
+    types::Option<std::string> none_option = types::Option<std::string>(types::None());
     
     EXPECT_EQ("hello", some_option.unwrap());
     EXPECT_EQ("default", none_option.unwrapOr("default"));

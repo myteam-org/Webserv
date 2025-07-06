@@ -1,10 +1,18 @@
 #include "ConnectionSocket.hpp"
 
-ConnectionSocket::ConnectionSocket(int fd, const SocketAddr& peerAddr) 
-: fd_(FileDescriptor(fd)) {
+ConnectionSocket::ConnectionSocket(int fd, const ISocketAddr& peerAddr) {
+    fd_ = FileDescriptor(fd);
     peerAddress_ = peerAddr.getAddress();
     peerPort_ = peerAddr.getPort();
 }
+
+ConnectionSocket::ConnectionSocket(int fd, const SocketAddr& peerAddr) {
+    fd_ = FileDescriptor(fd);
+    peerAddress_ = peerAddr.getAddress();
+    peerPort_ = peerAddr.getPort();
+}
+
+ConnectionSocket::~ConnectionSocket() {}
 
 int ConnectionSocket::getRawFd() const {
     return fd_.getFd().unwrapOr(kInvalidFd);
@@ -16,7 +24,7 @@ uint16_t ConnectionSocket::getPeerPort() const {
 
 std::string ConnectionSocket::getPeerAddress() const {
     return peerAddress_;
-}
+} 
 
 std::string ConnectionSocket::getClientInfo() const {
     std::ostringstream oss;
@@ -24,3 +32,4 @@ std::string ConnectionSocket::getClientInfo() const {
     return oss.str();
 }
 
+const int ConnectionSocket::kInvalidFd;

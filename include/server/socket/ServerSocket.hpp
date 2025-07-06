@@ -9,10 +9,11 @@ class ServerSocket : public ISocket {
 public:
     ServerSocket(
         uint16_t port,
+        const std::string &hostName,
         int domain = AF_INET,
         int type = SOCK_STREAM,
-        int protocol = kDefaultProtocol,
-        const std::string &hostName);
+        int protocol = kDefaultProtocol
+       );
     ~ServerSocket();
     virtual int getRawFd() const;
     void setFd(FileDescriptor fd);
@@ -24,9 +25,9 @@ public:
         int domain = AF_INET, 
         int type = SOCK_STREAM, 
         int protocol = kDefaultProtocol);
-    types::Result<int, int> ServerSocket::bind(SocketAddr &sockAddr);
+    types::Result<int, int> bind(SocketAddr &sockAddr);
     types::Result<int, int> listen(int backlog);
-    typedef types::Result<ConnectionSocket, int> ConnectionResult;
+    typedef types::Result<ConnectionSocket*, int> ConnectionResult;
     ConnectionResult accept();
     static const std::string kDefaultIp;
 

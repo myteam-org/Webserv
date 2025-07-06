@@ -47,18 +47,19 @@ void SocketAddr::resolveByName(
         throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(err)));
     }
     sockaddr_in* resolvedAddr = reinterpret_cast<sockaddr_in*>(res->ai_addr);
-    std::memcpy(addrIn, resolvedAddr, sizeof(sockaddr_in));
-    addrIn = reinterpret_cast<sockaddr_in*>(res->ai_addr);
+    std::memset(addrIn, 0, sizeof(sockaddr_in));
+    addrIn->sin_family = AF_INET;
+    addrIn->sin_addr = resolvedAddr->sin_addr;
     addrIn->sin_port = htons(port);
 }
 
 std::string SocketAddr::getAddress() const {
     const sockaddr_in* addr = reinterpret_cast<const sockaddr_in*>(&storage_);
     uint32_t ip = ntohl(addr->sin_addr.s_addr);
-    unsigned char a = (ip >> 24) & 0xFF;
-    unsigned char b = (ip >> 16) & 0xFF;
-    unsigned char c = (ip >> 8) & 0xFF;
-    unsigned char d = ip & 0xFF;
+    unsigned char a = (ip >> kFirstOctetShift) & kOctetMask;
+    unsigned char b = (ip >> kSecondOctetShift) & kOctetMask;
+    unsigned char c = (ip >> kThirdOctetShift) & kOctetMask;
+    unsigned char d = ip & kOctetMask;
     std::ostringstream oss;
     oss << static_cast<int>(a) << "."
         << static_cast<int>(b) << "."
@@ -71,3 +72,9 @@ uint16_t SocketAddr::getPort() const {
     const sockaddr_in* addr = reinterpret_cast<const sockaddr_in*>(&storage_);
     return ntohs(addr->sin_port);
 }
+
+const int SocketAddr::kFirstOctetShift;
+const int SocketAddr::kSecondOctetShift;
+const int SocketAddr::kThirdOctetShift;
+const int SocketAddr::kFourthOctetShift;
+const uint32_t SocketAddr::kOctetMask;

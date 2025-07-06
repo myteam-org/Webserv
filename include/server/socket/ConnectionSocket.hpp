@@ -10,7 +10,8 @@
 
 class ConnectionSocket : public ISocket {
 public:
-    ConnectionSocket(int fd, const SocketAddr& peerAddr);
+    ConnectionSocket(int fd, const ISocketAddr& peerAddr);
+    ConnectionSocket(int fd, const SocketAddr& peerAddr); 
     ~ConnectionSocket();
     virtual int getRawFd() const;
     uint16_t getPeerPort() const;
@@ -22,4 +23,5 @@ private:
     std::string peerAddress_;
     uint16_t peerPort_;
     static const int kInvalidFd = -1;
+    ConnectionSocket(const ConnectionSocket&);
 };

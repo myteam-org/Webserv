@@ -26,7 +26,10 @@ add_library(webserv_lib STATIC
     io/base/fileDescriptor.cpp
     server/epollEvent.cpp
     server/epollEventNotifier.cpp
-		http/request/read/body.cpp
+    server/socket/connectionSocket.cpp
+    server/socket/serverSocket.cpp
+    server/socket/socketAddr.cpp
+	http/request/read/body.cpp
 	  http/request/read/chunked_body.cpp
 	  http/request/read/context.cpp
 	  http/request/read/header.cpp
@@ -47,6 +50,7 @@ target_include_directories(webserv_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include/io/input/read
     ${PROJECT_SOURCE_DIR}/include/io/input/reader
     ${PROJECT_SOURCE_DIR}/include/server
+    ${PROJECT_SOURCE_DIR}/include/server/socket
 		${PROJECT_SOURCE_DIR}/include/http
 	  ${PROJECT_SOURCE_DIR}/include/http/request/read
 )

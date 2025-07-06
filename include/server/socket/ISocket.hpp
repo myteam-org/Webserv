@@ -5,6 +5,5 @@
 
 class ISocket {
 public:
-    virtual ~ISocket() = 0;
     virtual int getRawFd() const = 0;
 };

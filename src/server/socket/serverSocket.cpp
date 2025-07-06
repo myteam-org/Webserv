@@ -1,22 +1,44 @@
 #include "ServerSocket.hpp"
+#include "utils/types/result.hpp"
+#include <cerrno>
+#include <iostream>
+#include <cstring>
 
-ServerSocket::ServerSocket(uint16_t port, int domain, int type, int protocol) {    
+ServerSocket::ServerSocket(
+    uint16_t port, 
+    int domain, 
+    int type, 
+    int protocol, 
+    const std::string &hostName
+    ) {
     const types::Result<int, int> socketFd = socket(domain, type, protocol);
     if (socketFd.isErr()) {
         throw std::runtime_error("socket creation failed");
     }
-    //config から ipaddress を受け取る場合変更する必要あり。
-    SocketAddr sockAddr = SocketAddr::createIPv4(kDefaultIp, port);
-    bind(FileDescriptor(socketFd.unwrap()), sockAddr);
-
+    SocketAddr sockAddr = SocketAddr::createIPv4(hostName, port);
+    fd_ = FileDescriptor(socketFd.unwrap());
+    const types::Result<int, int> bindRet = bind(sockAddr);
+    if (bindRet.isErr()) {
+        throw std::runtime_error("bind failed");
+    }
+    bindPort_ = port;
+    bindAddress_ = hostName;
+    const types::Result<int, int> listenRet = listen(SOMAXCONN);
+    if (listenRet.isErr()) {
+        throw std::runtime_error("listen failed");
+    }
 }
 
-ServerSocket::~ServerSocket(){
+ServerSocket::~ServerSocket() {
 
 }
 
 int ServerSocket::getRawFd() const {
+    return fd_.getFd().unwrapOr(kInvalidResult); 
+}
 
+void ServerSocket::setFd(FileDescriptor fd) {
+    fd_ = fd;
 }
 
 uint16_t ServerSocket::getBindPort() const {
@@ -35,12 +57,47 @@ void ServerSocket::setBindPort(uint16_t port) {
     bindPort_ = port;
 }
 
-types::Result<int, int> ServerSocket::socket(int domain, int type, int protocol) {
-
+types::Result<int, int> ServerSocket::socket(
+    int domain, 
+    int type, 
+    int protocol
+    ) {
+    const int res = ::socket(domain, type, protocol);
+    if (res == kInvalidResult) {
+        return ERR(errno);
+    }
+    return OK(res);
 }
 
-types::Result<int, int> ServerSocket::bind(FileDescriptor fd, SocketAddr sockAddr) {
-    ::bind(fd.getFd().unwrap(), sockAddr.raw(), sockAddr.length());
+types::Result<int, int> ServerSocket::bind(SocketAddr &sockAddr) {
+    sockaddr* addr = sockAddr.raw();
+    socklen_t len = sockAddr.length();
+    const int res = ::bind(getRawFd(), addr, len);
+    if (res == kInvalidResult) {
+        return ERR(errno);
+    }
+    return OK(res);
 }
 
+types::Result<int, int> ServerSocket::listen(int backlog) {
+    const int res = ::listen(getRawFd(), backlog);
+    if (res == kInvalidResult) {
+        return ERR(errno);
+    }
+    return OK(res);
+}
 
+ServerSocket::ConnectionResult ServerSocket::accept() {
+    SocketAddr clientAddr;
+    socklen_t addrLen = sizeof(sockaddr_storage);
+    const int res = ::accept(
+        getRawFd(), 
+        clientAddr.raw(), 
+        &addrLen
+        );
+    if (res == kInvalidResult) {
+        return ERR(errno);
+    }
+    clientAddr.setLength(addrLen);  
+    return OK(ConnectionSocket(FileDescriptor(res), clientAddr));
+}

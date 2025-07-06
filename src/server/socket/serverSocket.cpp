@@ -61,7 +61,7 @@ types::Result<int, int> ServerSocket::socket(
     int domain, 
     int type, 
     int protocol
-    ) const {
+    ) {
     const int res = ::socket(domain, type, protocol);
     if (res == kInvalidResult) {
         return ERR(errno);
@@ -71,7 +71,7 @@ types::Result<int, int> ServerSocket::socket(
 
 types::Result<int, int> ServerSocket::bind(SocketAddr &sockAddr) const{
     sockaddr* addr = sockAddr.raw();
-    socklen_t len = sockAddr.length();
+    const socklen_t len = sockAddr.length();
     const int res = ::bind(getRawFd(), addr, len);
     if (res == kInvalidResult) {
         std::cout << errno << std::endl;

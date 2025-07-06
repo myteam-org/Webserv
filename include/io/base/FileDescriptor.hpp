@@ -11,7 +11,6 @@ public:
     ~FileDescriptor();
     types::Option<int> getFd() const;
     void setFd(int fd);
-    void reset(int fd);
 private:
     FileDescriptor(const FileDescriptor&);
     int fd_;

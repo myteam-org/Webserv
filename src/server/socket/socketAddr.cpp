@@ -42,7 +42,7 @@ void SocketAddr::resolveByName(
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     struct addrinfo* res;
-    int err = getaddrinfo(hostName.c_str(), NULL, &hints, &res);
+    const int err = getaddrinfo(hostName.c_str(), NULL, &hints, &res);
     if (err != 0) {
         throw std::runtime_error("getaddrinfo failed: " + std::string(gai_strerror(err)));
     }
@@ -55,16 +55,16 @@ void SocketAddr::resolveByName(
 
 std::string SocketAddr::getAddress() const {
     const sockaddr_in* addr = reinterpret_cast<const sockaddr_in*>(&storage_);
-    uint32_t ip = ntohl(addr->sin_addr.s_addr);
-    unsigned char a = (ip >> kFirstOctetShift) & kOctetMask;
-    unsigned char b = (ip >> kSecondOctetShift) & kOctetMask;
-    unsigned char c = (ip >> kThirdOctetShift) & kOctetMask;
-    unsigned char d = ip & kOctetMask;
+    const uint32_t ip = ntohl(addr->sin_addr.s_addr);
+    const unsigned char firstOctet = (ip >> kFirstOctetShift) & kOctetMask;
+    const unsigned char secondOctet = (ip >> kSecondOctetShift) & kOctetMask;
+    const unsigned char thirdOctet = (ip >> kThirdOctetShift) & kOctetMask;
+    const unsigned char lastOctet = ip & kOctetMask;
     std::ostringstream oss;
-    oss << static_cast<int>(a) << "."
-        << static_cast<int>(b) << "."
-        << static_cast<int>(c) << "."
-        << static_cast<int>(d);
+    oss << static_cast<int>(firstOctet) << "."
+        << static_cast<int>(secondOctet) << "."
+        << static_cast<int>(thirdOctet) << "."
+        << static_cast<int>(lastOctet);
     return oss.str();
 }
 

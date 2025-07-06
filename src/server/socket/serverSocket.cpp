@@ -16,7 +16,7 @@ ServerSocket::ServerSocket(
         throw std::runtime_error("socket creation failed");
     }
     SocketAddr sockAddr = SocketAddr::createIPv4(hostName, port);
-    fd_.setFd(socketFd.unwrap());
+    setFd(socketFd.unwrap());
     const types::Result<int, int> bindRet = bind(sockAddr);
     if (bindRet.isErr()) {
         throw std::runtime_error("bind failed");
@@ -37,10 +37,6 @@ int ServerSocket::getRawFd() const {
     return fd_.getFd().unwrapOr(kInvalidResult); 
 }
 
-void ServerSocket::setFd(FileDescriptor fd) {
-    fd_ = fd;
-}
-
 uint16_t ServerSocket::getBindPort() const {
     return bindPort_;
 }
@@ -49,7 +45,7 @@ std::string ServerSocket::getBindAddress() const {
     return bindAddress_;
 }
 
-void ServerSocket::setBindAddress(std::string address) {
+void ServerSocket::setBindAddress(std::string& address) {
     bindAddress_ = address;
 }
 
@@ -57,11 +53,15 @@ void ServerSocket::setBindPort(uint16_t port) {
     bindPort_ = port;
 }
 
+void ServerSocket::setFd(int fd) {
+    fd_.setFd(fd);
+}
+
 types::Result<int, int> ServerSocket::socket(
     int domain, 
     int type, 
     int protocol
-    ) {
+    ) const {
     const int res = ::socket(domain, type, protocol);
     if (res == kInvalidResult) {
         return ERR(errno);
@@ -69,7 +69,7 @@ types::Result<int, int> ServerSocket::socket(
     return OK(res);
 }
 
-types::Result<int, int> ServerSocket::bind(SocketAddr &sockAddr) {
+types::Result<int, int> ServerSocket::bind(SocketAddr &sockAddr) const{
     sockaddr* addr = sockAddr.raw();
     socklen_t len = sockAddr.length();
     const int res = ::bind(getRawFd(), addr, len);
@@ -80,7 +80,7 @@ types::Result<int, int> ServerSocket::bind(SocketAddr &sockAddr) {
     return OK(res);
 }
 
-types::Result<int, int> ServerSocket::listen(int backlog) {
+types::Result<int, int> ServerSocket::listen(int backlog) const {
     const int res = ::listen(getRawFd(), backlog);
     if (res == kInvalidResult) {
         return ERR(errno);
@@ -88,7 +88,7 @@ types::Result<int, int> ServerSocket::listen(int backlog) {
     return OK(res);
 }
 
-ServerSocket::ConnectionResult ServerSocket::accept() {
+ServerSocket::ConnectionResult ServerSocket::accept() const{
     SocketAddr clientAddr;
     socklen_t addrLen = sizeof(sockaddr_storage);
     const int res = ::accept(

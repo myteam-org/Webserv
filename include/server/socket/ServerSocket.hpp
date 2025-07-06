@@ -16,19 +16,19 @@ public:
        );
     ~ServerSocket();
     virtual int getRawFd() const;
-    void setFd(FileDescriptor fd);
+    void setFd(int fd);
     uint16_t getBindPort() const;
     std::string getBindAddress() const;
     void setBindPort(uint16_t port);
-    void setBindAddress(std::string address);	
+    void setBindAddress(std::string &address);	
     types::Result<int, int> socket(
         int domain = AF_INET, 
         int type = SOCK_STREAM, 
-        int protocol = kDefaultProtocol);
-    types::Result<int, int> bind(SocketAddr &sockAddr);
-    types::Result<int, int> listen(int backlog);
+        int protocol = kDefaultProtocol) const;
+    types::Result<int, int> bind(SocketAddr &sockAddr) const;
+    types::Result<int, int> listen(int backlog) const;
     typedef types::Result<ConnectionSocket*, int> ConnectionResult;
-    ConnectionResult accept();
+    ConnectionResult accept() const;
     static const std::string kDefaultIp;
 
 private:

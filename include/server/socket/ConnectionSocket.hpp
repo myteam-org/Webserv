@@ -10,7 +10,6 @@
 class ConnectionSocket : public ISocket {
 public:
     ConnectionSocket(int fd, const ISocketAddr& peerAddr);
-    ConnectionSocket(int fd, const SocketAddr& peerAddr); 
     ~ConnectionSocket();
     virtual int getRawFd() const;
     uint16_t getPeerPort() const;

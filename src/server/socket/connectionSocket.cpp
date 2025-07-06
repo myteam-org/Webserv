@@ -6,12 +6,6 @@ ConnectionSocket::ConnectionSocket(int fd, const ISocketAddr& peerAddr) {
     peerPort_ = peerAddr.getPort();
 }
 
-ConnectionSocket::ConnectionSocket(int fd, const SocketAddr& peerAddr) {
-    fd_ = FileDescriptor(fd);
-    peerAddress_ = peerAddr.getAddress();
-    peerPort_ = peerAddr.getPort();
-}
-
 ConnectionSocket::~ConnectionSocket() {}
 
 int ConnectionSocket::getRawFd() const {

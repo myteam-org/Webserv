@@ -11,7 +11,6 @@
 namespace {
 
 const uint16_t kTestPort = 55557;
-const uint16_t kTestPort2 = 55560;
 const std::string kTestAddress = "127.0.0.1";
 
 

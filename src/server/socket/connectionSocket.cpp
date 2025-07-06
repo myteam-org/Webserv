@@ -32,4 +32,4 @@ std::string ConnectionSocket::getClientInfo() const {
     return oss.str();
 }
 
-const int ConnectionSocket::kInvalidFd = -1;
+const int ConnectionSocket::kInvalidFd;

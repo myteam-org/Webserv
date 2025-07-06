@@ -102,5 +102,5 @@ ServerSocket::ConnectionResult ServerSocket::accept() const{
     return OK(new ConnectionSocket(res, clientAddr));
 }
 
-const int ServerSocket::kDefaultProtocol = 0;
-const int ServerSocket::kInvalidResult = -1;
+const int ServerSocket::kDefaultProtocol;
+const int ServerSocket::kInvalidResult;

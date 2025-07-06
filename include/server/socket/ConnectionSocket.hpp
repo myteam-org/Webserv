@@ -2,7 +2,6 @@
 
 #include "ISocket.hpp"
 #include "SocketAddr.hpp"
-#include "ConnectionSocket.hpp"
 #include <sstream>
 #include <arpa/inet.h>
 #include <netinet/in.h>

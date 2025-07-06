@@ -29,7 +29,6 @@ public:
     types::Result<int, int> listen(int backlog) const;
     typedef types::Result<ConnectionSocket*, int> ConnectionResult;
     ConnectionResult accept() const;
-    static const std::string kDefaultIp;
 
 private:
     FileDescriptor fd_;

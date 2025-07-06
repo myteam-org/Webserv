@@ -74,7 +74,6 @@ types::Result<int, int> ServerSocket::bind(SocketAddr &sockAddr) const{
     const socklen_t len = sockAddr.length();
     const int res = ::bind(getRawFd(), addr, len);
     if (res == kInvalidResult) {
-        std::cout << errno << std::endl;
         return ERR(errno);
     }
     return OK(res);
@@ -103,5 +102,5 @@ ServerSocket::ConnectionResult ServerSocket::accept() const{
     return OK(new ConnectionSocket(res, clientAddr));
 }
 
-const int ServerSocket::kDefaultProtocol;
-const int ServerSocket::kInvalidResult;
+const int ServerSocket::kDefaultProtocol = 0;
+const int ServerSocket::kInvalidResult = -1;

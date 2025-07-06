@@ -51,6 +51,7 @@ void SocketAddr::resolveByName(
     addrIn->sin_family = AF_INET;
     addrIn->sin_addr = resolvedAddr->sin_addr;
     addrIn->sin_port = htons(port);
+    freeaddrinfo(res);
 }
 
 std::string SocketAddr::getAddress() const {

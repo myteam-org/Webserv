@@ -19,11 +19,11 @@ TEST(ConnectionSocketTest, BasicInfoTest) {
     uint16_t port = 65535;
     MockSocketAddr mock = MockSocketAddr("192.168.0.5", port);
     int fd = 42;
-    ConnectionSocket testConnetionSocket(fd, mock);
-    EXPECT_EQ(testConnetionSocket.getRawFd(), fd);
-    EXPECT_EQ(testConnetionSocket.getPeerAddress(), "192.168.0.5");
-    EXPECT_EQ(testConnetionSocket.getPeerPort(), port);
-    EXPECT_EQ(testConnetionSocket.getClientInfo(), "192.168.0.5:65535");
+    ConnectionSocket testConnectionSocket(fd, mock);
+    EXPECT_EQ(testConnectionSocket.getRawFd(), fd);
+    EXPECT_EQ(testConnectionSocket.getPeerAddress(), "192.168.0.5");
+    EXPECT_EQ(testConnectionSocket.getPeerPort(), port);
+    EXPECT_EQ(testConnectionSocket.getClientInfo(), "192.168.0.5:65535");
 
 }
 }

@@ -1,0 +1,29 @@
+#include "router.hpp"
+namespace http {
+   Router::Router() 
+        : routeRegistry_(new RouteRegistry()),
+          middlewareChain_(new MiddlewareChain()),
+          internalRouter_(NULL),
+          compiledHandler_(NULL) {}
+    
+    Router::~Router() {
+        delete routeRegistry_;
+        delete middlewareChain_;
+        delete internalRouter_;
+        // compiledHandler_ は middlewareChain_ が管理するので削除しない
+    }
+    
+    Either<IAction*, Response> Router::serve(const RequestContext& ctx) {
+        if (!compiledHandler_) {
+            compile();
+        }
+        return compiledHandler_->serve(ctx);
+    }
+
+    void Router::compile() {
+        if (!internalRouter_) {
+            internalRouter_ = new InternalRouter(*routeRegistry_);
+        }
+        compiledHandler_ = middlewareChain_->buildChain(internalRouter_);
+    }
+} //namespace http

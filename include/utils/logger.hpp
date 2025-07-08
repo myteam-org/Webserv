@@ -58,3 +58,27 @@ private:
     static std::string colorize(const std::string &text, LogColor color);
 };
 
+// Logger::instance()を通じてどこからでもログ出力できるようにする
+// ログレベル(DEBUG,INFOなど)や出力先を指定可能
+// 主な機能
+// Logger::instance():シングルトンインスタンス取得
+// log(level, message):ログ出力（レベルとメッセージ指定）
+// setLevel(...):出力する最小ログレベルを設定
+// setOutput(...):出力先（コンソールorファイル）を設定
+// setLogFile(...):ファイル名を指定（kFile出力時）
+// LOG_INFO("msg"):マクロでかんたんにログ出力できる
+// #include "logger.hpp" 
+// int main() { 
+//     // ログレベルをINFOに設定
+//     SET_LOG_LEVEL(Logger::kInfo); 
+//     // コンソールに出力（デフォルト） 
+//     LOG_INFO("Application started"); 
+//     // ファイル出力に変更 
+//     SET_LOG_FILE("myapp.log"); 
+//     SET_LOG_OUTPUT(Logger::kFile); 
+//     LOG_INFO("Logging to file only"); 
+//     // コンソール出力に戻す 
+//     SET_LOG_OUTPUT(Logger::kConsole); 
+//     LOG_ERROR("Console only error"); 
+//     return 0; 
+// }

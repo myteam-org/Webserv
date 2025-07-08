@@ -87,3 +87,24 @@ namespace types {
 // #define ERR(e) ::types::err(e)
 #define OK(val) (::types::ok(val))
 #define ERR(e)  (::types::err(e))
+
+// 「成功」「失敗」を型で安全に扱うための仕組み
+// RustのResult<T, E>型をC++で再現した実装
+// ＜クラス＞
+//  Ok<T>:成功時の値を持つ（成功のラッパー）
+//  Err<E>:失敗（エラー）を持つ（失敗のラッパー）
+//  Result<T, E>:成功か失敗のどちらかを保持する型
+//               Ok<T>やErr<E>で包みunwrap()などで安全に扱うことができる
+//               Ok<T>*,Err<E>*のいずれかを持つ
+// ＜メソッド＞
+//  ok(val):Ok<T>を作る関数（マクロでも使用）
+//  err(e):Err<E>を作る関数（マクロでも使用）
+//  OK(val):ok(val)マクロ
+//  ERR(e):err(e)のマクロ
+//  isOk():成功か？
+//  isErr():失敗か？
+//  unwrap():成功時の値を返す。失敗なら例外。
+//  unwrapErr():失敗時の値を返す。成功なら例外。
+//  canUnwrap():TRYマクロ用のisOk()エイリアス
+// 関数の返り値で「成功/失敗」を型で表現できる
+// unwrapで失敗時に強制的に例外を出すことができる

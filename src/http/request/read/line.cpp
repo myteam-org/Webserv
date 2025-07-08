@@ -12,6 +12,15 @@ ReadingRequestLineState::ReadingRequestLineState() {}
 
 ReadingRequestLineState::~ReadingRequestLineState() {}
 
+// handle関数
+// 1. getLine(buf)を使って1行読み取る
+//    getLine()はバッファから\r\n区切りで1行読み取る関数
+// 2. 読み取りエラーが起きたらTransitionResultにエラーを入れて即return
+// 3. 行が取得できない（EOFなど）時は　まだ行が完成していない->読み込みを一時停止（kSuspend）
+// 4. 行が空なら異常->エラーで返す
+// 5. 正常に行が読めた時
+//    ・TransitionResultに requestLine と status をセットしreturnする
+
 TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
   TransitionResult tr;
 
@@ -41,3 +50,7 @@ TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
 }
 
 }  // namespace http
+
+// HTTPリクエストのリクエストライン（1行目）を読み取るstateを実装
+// 例：GET /index.html HTTP/1.1
+// stateパターンの「リクエストライン読み取りフェーズ」を表す

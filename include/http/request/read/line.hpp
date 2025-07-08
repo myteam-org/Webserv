@@ -13,3 +13,6 @@ class ReadingRequestLineState : public IState {
 };
 
 }  // namespace http
+
+// HTTPリクエストのリクエストライン（1行目）を読み取るstateを実装
+// stateパターンの「リクエストライン読み取りフェーズ」を表す

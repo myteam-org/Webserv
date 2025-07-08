@@ -37,3 +37,12 @@ bool FdReader::eof() {
 }
 
 } // namespace io
+
+// ファイルやソケットからバイナリデータを読み込むためのクラス
+// IReaderという抽象クラスを継承
+// 実態として「ファイルディスクリプタから読み込む」処置を提供する
+// read()メソッド
+// ・読み込み済み（eof == true）なら0を返す
+// ・::read(fd_, buf, nbyte)を使って読み込みする
+// ・読み込めなければERR(kIOUnknown)を返す
+// ・読み込んだバイト数をResult<std::size_t, AppError>型で返す

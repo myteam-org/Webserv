@@ -19,3 +19,6 @@ private:
 };
 
 } // namespace io
+
+// IReaderを継承して、ファイルディスクリプタ（int fd）を読み込む実装
+// 実際には::read(fd_, buf, nbyte)を使う（低レベルな入出力）

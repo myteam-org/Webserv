@@ -72,3 +72,22 @@ namespace types {
 	Option<T> none() { return Option<T>(None()); }
 } // namespace types
 
+// C++ における Rust風の Option<T> 型 を実装したもの
+// 値が「ある/Some<T> or ない/None」を安全に扱うための ラッパー構造
+// 主な構成
+//  Some<T>:値が存在する時のラッパー構造
+//  None:値がない時を表す空の構造体
+//  Option<T>:Some<T>またはNoneを内部に持ち、値の有無を表すクラス
+//  　　　　　　「値があるかないか」を安全に表現するためのテンプレートクラス
+//  some(val):Option<T>をSome(val)で作る関数
+//  none<T>():Option<T>をNoneで作る関数
+// 主なメソッド
+//  isSome():値があるか？
+//  isNone():値がないか？
+//  unwrap():値を取り出す。Noneの時は例外
+//  unwrapOr(default):値がなければdefaultを返す
+//  canUnwrap():TRYマクロ用:unwrapできるか？
+// 使用目的
+//  NULLやポインタの存在チェックを安全に行える
+//  「値がないことを例外でなく型で表現できる
+//  unwrap()で意図的に失敗を設計可能（例外）

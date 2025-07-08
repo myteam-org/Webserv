@@ -1,5 +1,4 @@
 #include "line.hpp"
-#include "http/request/read/state.hpp"
 #include "state.hpp"
 #include "header.hpp"
 #include "utils/types/try.hpp"

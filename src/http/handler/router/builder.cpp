@@ -1,53 +1,56 @@
 #include "builder.hpp"
+#include "http/handler/router/router.hpp"
+#include "http/handler/router/registry.hpp"
+#include "http/handler/router/middleware/chain.hpp"
+#include "utils/logger.hpp"
 
 namespace http {
-    RouterBuilder::RouterBuilder() 
-        : router_(new Router()), built_(false) {}
-    
+    RouterBuilder::RouterBuilder()
+        : routerInstance_(new Router()), isBuilt_(false) {}
+
     RouterBuilder::~RouterBuilder() {
-        if (!built_ && router_) {
-            delete router_;
+        if (!isBuilt_ && routerInstance_ != NULL) {
+            delete routerInstance_;
         }
     }
-    
-    RouterBuilder& RouterBuilder::route(HttpMethod method, const std::string& path, IHandler* handler) {
-        if (built_) {
-            // すでにビルド済みの場合はエラー
+
+    RouterBuilder& RouterBuilder::route(const HttpMethod httpMethod, const std::string& routePath, IHandler* routeHandler) {
+        if (isBuilt_) {
             LOG_ERROR("RouterBuilder: Cannot add route after build()");
             return *this;
         }
-        router_->routeRegistry_->addRoute(method, path, handler);
+        routerInstance_->routeRegistry_->addRoute(httpMethod, routePath, routeHandler);
         return *this;
     }
-    
-    RouterBuilder& RouterBuilder::route(const std::vector<HttpMethod>& methods, 
-                                       const std::string& path, IHandler* handler) {
-        if (built_) {
+
+    RouterBuilder& RouterBuilder::route(const std::vector<HttpMethod>& httpMethodList,
+                                       const std::string& routePath, IHandler* routeHandler) {
+        if (isBuilt_) {
             LOG_ERROR("RouterBuilder: Cannot add route after build()");
             return *this;
         }
-        router_->routeRegistry_->addRoute(methods, path, handler);
+        routerInstance_->routeRegistry_->addRoute(httpMethodList, routePath, routeHandler);
         return *this;
     }
-    
-    RouterBuilder& RouterBuilder::middleware(IMiddleware* middleware) {
-        if (built_) {
+
+    RouterBuilder& RouterBuilder::middleware(IMiddleware* middlewareInstance) {
+        if (isBuilt_) {
             LOG_ERROR("RouterBuilder: Cannot add middleware after build()");
             return *this;
         }
-        router_->middlewareChain_->addMiddleware(middleware);
+        routerInstance_->middlewareChain_->addMiddleware(middlewareInstance);
         return *this;
     }
-    
+
     Router* RouterBuilder::build() {
-        if (built_) {
+        if (isBuilt_) {
             LOG_ERROR("RouterBuilder: build() called multiple times");
             return NULL;
         }
-        built_ = true;
-        router_->compile();
-        Router* result = router_;
-        router_ = NULL;  // 所有権を放棄
-        return result;
+        isBuilt_ = true;
+        routerInstance_->compile();
+        Router* resultRouter = routerInstance_;
+        routerInstance_ = NULL;  // Release ownership
+        return resultRouter;
     }
-} //namespace http
+} // namespace http

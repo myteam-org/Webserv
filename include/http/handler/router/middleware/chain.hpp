@@ -14,7 +14,7 @@ namespace http {
         class ChainedHandler : public IHandler {
         public:
             ChainedHandler(IMiddleware& middleware, IHandler& next);
-            Either<IAction*, Response> serve(const RequestContext& ctx);
+            // Either<IAction*, Response> serve(const RequestContext& ctx);
             
         private:
             IMiddleware& middleware_;

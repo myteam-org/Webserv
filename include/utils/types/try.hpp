@@ -27,3 +27,14 @@ types::Option<T> tryDefault(const types::Option<T> &opt) {
 
 #endif
 
+// C++でRust風のTRYマクロを実現するための仕組み
+// 失敗を安全に早期リターンしつつ、成功時は値を取り出す
+// ＜2つのオーバーロード関数＞TRY内部で使われるErrやNoneを返す補助関数
+//  tryDefault(Result<T, E>):失敗時にErr<E>をそのまま返す
+//  tryDefault(Option<T>):値なし（None）の場合にOption<T>(None)をそのまま返す
+// ＜TRY(expr)マクロ＞
+//  exprを一度だけ評価する
+//  canUnwrap()（=成功かどうか）をチェック
+//  失敗していればreturn
+//  成功していれば.unwrap()で値を取り出す
+// 安全・簡潔・多重評価なし・関数型風のエラーハンドリンクが可能

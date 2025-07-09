@@ -9,3 +9,4 @@ include(GoogleTest)
 gtest_discover_tests(method_test)
 
 add_subdirectory(request)
+add_subdirectory(handler)

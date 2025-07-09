@@ -1,9 +1,9 @@
 #include "registry.hpp"
+#include <set>
 namespace http {
     RouteRegistry::RouteRegistry() : pathMatcher_(NULL), matcherDirty_(true) {}
     
     RouteRegistry::~RouteRegistry() {
-        // メソッドに同じ handler が登録されていると double free になることに注意
         std::set<IHandler *> deleted;
         delete pathMatcher_;
         for (HandlerMap::const_iterator it = handlers_.begin(); it != handlers_.end(); ++it) {
@@ -17,10 +17,7 @@ namespace http {
     }
     
     void RouteRegistry::addRoute(HttpMethod method, const std::string& path, IHandler* handler) {
-        const std::string methodStr = httpMethodToString(method);
-        LOG_DEBUGF("register %s handler for path: %s", methodStr.c_str(), path.c_str());
         if (handlers_[path][method]) {
-            LOG_DEBUGF("handler for %s %s is overwritten", methodStr.c_str(), path.c_str());
             delete handlers_[path][method];
         }
         handlers_[path][method] = handler;
@@ -50,14 +47,14 @@ namespace http {
         }
     }
 
-    Option<RouteRegistry::Path> RouteRegistry::matchPath(const std::string& requestPath) const {
+    types::Option<RouteRegistry::Path> RouteRegistry::matchPath(const std::string& requestPath) const {
         ensureMatcherUpdated();
         return pathMatcher_->match(requestPath);
     }
     IHandler* RouteRegistry::findHandler(HttpMethod method, const std::string& path) const {
-        HandlerMap::const_iterator pathIt = handlers_.find(path);
+        const HandlerMap::const_iterator pathIt = handlers_.find(path);
         if (pathIt != handlers_.end()) {
-            MethodHandlerMap::const_iterator methodIt = pathIt->second.find(method);
+            const MethodHandlerMap::const_iterator methodIt = pathIt->second.find(method);
             if (methodIt != pathIt->second.end()) {
                 return methodIt->second;
             }
@@ -67,7 +64,7 @@ namespace http {
     
     std::vector<HttpMethod> RouteRegistry::getAllowedMethods(const std::string& path) const {
         std::vector<HttpMethod> methods;
-        HandlerMap::const_iterator pathIt = handlers_.find(path);
+        const HandlerMap::const_iterator pathIt = handlers_.find(path);
         if (pathIt != handlers_.end()) {
             for (MethodHandlerMap::const_iterator it = pathIt->second.begin(); 
                  it != pathIt->second.end(); ++it) {

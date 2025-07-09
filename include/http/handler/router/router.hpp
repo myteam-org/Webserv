@@ -1,8 +1,7 @@
 #pragma once
 
-#include "http/handler/router/registry.hpp"
-#include "http/handler/router/middleware/chain.hpp"
-#include "http/handler/router/internal.hpp"
+#include "internal.hpp"
+#include "middleware/chain.hpp"
 
 namespace http {
     class Router : public IHandler {
@@ -10,7 +9,7 @@ namespace http {
         Router();
         ~Router();
 
-        // Either<IAction*, Response> serve(const RequestContext& ctx);
+        Either<IAction*, Response> serve(const Request& request);
 
     private:
         friend class RouterBuilder;

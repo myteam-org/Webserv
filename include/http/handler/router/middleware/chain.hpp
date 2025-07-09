@@ -1,6 +1,8 @@
 #pragma once
+
 #include <vector>
 #include "handler/handler.hpp"
+#include "middleware/middleware.hpp"
 
 namespace http {
     class MiddlewareChain {
@@ -15,7 +17,7 @@ namespace http {
         class ChainedHandler : public IHandler {
         public:
             ChainedHandler(IMiddleware& middleware, IHandler& next);
-            // Either<IAction*, Response> serve(const RequestContext& ctx);
+            Either<IAction*, Response> serve(const Request& req);
             
         private:
             IMiddleware& middleware_;

@@ -1,4 +1,4 @@
-#include "chain.hpp"
+#include "middleware/chain.hpp"
 namespace http {
     MiddlewareChain::MiddlewareChain() {}
     
@@ -35,7 +35,7 @@ namespace http {
     MiddlewareChain::ChainedHandler::ChainedHandler(IMiddleware& middleware, IHandler& next)
         : middleware_(middleware), next_(next) {}
     
-    Either<IAction*, Response> MiddlewareChain::ChainedHandler::serve(const RequestContext& ctx) {
-        return middleware_.intercept(ctx, next_);
+    Either<IAction*, Response> MiddlewareChain::ChainedHandler::serve(const Request& req) {
+        return middleware_.intercept(req, next_);
     }
-} //http
+} //namespace http

@@ -15,8 +15,8 @@ namespace http {
         RouterBuilder();
         ~RouterBuilder();
 
-        RouterBuilder& route(const HttpMethod httpMethod, const std::string& routePath, IHandler* routeHandler);
-        RouterBuilder& route(const std::vector<HttpMethod>& httpMethodList, const std::string& routePath, IHandler* routeHandler);
+        RouterBuilder& route(HttpMethod httpMethod, const std::string& routePath, IHandler* routeHandler);
+        RouterBuilder& route(std::vector<HttpMethod>& httpMethodList, const std::string& routePath, IHandler* routeHandler);
         RouterBuilder& middleware(IMiddleware* middlewareInstance);
 
         Router* build();

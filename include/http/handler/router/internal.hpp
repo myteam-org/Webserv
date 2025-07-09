@@ -1,11 +1,13 @@
 #pragma once
-#include <iostream>
+#include "request/request.hpp"
+#include "handler/handler.hpp"
+#include "router/registry.hpp"
 
 namespace http {
     class InternalRouter : public IHandler {
     public:
         explicit InternalRouter(const RouteRegistry& registry);
-        // Either<IAction*, Response> serve(const RequestContext& ctx);
+        Either<IAction*, Response> serve(const Request& req);
         
     private:
         const RouteRegistry& registry_;

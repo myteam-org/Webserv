@@ -5,6 +5,7 @@
 #include "method.hpp"
 #include "option.hpp"
 #include "matcher.hpp"
+#include "handler/handler.hpp"
 
 namespace http {
     class RouteRegistry {

@@ -10,14 +10,13 @@ namespace http {
         delete routeRegistry_;
         delete middlewareChain_;
         delete internalRouter_;
-        // compiledHandler_ は middlewareChain_ が管理するので削除しない
     }
     
-    Either<IAction*, Response> Router::serve(const RequestContext& ctx) {
+    Either<IAction*, Response> Router::serve(const Request& req) {
         if (!compiledHandler_) {
             compile();
         }
-        return compiledHandler_->serve(ctx);
+        return compiledHandler_->serve(req);
     }
 
     void Router::compile() {

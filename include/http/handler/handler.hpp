@@ -1,3 +1,4 @@
+#pragma once
 #include "http/request/request.hpp"
 #include "either.hpp"
 #include "action/action.hpp"

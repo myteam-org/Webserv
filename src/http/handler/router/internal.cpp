@@ -3,31 +3,24 @@ namespace http {
     InternalRouter::InternalRouter(const RouteRegistry& registry) 
         : registry_(registry) {}
     
-    Either<IAction*, Response> InternalRouter::serve(const RequestContext& ctx) {
-        const Request& req = ctx.getRequest();
+    Either<IAction*, Response> InternalRouter::serve(const Request& req) {
 
-        const Option<std::string> matchResult = registry_.matchPath(req.getRequestTarget());
+        const types::Option<std::string> matchResult = registry_.matchPath(req.getRequestTarget());
         if (matchResult.isNone()) {
-            LOG_DEBUGF("no handler found for path: %s", req.getRequestTarget().c_str());
-            return Right(ResponseBuilder().status(kStatusNotFound).build());
+            // return Right(ResponseBuilder().status(kStatusNotFound).build());
         }
         
         const std::string& matchedPath = matchResult.unwrap();
         IHandler* handler = registry_.findHandler(req.getMethod(), matchedPath);
         
         if (!handler) {
-            std::vector<HttpMethod> allowedMethods = registry_.getAllowedMethods(matchedPath);
+            const std::vector<HttpMethod> allowedMethods = registry_.getAllowedMethods(matchedPath);
             if (!allowedMethods.empty()) {
-                LOG_DEBUGF(
-                    "method %s is not allowed for path: %s",
-                    http::httpMethodToString(req.getMethod()).c_str(),
-                    req.getRequestTarget().c_str()
-                );
-                return Right(ResponseBuilder().status(kStatusMethodNotAllowed).build());
+                // return Right(ResponseBuilder().status(kStatusMethodNotAllowed).build());
             }
-            return Right(ResponseBuilder().status(kStatusNotFound).build());
+            // return Right(ResponseBuilder().status(kStatusNotFound).build());
         }
-        return handler->serve(ctx);
+        return handler->serve(req);
     }
     
     Matcher<std::string> InternalRouter::createMatcher() const {

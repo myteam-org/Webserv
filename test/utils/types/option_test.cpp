@@ -65,6 +65,26 @@ TEST(OptionTest, StringOption) {
     EXPECT_EQ("default", none_option.unwrapOr("default"));
 }
 
+TEST(OptionTest, EqualityOperator) {
+    types::Option<int> some1 = types::some(10);
+    types::Option<int> some2 = types::some(10);
+    types::Option<int> some3 = types::some(20);
+    types::Option<int> none1 = types::none<int>();
+    types::Option<int> none2 = types::none<int>();
+
+    EXPECT_TRUE(some1 == some2);
+    EXPECT_FALSE(some1 == some3);
+    EXPECT_FALSE(some1 == none1);
+    EXPECT_TRUE(none1 == none2);
+
+    types::Option<std::string> str_some1 = types::some(std::string("test"));
+    types::Option<std::string> str_some2 = types::some(std::string("test"));
+    types::Option<std::string> str_none1 = types::none<std::string>();
+
+    EXPECT_TRUE(str_some1 == str_some2);
+    EXPECT_FALSE(str_some1 == str_none1);
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {

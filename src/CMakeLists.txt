@@ -37,7 +37,9 @@ add_library(webserv_lib STATIC
     http/request/read/line.cpp
     http/request/read/reader.cpp
     http/request/read/utils.cpp
+    http/request/request.cpp
     http/method.cpp
+    http/response/response.cpp
     http/handler/router/builder.cpp
     http/handler/router/internal.cpp
     http/handler/router/registry.cpp

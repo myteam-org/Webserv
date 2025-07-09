@@ -24,27 +24,27 @@ protected:
     RouteRegistry registry_;
 
     void SetUp() override {
-        registry_.addRoute(kGet, "/api/v1", new MockHandler(1));
-        registry_.addRoute(kPost, "/api/v1", new MockHandler(2));
-        registry_.addRoute(kGet, "/", new MockHandler(3));
+        registry_.addRoute(kMethodGet, "/api/v1", new MockHandler(1));
+        registry_.addRoute(kMethodPost, "/api/v1", new MockHandler(2));
+        registry_.addRoute(kMethodGet, "/", new MockHandler(3));
     }
 };
 
 TEST_F(RegistryTest, FindHandler) {
-    IHandler* handler = registry_.findHandler(kGet, "/api/v1");
+    IHandler* handler = registry_.findHandler(kMethodGet, "/api/v1");
     ASSERT_NE(handler, nullptr);
     EXPECT_EQ(dynamic_cast<MockHandler*>(handler)->id(), 1);
 
-    IHandler* handler2 = registry_.findHandler(kPost, "/api/v1");
+    IHandler* handler2 = registry_.findHandler(kMethodPost, "/api/v1");
     ASSERT_NE(handler2, nullptr);
     EXPECT_EQ(dynamic_cast<MockHandler*>(handler2)->id(), 2);
 }
 
 TEST_F(RegistryTest, FindHandlerNoMatch) {
-    IHandler* handler = registry_.findHandler(kDelete, "/api/v1");
+    IHandler* handler = registry_.findHandler(kMethodDelete, "/api/v1");
     EXPECT_EQ(handler, nullptr);
 
-    IHandler* handler2 = registry_.findHandler(kGet, "/api/v2");
+    IHandler* handler2 = registry_.findHandler(kMethodGet, "/api/v2");
     EXPECT_EQ(handler2, nullptr);
 }
 
@@ -65,8 +65,8 @@ TEST_F(RegistryTest, GetAllowedMethods) {
     bool getFound = false;
     bool postFound = false;
     for (size_t i = 0; i < methods.size(); ++i) {
-        if (methods[i] == kGet) getFound = true;
-        if (methods[i] == kPost) postFound = true;
+        if (methods[i] == kMethodGet) getFound = true;
+        if (methods[i] == kMethodPost) postFound = true;
     }
     EXPECT_TRUE(getFound);
     EXPECT_TRUE(postFound);
@@ -74,15 +74,15 @@ TEST_F(RegistryTest, GetAllowedMethods) {
 
 TEST_F(RegistryTest, AddRouteVector) {
     std::vector<HttpMethod> methods;
-    methods.push_back(kPut);
-    methods.push_back(kPatch);
+    methods.push_back(kMethodPut);
+    methods.push_back(kMethodPatch);
     registry_.addRoute(methods, "/api/v2", new MockHandler(4));
 
-    IHandler* handler_put = registry_.findHandler(kPut, "/api/v2");
+    IHandler* handler_put = registry_.findHandler(kMethodPut, "/api/v2");
     ASSERT_NE(handler_put, nullptr);
     EXPECT_EQ(dynamic_cast<MockHandler*>(handler_put)->id(), 4);
 
-    IHandler* handler_patch = registry_.findHandler(kPatch, "/api/v2");
+    IHandler* handler_patch = registry_.findHandler(kMethodPatch, "/api/v2");
     ASSERT_NE(handler_patch, nullptr);
     EXPECT_EQ(dynamic_cast<MockHandler*>(handler_patch)->id(), 4);
 }

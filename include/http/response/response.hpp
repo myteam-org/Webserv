@@ -1,7 +1,6 @@
 #pragma once
 
 #include "status.hpp"
-#include "http/header.hpp"
 #include "option.hpp"
 #include <iostream>
 
@@ -11,7 +10,7 @@ namespace http {
         explicit Response(
             HttpStatusCode status,
             // const Headers &headers = Headers(),
-            const types::Option<std::string> &body = types::none<std::string>,
+            types::Option<std::string> body = types::none<std::string>(),
             const std::string &httpVersion = "HTTP/1.1"
         );
         bool operator==(const Response &other) const;

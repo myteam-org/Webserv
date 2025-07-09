@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include "handler/handler.hpp"
 
 namespace http {
     class MiddlewareChain {

@@ -23,7 +23,7 @@ namespace http {
         return *this;
     }
 
-    RouterBuilder& RouterBuilder::route(std::vector<HttpMethod>& httpMethodList,
+    RouterBuilder& RouterBuilder::route(const std::vector<HttpMethod>& httpMethodList,
                                        const std::string& routePath, IHandler* routeHandler) {
         if (isBuilt_) {
             LOG_ERROR("RouterBuilder: Cannot add route after build()");

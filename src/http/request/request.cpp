@@ -3,7 +3,7 @@
 namespace http {
     Request::Request(
         HttpMethod method,
-        const std::string &requestTarget,
+        const std::string &requestTarget,// NOLINT(bugprone-easily-swappable-parameters)
         const std::string &httpVersion,
         const std::string &body
     ) : method_(method), requestTarget_(requestTarget), httpVersion_(httpVersion), body_(body) {}

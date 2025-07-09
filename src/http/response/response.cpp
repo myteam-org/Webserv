@@ -3,7 +3,7 @@
 namespace http {
     Response::Response(
         HttpStatusCode status,
-        types::Option<std::string> body,
+        const types::Option<std::string> &body,
         const std::string &httpVersion
     ) : status_(status), httpVersion_(httpVersion), body_(body) {}
 
@@ -25,8 +25,8 @@ namespace http {
         return body_;
     }
 
-    std::string Response::toString() const {
+    std::string Response::toString() {
         // Implementation missing
         return "";
     }
-}
+} // namespace http

@@ -10,7 +10,7 @@ namespace http {
         explicit Response(
             HttpStatusCode status,
             // const Headers &headers = Headers(),
-            types::Option<std::string> body = types::none<std::string>(),
+            const types::Option<std::string> &body = types::none<std::string>(),
             const std::string &httpVersion = "HTTP/1.1"
         );
         bool operator==(const Response &other) const;
@@ -20,7 +20,7 @@ namespace http {
         // const Headers &getHeaders() const;
         const types::Option<std::string> &getBody() const;
 
-        std::string toString() const;
+        static std::string toString();
 
     private:
         HttpStatusCode status_;

@@ -27,7 +27,7 @@ namespace http {
         return httpVersion_;
     }
 
-    types::Option<std::string> Request::getHeader(const std::string &key) const {
+    types::Option<std::string> Request::getHeader(const std::string &key) {
         (void)key; // Unused parameter
         return types::none<std::string>();
     }
@@ -35,4 +35,4 @@ namespace http {
     const std::string &Request::getBody() const {
         return body_;
     }
-}
+} // namespace http

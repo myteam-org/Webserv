@@ -11,7 +11,7 @@ namespace http {
             HttpStatusCode status,
             // const Headers &headers = Headers(),
             const types::Option<std::string> &body = types::none<std::string>(),
-            const std::string &httpVersion = "HTTP/1.1"
+            const std::string &httpVersion = defaultHttpVersion
         );
         bool operator==(const Response &other) const;
 
@@ -21,8 +21,8 @@ namespace http {
         const types::Option<std::string> &getBody() const;
 
         static std::string toString();
-
     private:
+        static const std::string defaultHttpVersion;
         HttpStatusCode status_;
         std::string httpVersion_;
         // Headers headers_;

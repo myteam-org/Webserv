@@ -1,6 +1,8 @@
 #include "http/response/response.hpp"
 
 namespace http {
+    const std::string Response::defaultHttpVersion = "HTTP/1.1";
+
     Response::Response(
         HttpStatusCode status,
         const types::Option<std::string> &body,

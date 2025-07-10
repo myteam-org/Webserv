@@ -66,6 +66,17 @@ namespace types {
     };
 
     template<typename T>
+    bool operator==(const Option<T>& lhs, const Option<T>& rhs) {
+        if (lhs.isNone() && rhs.isNone()) {
+            return true;
+        }
+        if (lhs.isSome() && rhs.isSome()) {
+            return lhs.unwrap() == rhs.unwrap();
+        }
+        return false;
+    }
+
+    template<typename T>
 	Option<T> some(const T& val) { return Option<T>(Some<T>(val)); }
 
 	template<typename T>

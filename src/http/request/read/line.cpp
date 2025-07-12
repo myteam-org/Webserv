@@ -44,7 +44,7 @@ TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
   }
 
   tr.setRequestLine(types::Option<std::string>(types::some(line)));
-  // tr.setNextState(new ReadingHeadersState());
+  tr.setNextState(new ReadingRequestHeadersState());
   tr.setStatus(types::ok(IState::kDone));
   return tr;
 }

@@ -1,6 +1,6 @@
 #pragma once
-#include "state.hpp"
 #include "buffer.hpp"
+#include "state.hpp"
 
 // class ReadBuffer;
 
@@ -11,8 +11,9 @@ class ReadingRequestHeadersState : public IState {
     ReadingRequestHeadersState();
     virtual ~ReadingRequestHeadersState();
     TransitionResult handle(ReadBuffer& buf);
+
    private:
-	std::vector<std::string> headerLine_;
+    std::vector<std::string> headerLine_;
 };
-    
-} // namespace http
+
+}  // namespace http

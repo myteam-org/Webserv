@@ -11,9 +11,6 @@ class ReadingRequestHeadersState : public IState {
     ReadingRequestHeadersState();
     virtual ~ReadingRequestHeadersState();
     TransitionResult handle(ReadBuffer& buf);
-
-   private:
-    std::vector<std::string> headerLine_;
 };
 
 }  // namespace http

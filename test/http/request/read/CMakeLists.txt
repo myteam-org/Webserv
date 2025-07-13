@@ -31,8 +31,16 @@ target_link_libraries(context_test
     PRIVATE webserv_lib gtest
 )
 
+add_executable(header_test header_test.cpp)
+target_link_libraries(header_test
+    PRIVATE webserv_lib gtest
+)
+gtest_discover_tests(header_test)
+
+
 include(GoogleTest)
 gtest_discover_tests(getline_test)
 gtest_discover_tests(reader_test)
 gtest_discover_tests(line_test)
 gtest_discover_tests(context_test)
+gtest_discover_tests(header_test) 

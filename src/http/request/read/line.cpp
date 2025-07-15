@@ -5,6 +5,7 @@
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
+#include "http/request/read/header.hpp"
 
 namespace http {
 
@@ -44,7 +45,7 @@ TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
   }
 
   tr.setRequestLine(types::Option<std::string>(types::some(line)));
-  // tr.setNextState(new ReadingHeadersState());
+  tr.setNextState(new ReadingRequestHeadersState());
   tr.setStatus(types::ok(IState::kDone));
   return tr;
 }

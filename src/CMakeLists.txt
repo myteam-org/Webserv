@@ -31,6 +31,7 @@ add_library(webserv_lib STATIC
     server/socket/serverSocket.cpp
     server/socket/socketAddr.cpp
     http/request/read/body.cpp
+    http/request/read/length_body.cpp
     http/request/read/chunked_body.cpp
     http/request/read/context.cpp
     http/request/read/header.cpp

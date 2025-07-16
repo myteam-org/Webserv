@@ -11,8 +11,8 @@ class ReadingRequestBodyLengthState : public IState {
     virtual TransitionResult handle(ReadBuffer& buf);
 
    private:
-    size_t contentLength_;
-    size_t alreadyRead_;
+    std::size_t contentLength_;
+    std::size_t alreadyRead_;
     std::string bodyBuffer_;
 };
 }  // namespace http

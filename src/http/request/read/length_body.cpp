@@ -16,8 +16,8 @@ ReadingRequestBodyLengthState::~ReadingRequestBodyLengthState() {}
 // 全部読み取れないなどのエラーはソケット側でタイムアウト処理をするのでここでは感知しない
 TransitionResult ReadingRequestBodyLengthState::handle(ReadBuffer& buf) {
     TransitionResult tr;
-    const size_t remain = contentLength_ - alreadyRead_;
-    const size_t toRoad = std::min(remain, buf.size());
+    const std::size_t remain = contentLength_ - alreadyRead_;
+    const std::size_t toRoad = std::min(remain, buf.size());
 
     if (toRoad == 0) {
         tr.setStatus(types::ok(IState::kSuspend));  // データ待ち

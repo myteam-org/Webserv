@@ -158,16 +158,3 @@ int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
-
-// 既存のテストに続けてこれを追加
-class FailingReader : public io::IReader {
-public:
-    virtual types::Result<std::size_t, error::AppError> read(char*, std::size_t) {
-        return types::err(error::kIOUnknown);  // 読み取り失敗を意図的に発生
-    }
-
-    virtual bool eof() {
-        return false;
-    }
-};

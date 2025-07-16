@@ -2,6 +2,7 @@
 
 #include "state.hpp"
 #include "http/request/read/raw_headers.hpp"
+#include 
 
 namespace http {
 
@@ -27,6 +28,7 @@ class ReadContext {
   std::string requestLine_;
   RawHeaders headers_;
   std::string body_;
+  size_t maxBodySize_ ;
 };
 
 }  // namespace http

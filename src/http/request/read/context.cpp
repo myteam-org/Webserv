@@ -1,5 +1,9 @@
 #include "context.hpp"
+#include "header.hpp"
+#include "header_parseing_utils.hpp"
 #include "reader.hpp"
+#include "config/context/serverContext.hpp"
+#include "http/config/config_resolver.hpp"
 
 namespace http {
 
@@ -34,6 +38,14 @@ HandleResult ReadContext::handle(ReadBuffer& buf) {
   }
   if (tr.getBody().isSome()) {
     body_ = tr.getBody().unwrap();
+  }
+  if (tr.getStatus().unwrap() == IState::kDone) {
+    if (dynamic_cast<ReadingRequestHeadersState*>(state_) != NULL) {
+      std::string host = parser::extractHost(headers_);
+      std::string uri = parser::extractUri(requestLine_);
+      const ServerContext& config = resolver_.choseServer(host, uri);
+      maxBodySize_ = config.getClientMaxBodySize();
+    }
   }
 
   if (tr.getNextState() != NULL) {

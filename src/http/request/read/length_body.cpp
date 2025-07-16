@@ -17,14 +17,14 @@ ReadingRequestBodyLengthState::~ReadingRequestBodyLengthState() {}
 TransitionResult ReadingRequestBodyLengthState::handle(ReadBuffer& buf) {
     TransitionResult tr;
     const std::size_t remain = contentLength_ - alreadyRead_;
-    const std::size_t toRoad = std::min(remain, buf.size());
+    const std::size_t toRead = std::min(remain, buf.size());
 
-    if (toRoad == 0) {
+    if (toRead == 0) {
         tr.setStatus(types::ok(IState::kSuspend));  // データ待ち
         return tr;
     }
 
-    const std::string segment = buf.consume(toRoad);  // 読み取って消費
+    const std::string segment = buf.consume(toRead);  // 読み取って消費
     bodyBuffer_ += segment;
     alreadyRead_ += segment.size();
 

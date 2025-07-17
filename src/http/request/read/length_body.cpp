@@ -20,9 +20,11 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadBuffer& buf) {
     const std::size_t remain = contentLength_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
 
-    if (contentLength_ > clientMaxBodySize_) {
-        return types::err(error::kRequestEntityTooLarge);  // 適切なエラー種別を使う
+    if (alreadyRead_ == 0 && contentLength_ > clientMaxBodySize_) {
+        tr.setStatus(types::err(error::kRequestEntityTooLarge));
+        return tr;  // 適切なエラー種別を使う
     }
+
     if (toRead == 0) {
         tr.setStatus(types::ok(IState::kSuspend));  // データ待ち
         return tr;

@@ -4,9 +4,16 @@
 #include "state.hpp"
 
 namespace http {
+
+struct BodyLengthConfig {
+    std::size_t contentLength;
+    std::size_t clientMaxBodySize;
+};
+
 class ReadingRequestBodyLengthState : public IState {
    public:
-    explicit ReadingRequestBodyLengthState(std::size_t contentLength, std::size_t clientMaxBodySize);
+    explicit ReadingRequestBodyLengthState(const BodyLengthConfig& config);
+    // explicit ReadingRequestBodyLengthState(std::size_t contentLength, std::size_t clientMaxBodySize);
     virtual ~ReadingRequestBodyLengthState();
     virtual TransitionResult handle(ReadBuffer& buf);
 

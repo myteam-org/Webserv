@@ -7,11 +7,14 @@
 
 namespace http {
 
-ReadingRequestBodyLengthState::ReadingRequestBodyLengthState(
-    std::size_t contentLength, std::size_t clientMaxBodySize)
-    : contentLength_(contentLength), clientMaxBodySize_(clientMaxBodySize), alreadyRead_(0) {}
+// ReadingRequestBodyLengthState::ReadingRequestBodyLengthState(
+//     std::size_t contentLength, std::size_t clientMaxBodySize)
+//     : contentLength_(contentLength), clientMaxBodySize_(clientMaxBodySize), alreadyRead_(0) {}
 
-ReadingRequestBodyLengthState::~ReadingRequestBodyLengthState() {}
+ReadingRequestBodyLengthState::ReadingRequestBodyLengthState(const BodyLengthConfig& config)
+    : contentLength_(config.contentLength), clientMaxBodySize_(config.clientMaxBodySize), alreadyRead_(0) {}
+
+    ReadingRequestBodyLengthState::~ReadingRequestBodyLengthState() {}
 
 // Content-Lengthで指定されたbodyサイズ分だけbufから読み取りためておく
 // 全部読み取れないなどのエラーはソケット側でタイムアウト処理をするのでここでは感知しない

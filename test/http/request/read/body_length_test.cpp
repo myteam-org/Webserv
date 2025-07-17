@@ -85,10 +85,12 @@ public:
 
 // ====== テスト本体 ======
 
+
 TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendWhenNoDataAvailable) {
     DummyReader dummyReader("");
     ReadBuffer readBuffer(dummyReader);
-    http::ReadingRequestBodyLengthState state(5);
+    http::BodyLengthConfig cfg = {5, 1024};
+    http::ReadingRequestBodyLengthState state(cfg);
 
     http::TransitionResult result = state.handle(readBuffer);
 
@@ -102,7 +104,8 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfPartialDataAvailable) {
     ReadBuffer readBuffer(dummyReader);
     readBuffer.load();
 
-    http::ReadingRequestBodyLengthState state(5);
+    http::BodyLengthConfig cfg = {5, 1024};
+    http::ReadingRequestBodyLengthState state(cfg);
     http::TransitionResult result = state.handle(readBuffer);
 
     ASSERT_TRUE(result.getStatus().isOk());
@@ -115,7 +118,8 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsDoneWhenEnoughDataAvailable) {
     ReadBuffer readBuffer(dummyReader);
     readBuffer.load();
 
-    http::ReadingRequestBodyLengthState state(5);
+    http::BodyLengthConfig cfg = {5, 1024};
+    http::ReadingRequestBodyLengthState state(cfg);
     http::TransitionResult result = state.handle(readBuffer);
 
     ASSERT_TRUE(result.getStatus().isOk());
@@ -127,7 +131,8 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsDoneWhenEnoughDataAvailable) {
 TEST(ReadingRequestBodyLengthStateTest, HandlesMultiplePartialLoads) {
     MultiStageReader multiReader;
     ReadBuffer readBuffer(multiReader);
-    http::ReadingRequestBodyLengthState state(5);
+    http::BodyLengthConfig cfg = {5, 1024};
+    http::ReadingRequestBodyLengthState state(cfg);
 
     readBuffer.load();  // "He"
     http::TransitionResult result = state.handle(readBuffer);
@@ -143,7 +148,8 @@ TEST(ReadingRequestBodyLengthStateTest, HandlesMultiplePartialLoads) {
 TEST(ReadingRequestBodyLengthStateTest, ReturnsErrorOnReadFailure) {
     FailingReader failingReader;
     ReadBuffer readBuffer(failingReader);
-    http::ReadingRequestBodyLengthState state(5);
+    http::BodyLengthConfig cfg = {5, 1024};
+    http::ReadingRequestBodyLengthState state(cfg);
 
     auto result = readBuffer.load();
     ASSERT_TRUE(result.isErr());
@@ -157,4 +163,17 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsErrorOnReadFailure) {
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
+}
+
+TEST(ReadingRequestBodyLengthStateTest, ReturnsErrorIfContentLengthExceedsLimit) {
+    DummyReader dummyReader("Hello, world!");  // 実際の中身は関係ない
+    ReadBuffer readBuffer(dummyReader);
+
+    // contentLength = 20, clientMaxBodySize = 5 → 超過
+    http::BodyLengthConfig cfg = {20, 5};
+    http::ReadingRequestBodyLengthState state(cfg);
+    http::TransitionResult result = state.handle(readBuffer);
+
+    ASSERT_TRUE(result.getStatus().isErr());  // エラーが返る
+    EXPECT_EQ(result.getStatus().unwrapErr(), error::kRequestEntityTooLarge);
 }

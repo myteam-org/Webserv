@@ -41,7 +41,7 @@ HandleResult ReadContext::handle(ReadBuffer& buf) {
   }
   if (tr.getStatus().unwrap() == IState::kDone) {
     if (dynamic_cast<ReadingRequestHeadersState*>(state_) != NULL) {
-      std::string host = parser::extractHost(headers_);
+      const std::string host = parser::extractHost(headers_);
       const ServerContext& config = resolver_.choseServer(host);
       maxBodySize_ = config.getClientMaxBodySize();
     }

@@ -24,7 +24,7 @@ class ReadContext {
 
  private:
   IState* state_;
-  config::IConfigResolver& resolver_;
+  http::config::IConfigResolver& resolver_;
   std::string requestLine_;
   RawHeaders headers_;
   std::string body_;

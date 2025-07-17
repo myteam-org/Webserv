@@ -2,6 +2,7 @@
 #include <string>
 #include "http/request/read/context.hpp"
 #include "http/request/read/state.hpp"
+#include "http/config/config_resolver.hpp"
 #include "utils/types/result.hpp"
 #include "io/input/read/buffer.hpp"
 #include "io/input/reader/reader.hpp"
@@ -17,11 +18,15 @@ public:
 // ---- End: IConfigResolver仮実装 ----
 
 // ダミーConfigResolver
-class DummyConfigResolver : public http::IConfigResolver {
+class DummyConfigResolver : public http::config::IConfigResolver {
 public:
     DummyConfigResolver() {}
     virtual ~DummyConfigResolver() {}
-    // 必要な仮想関数実装（現状は空でOK）
+    const ServerContext& choseServer(const std::string& host) const {
+        (void)host;
+        static ServerContext dummy("dummy_server");
+        return dummy;  // テスト用の適当なオブジェクトを返す
+    }
 };
 
 // テスト用ダミーState

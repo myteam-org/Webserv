@@ -3,12 +3,13 @@
 #include "state.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"
+#include "utils/types/error.hpp"
 
 namespace http {
 
 ReadingRequestBodyLengthState::ReadingRequestBodyLengthState(
-    std::size_t contentLength)
-    : contentLength_(contentLength), alreadyRead_(0) {}
+    std::size_t contentLength, std::size_t clientMaxBodySize)
+    : contentLength_(contentLength), clientMaxBodySize_(clientMaxBodySize), alreadyRead_(0) {}
 
 ReadingRequestBodyLengthState::~ReadingRequestBodyLengthState() {}
 
@@ -19,6 +20,9 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadBuffer& buf) {
     const std::size_t remain = contentLength_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
 
+    if (contentLength_ > clientMaxBodySize_) {
+        return types::err(error::kRequestEntityTooLarge);  // 適切なエラー種別を使う
+    }
     if (toRead == 0) {
         tr.setStatus(types::ok(IState::kSuspend));  // データ待ち
         return tr;

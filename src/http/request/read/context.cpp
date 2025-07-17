@@ -7,7 +7,7 @@
 
 namespace http {
 
-ReadContext::ReadContext(IConfigResolver& resolver, IState* initial)
+ReadContext::ReadContext(config::IConfigResolver& resolver, IState* initial)
     : state_(initial),
       resolver_(resolver)
       {}
@@ -42,8 +42,7 @@ HandleResult ReadContext::handle(ReadBuffer& buf) {
   if (tr.getStatus().unwrap() == IState::kDone) {
     if (dynamic_cast<ReadingRequestHeadersState*>(state_) != NULL) {
       std::string host = parser::extractHost(headers_);
-      std::string uri = parser::extractUri(requestLine_);
-      const ServerContext& config = resolver_.choseServer(host, uri);
+      const ServerContext& config = resolver_.choseServer(host);
       maxBodySize_ = config.getClientMaxBodySize();
     }
   }
@@ -66,7 +65,7 @@ void ReadContext::changeState(IState* next) {
 
 const IState* ReadContext::getState() const { return state_; }
 
-IConfigResolver& ReadContext::getConfigResolver() const {
+config::IConfigResolver& ReadContext::getConfigResolver() const {
   return resolver_;
 }
 

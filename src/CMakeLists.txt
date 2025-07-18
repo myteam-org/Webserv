@@ -68,6 +68,7 @@ target_include_directories(webserv_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include/http/handler/router
     ${PROJECT_SOURCE_DIR}/include/http/request
     ${PROJECT_SOURCE_DIR}/include/action
+    ${PROJECT_SOURCE_DIR}/include/http/response
 )
 
 # 実行ファイルの生成

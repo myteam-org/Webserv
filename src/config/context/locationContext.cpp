@@ -43,3 +43,13 @@ DocumentRootConfig& LocationContext::getDocumentRootConfig() {
 const DocumentRootConfig& LocationContext::getDocumentRootConfig() const {
     return (this->documentRootConfig_);
 }
+
+std::vector<http::HttpMethod> LocationContext::getAllowedMethods() const {
+    std::vector<http::HttpMethod> methods;
+    for (int i = 0; i < 3; ++i) {
+        if (allowedMethod_[i] == ON) {
+            methods.push_back(static_cast<http::HttpMethod>(i));
+        }
+    }
+    return methods;
+}

@@ -1,6 +1,6 @@
 #include "context.hpp"
 #include "header.hpp"
-#include "header_parseing_utils.hpp"
+#include "header_parsing_utils.hpp"
 #include "reader.hpp"
 #include "config/context/serverContext.hpp"
 #include "http/config/config_resolver.hpp"
@@ -82,7 +82,7 @@ const std::string& ReadContext::getBody() const { return body_; }
 // HTTPリクエストの読み取り処理におけるstateマシンの実行環境
 // 現在のstate(IState)を持ち、stateの進行に合わせて状態やデータ
 // （リクエストライン・ヘッダー・ボディ）を更新する役割を持つ
-// クラス
+// クラスa
 //  ReadContext:状態と読み込み処理を管理するstateマシンのコンテキスト（状態保持）
 //  IState:各段階（リクエストライン、ヘッダ、ボディなど）の処理単位（Stageパターン）
 //  IConfigResolver:コンフィグ情報を提供する依存対象

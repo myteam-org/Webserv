@@ -34,14 +34,24 @@ private:
     std::size_t position_;
 };
 
+class DummyResolver : public http::config::IConfigResolver {
+public:
+    const ServerContext& choseServer(const std::string&) const {
+        static ServerContext dummy("server");
+        return dummy;
+    }
+};
+
+
 }  // namespace
 
 TEST(ReadingRequestHeadersStateTest, EmptyBufferReturnsSuspend) {
     DummyReader dummyReader("");
     ReadBuffer readBuffer(dummyReader);
     http::ReadingRequestHeadersState state;
-
-    http::TransitionResult result = state.handle(readBuffer);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);  // ← ctx を定義！
+    http::TransitionResult result = state.handle(ctx, readBuffer);
 
     ASSERT_TRUE(result.getStatus().isOk());
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
@@ -52,8 +62,9 @@ TEST(ReadingRequestHeadersStateTest, InvalidHeaderReturnsError) {
     DummyReader dummyReader("InvalidHeader\r\n\r\n");
     ReadBuffer readBuffer(dummyReader);
     http::ReadingRequestHeadersState state;
-
-    http::TransitionResult result = state.handle(readBuffer);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);  // ← ctx を定義！
+    http::TransitionResult result = state.handle(ctx, readBuffer);
 
     ASSERT_TRUE(result.getStatus().isErr());
     EXPECT_EQ(result.getStatus().unwrapErr(), error::kIOUnknown);
@@ -64,8 +75,9 @@ TEST(ReadingRequestHeadersStateTest, ValidHeadersReturnsDone) {
     DummyReader dummyReader("Host: localhost\r\nUser-Agent: curl\r\n\r\n");
     ReadBuffer readBuffer(dummyReader);
     http::ReadingRequestHeadersState state;
-
-    http::TransitionResult result = state.handle(readBuffer);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);  // ← ctx を定義！
+    http::TransitionResult result = state.handle(ctx, readBuffer);
 
     ASSERT_TRUE(result.getStatus().isOk());
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
@@ -82,8 +94,9 @@ TEST(ReadingRequestHeadersStateTest, HeaderWithoutColonReturnsError) {
     DummyReader dummyReader("Host localhost\r\n\r\n");
     ReadBuffer readBuffer(dummyReader);
     http::ReadingRequestHeadersState state;
-
-    http::TransitionResult result = state.handle(readBuffer);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);  // ← ctx を定義！
+    http::TransitionResult result = state.handle(ctx, readBuffer);
 
     ASSERT_TRUE(result.getStatus().isErr());
     EXPECT_TRUE(result.getHeaders().isNone());

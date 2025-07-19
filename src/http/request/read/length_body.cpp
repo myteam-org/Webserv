@@ -18,8 +18,9 @@ ReadingRequestBodyLengthState::ReadingRequestBodyLengthState(const BodyLengthCon
 
 // Content-Lengthで指定されたbodyサイズ分だけbufから読み取りためておく
 // 全部読み取れないなどのエラーはソケット側でタイムアウト処理をするのでここでは感知しない
-TransitionResult ReadingRequestBodyLengthState::handle(ReadBuffer& buf) {
+TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx, ReadBuffer& buf) {
     TransitionResult tr;
+    (void)ctx;
     const std::size_t remain = contentLength_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
 

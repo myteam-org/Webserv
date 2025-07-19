@@ -28,7 +28,7 @@ HandleResult ReadContext::handle(ReadBuffer& buf) {
     return types::ok(IState::kDone);
   }
 
-  const TransitionResult tr = state_->handle(buf);
+  const TransitionResult tr = state_->handle(*this, buf);
 
   if (tr.getRequestLine().isSome()) {
     requestLine_ = tr.getRequestLine().unwrap();

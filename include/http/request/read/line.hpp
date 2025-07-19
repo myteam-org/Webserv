@@ -1,7 +1,9 @@
 #pragma once
-#include "buffer.hpp"
-#include "reader.hpp"
+
 #include "state.hpp"
+#include "buffer.hpp"
+#include "context.hpp"
+#include "reader.hpp"
 
 namespace http {
 
@@ -9,7 +11,7 @@ class ReadingRequestLineState : public IState {
  public:
   ReadingRequestLineState();
   virtual ~ReadingRequestLineState();
-  TransitionResult handle(ReadBuffer& buf);
+  TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
 };
 
 }  // namespace http

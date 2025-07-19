@@ -3,8 +3,9 @@
 #include <cstring>
 
 #include "http/request/read/length_body.hpp"
+#include "config/context/serverContext.hpp"
 #include "io/input/read/buffer.hpp"
-#include "io/input/reader/reader.hpp"
+#include "io/input/reader/reader.hpp"\
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
@@ -81,6 +82,14 @@ public:
     }
 };
 
+class DummyResolver : public http::config::IConfigResolver {
+public:
+    const ServerContext& choseServer(const std::string&) const {
+        static ServerContext dummy("server");
+        return dummy;
+    }
+};
+
 }  // namespace
 
 // ====== テスト本体 ======
@@ -91,8 +100,10 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendWhenNoDataAvailable) {
     ReadBuffer readBuffer(dummyReader);
     http::BodyLengthConfig cfg = {5, 1024};
     http::ReadingRequestBodyLengthState state(cfg);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);
 
-    http::TransitionResult result = state.handle(readBuffer);
+    http::TransitionResult result = state.handle(ctx, readBuffer);
 
     ASSERT_TRUE(result.getStatus().isOk());
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
@@ -106,7 +117,10 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfPartialDataAvailable) {
 
     http::BodyLengthConfig cfg = {5, 1024};
     http::ReadingRequestBodyLengthState state(cfg);
-    http::TransitionResult result = state.handle(readBuffer);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);
+
+    http::TransitionResult result = state.handle(ctx, readBuffer);
 
     ASSERT_TRUE(result.getStatus().isOk());
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
@@ -120,7 +134,10 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsDoneWhenEnoughDataAvailable) {
 
     http::BodyLengthConfig cfg = {5, 1024};
     http::ReadingRequestBodyLengthState state(cfg);
-    http::TransitionResult result = state.handle(readBuffer);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);
+
+    http::TransitionResult result = state.handle(ctx, readBuffer);
 
     ASSERT_TRUE(result.getStatus().isOk());
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
@@ -135,11 +152,14 @@ TEST(ReadingRequestBodyLengthStateTest, HandlesMultiplePartialLoads) {
     http::ReadingRequestBodyLengthState state(cfg);
 
     readBuffer.load();  // "He"
-    http::TransitionResult result = state.handle(readBuffer);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);
+
+    http::TransitionResult result = state.handle(ctx, readBuffer);
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
 
     readBuffer.load();  // "llo"
-    result = state.handle(readBuffer);
+    result = state.handle(ctx, readBuffer);
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
     ASSERT_TRUE(result.getBody().isSome());
     EXPECT_EQ(result.getBody().unwrap(), "Hello");
@@ -153,8 +173,10 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsErrorOnReadFailure) {
 
     auto result = readBuffer.load();
     ASSERT_TRUE(result.isErr());
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);
 
-    http::TransitionResult transitionResult = state.handle(readBuffer);
+    http::TransitionResult transitionResult = state.handle(ctx, readBuffer);
     ASSERT_TRUE(transitionResult.getStatus().isOk());
     EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kSuspend);
     EXPECT_TRUE(transitionResult.getBody().isNone());
@@ -172,7 +194,10 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsErrorIfContentLengthExceedsLimit)
     // contentLength = 20, clientMaxBodySize = 5 → 超過
     http::BodyLengthConfig cfg = {20, 5};
     http::ReadingRequestBodyLengthState state(cfg);
-    http::TransitionResult result = state.handle(readBuffer);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, &state);
+
+    http::TransitionResult result = state.handle(ctx, readBuffer);
 
     ASSERT_TRUE(result.getStatus().isErr());  // エラーが返る
     EXPECT_EQ(result.getStatus().unwrapErr(), error::kRequestEntityTooLarge);

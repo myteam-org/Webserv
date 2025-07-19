@@ -10,7 +10,7 @@ class ReadingRequestHeadersState : public IState {
    public:
     ReadingRequestHeadersState();
     virtual ~ReadingRequestHeadersState();
-    static TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
+    TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
    private:
     static IState* createBodyReadingState(const RawHeaders& headers, ReadContext& ctx);
 };

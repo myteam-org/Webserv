@@ -21,7 +21,7 @@ ReadingRequestBodyState::ReadingRequestBodyState(BodyEncodingType type, const Bo
 
 ReadingRequestBodyState::~ReadingRequestBodyState() {}
 
-TransitionResult ReadingRequestBodyState::handle(ReadBuffer& buf) {
+TransitionResult ReadingRequestBodyState::handle(ReadContext& ctx, ReadBuffer& buf) {
     TransitionResult tr;
     RawHeaders headers;
 

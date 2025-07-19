@@ -35,17 +35,33 @@ public:
     DummyState() : handleCallCount_(0) {}
     virtual ~DummyState() {}
 
-    virtual http::TransitionResult handle(ReadBuffer& /*buf*/) {
+    virtual http::TransitionResult handle(http::ReadContext& ctx, ReadBuffer& buf) {
+        (void)ctx;
+        (void)buf;
         ++handleCallCount_;
         http::TransitionResult result;
         if (handleCallCount_ == 1) {
             result.setStatus(types::ok(http::IState::kDone));
-            result.setRequestLine(types::Option<std::string>(types::some(std::string("REQLINE"))));
+            result.setRequestLine(types::some(std::string("REQLINE")));
+        } else {
+            result.setStatus(types::ok(http::IState::kSuspend));
         }
         return result;
     }
 
-    int handleCallCount_;
+private:
+    int handleCallCount_;  // ← これを追加
+//     virtual http::TransitionResult handle() {
+//         ++handleCallCount_;
+//         http::TransitionResult result;
+//         if (handleCallCount_ == 1) {
+//             result.setStatus(types::ok(http::IState::kDone));
+//             result.setRequestLine(types::Option<std::string>(types::some(std::string("REQLINE"))));
+//         }
+//         return result;
+//     }
+
+//     int handleCallCount_;
 };
 
 TEST(ReadContextTest, HandleUpdatesRequestLineAndStatus) {

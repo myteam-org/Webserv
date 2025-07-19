@@ -17,7 +17,7 @@ class ReadingRequestBodyState : public IState {
    public:
     explicit ReadingRequestBodyState(BodyEncodingType type, const BodyLengthConfig& config);
     virtual ~ReadingRequestBodyState();
-    virtual TransitionResult handle(ReadBuffer& buf);
+    virtual TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
 
    private:
     IState* activeBodyState_;     // ★ 本体：Length or Chunked を指す

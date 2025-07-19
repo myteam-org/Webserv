@@ -1,12 +1,12 @@
 #pragma once
 
-#include "state.hpp"
+#include "http/request/read/state.hpp"
 #include "http/request/read/raw_headers.hpp"
 #include "http/config/config_resolver.hpp"
 
 namespace http {
 
-// class IConfigResolver;
+class IState;
 
 class ReadContext {
  public:

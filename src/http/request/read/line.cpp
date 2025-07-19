@@ -1,4 +1,5 @@
 #include "line.hpp"
+#include "context.hpp"
 #include "state.hpp"
 #include "header.hpp"
 #include "utils/types/try.hpp"
@@ -22,9 +23,10 @@ ReadingRequestLineState::~ReadingRequestLineState() {}
 // 5. 正常に行が読めた時
 //    ・TransitionResultに requestLine と status をセットしreturnする
 
-TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
+TransitionResult ReadingRequestLineState::handle(ReadContext& ctx, ReadBuffer& buf) {
   TransitionResult tr;
 
+  (void)ctx;
   const GetLineResult result = getLine(buf);
   if (!result.canUnwrap()) {
     tr.setStatus(types::err(result.unwrapErr()));

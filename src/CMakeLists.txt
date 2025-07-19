@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 98)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # コンパイラ固有の拡張機能無効
 set(CMAKE_CXX_EXTENSIONS OFF)
-
 # 実行ファイルをプロジェクトルートに出力
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
@@ -47,7 +46,10 @@ add_library(webserv_lib STATIC
     http/handler/router/registry.cpp
     http/handler/router/router.cpp
     http/handler/router/middleware/chain.cpp
-    
+    http/virtual_server.cpp
+    http/handler/router/middleware/error_page.cpp
+    http/handler/router/middleware/logger.cpp
+    http/status.cpp
 )
 
 # includeディレクトリの設定（ターゲットベース）
@@ -69,6 +71,7 @@ target_include_directories(webserv_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include/http/request
     ${PROJECT_SOURCE_DIR}/include/action
     ${PROJECT_SOURCE_DIR}/include/http/response
+    ${PROJECT_SOURCE_DIR}/include/http/handler/router/middleware
 )
 
 # 実行ファイルの生成

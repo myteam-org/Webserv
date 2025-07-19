@@ -1,5 +1,6 @@
 #pragma once
 #include <stdexcept>
+#include "status.hpp"
 
 namespace types {
 
@@ -81,6 +82,11 @@ namespace types {
 
 	template<typename T>
 	Option<T> none() { return Option<T>(None()); }
+
+    types::Option<http::HttpStatusCode> httpStatusCodeFromInt(int code);
+
+    std::string getHttpStatusText(http::HttpStatusCode code);
+
 } // namespace types
 
 // C++ における Rust風の Option<T> 型 を実装したもの

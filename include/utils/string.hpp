@@ -6,4 +6,5 @@
 
 namespace utils {
     bool startsWith(const std::string &str, const std::string &prefix);
+	std::string toLower(const std::string& str);
 } //namespace utils

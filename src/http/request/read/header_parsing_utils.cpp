@@ -1,15 +1,19 @@
 #include <sstream>
-#include "header_parseing_utils.hpp"
+#include "header_parsing_utils.hpp"
+
 namespace http {
 namespace parser {
-    
-std::string extractHost(const RawHeaders& headers) {
-    for (std::map<std::string, std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
-        if (it->first == "Host") {
-            return it->second;
-        }
+
+std::string extractHeader(const RawHeaders& headers, const std::string& key) {
+    RawHeaders::const_iterator it = headers.find(key);
+    if (it != headers.end()) {
+        return it->second;
     }
     return "";
+}
+    
+std::string extractHost(const RawHeaders& headers) {
+    return extractHeader(headers, "Hosst");
 }
 
 std::string extractUri(const std::string& requestLine) {

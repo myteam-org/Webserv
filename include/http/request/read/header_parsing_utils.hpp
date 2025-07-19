@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "body.hpp"
 #include "raw_headers.hpp"
 
 namespace http {
@@ -11,6 +12,11 @@ namespace parser {
     std::string extractHost(const RawHeaders& headers);
 	// uri取得関数
     std::string extractUri(const std::string& requestLine);
+	// ボディがあるかどうか
+	bool hasBody(const RawHeaders& headers);
+	//"Content-Length"があればkContentLengthを返す
+	//"Transfer-Encoding: chunk"をチェックしてkChunkedを返す
+	http::BodyEncodingType detectEncoding(const RawHeaders& headers);
 
-} // namespase parser
-} // namespase http
+} // namespace parser
+} // namespace http

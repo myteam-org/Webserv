@@ -1,14 +1,20 @@
 #include <sstream>
+#include <algorithm>
 #include "header_parsing_utils.hpp"
+#include "utils/string.hpp"
+#include "http/request/read/body.hpp"
 
 namespace http {
 namespace parser {
 
 std::string extractHeader(const RawHeaders& headers, const std::string& key) {
-    RawHeaders::const_iterator it = headers.find(key);
-    if (it != headers.end()) {
-        return it->second;
-    }
+	std::string lowercaseKey = utils::toLower(key);
+
+	for (RawHeaders::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+		if (utils::toLower(it->first) == lowercaseKey) {
+			return it->second;
+		}
+	}
     return "";
 }
     
@@ -23,6 +29,43 @@ std::string extractUri(const std::string& requestLine) {
     std::string version;
     iss >> method >> uri >> version;
     return uri;
+}
+
+bool hasBody(const RawHeaders& headers) {
+    // Content-LengthまたはTransfer-Encodeing* chungedのいずれががあればぼでぃあり
+
+    RawHeaders::const_iterator it;
+
+    it = headers.find("Content-Length");
+    if (it != headers.end()) {
+        return true;
+    }
+    it = headers.find("Transfer-Encoding");
+    if (it != headers.end()) {
+        std::string value = it->second;
+        std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+        if (value.find("chunked") != std::string::npos) {
+            return true;
+        }
+    }
+    return false;
+
+}
+
+
+http::BodyEncodingType detectEncoding(const RawHeaders& headers) {
+    for (RawHeaders::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+        std::string key = utils::toLower(it->first);
+        std::string val = utils::toLower(it->second);
+
+        if (key == "content-length") {
+            return http::kContentLength;
+        }
+        if (key == "transfer-encoding" && val.find("chunked") != std::string::npos) {
+            return http::kChunked;
+        }
+    }
+    return http::kNone;
 }
 
 } // namespace parser

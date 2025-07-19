@@ -2,22 +2,22 @@
 
 #include "config/config.hpp"
 #include "router/router.hpp"
+#include "handler/router/router.hpp"
+#include "handler/router/builder.hpp"
 
 class VirtualServer {
 public:
-    explicit VirtualServer(const ServerContext &serverConfig, const std::string &bindAddress);
+    VirtualServer(const ServerContext &serverConfig, const std::string &bindAddress);
+    ~VirtualServer();
 
     const ServerContext &getServerConfig() const;
     http::Router &getRouter();
 
-    void registerHandlers(const LocationContext &location);
-
 private:
-    ServerContext serverConfig_;
-    std::string bindAddress_;
-    http::Router router_;
-
+    void registerHandlers(http::RouterBuilder &routerBuilder, const LocationContext &locationContext) const;
     void setupRouter();
 
-    friend class VirtualServerResolver;
+    const ServerContext serverConfig_;
+    const std::string bindAddress_;
+    http::Router *router_;
 };

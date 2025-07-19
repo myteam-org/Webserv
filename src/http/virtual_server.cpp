@@ -1,10 +1,17 @@
 #include "virtual_server.hpp"
 #include "router/router.hpp"
+#include "handler/router/builder.hpp"
 #include "middleware/chain.hpp"
 
-VirtualServer::VirtualServer(const ServerContext &serverConfig, const std::string &bindAddress)
-    : serverConfig_(serverConfig), bindAddress_(bindAddress) {
+VirtualServer::VirtualServer(const ServerContext &serverContext, const std::string &bindAddress)
+    : serverConfig_(serverContext), bindAddress_(bindAddress), router_(NULL) {
     this->setupRouter();
+}
+
+VirtualServer::~VirtualServer() {
+    if (router_ != NULL) {
+        delete router_;
+    }
 }
 
 const ServerContext &VirtualServer::getServerConfig() const {
@@ -12,46 +19,53 @@ const ServerContext &VirtualServer::getServerConfig() const {
 }
 
 http::Router &VirtualServer::getRouter() {
-    return router_;
+    return *router_;
 }
 
-
-void VirtualServer::registerHandlers(const LocationContext &location) { // NOLINT(readability-convert-member-functions-to-static)
-    std::vector<http::HttpMethod> allowedMethods = location.getAllowedMethods();
-    for (std::vector<http::HttpMethod>::const_iterator iter = allowedMethods.begin();
-            iter != allowedMethods.end();
-            ++iter) {
-        DocumentRootConfig documentRootConfig = location.getDocumentRootConfig();
-        switch (*iter) {
+void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder, const LocationContext &locationContext) const {
+    const std::vector<http::HttpMethod> allowedHttpMethods = locationContext.getAllowedMethods();
+    for (std::vector<http::HttpMethod>::const_iterator methodIterator = allowedHttpMethods.begin();
+         methodIterator != allowedHttpMethods.end();
+         ++methodIterator) {
+        const DocumentRootConfig documentRootConfig = locationContext.getDocumentRootConfig(); // NOLINT
+        switch (*methodIterator) {
             case http::kMethodGet: { // NOLINT(bugprone-branch-clone)
-                // http::IHandler *handler = new http::StaticFileHandler(documentRootConfig);
-                // router_.addRoute(http::kMethodGet, location.getPath(), handler);
+                // http::IHandler *getHandler = new http::StaticFileHandler(documentRootConfig);
+                // routerBuilder.route(http::kMethodGet, locationContext.getPath(), getHandler);
                 break;
             }
             case http::kMethodDelete: {
-                // http::IHandler *handler = new http::DeleteFileHandler(documentRootConfig);
-                // router_.addRoute(http::kMethodDelete, location.getPath(), handler);
+                // http::IHandler *deleteHandler = new http::DeleteFileHandler(documentRootConfig);
+                // routerBuilder.route(http::kMethodDelete, locationContext.getPath(), deleteHandler);
                 break;
             }
             default:
-                // do nothing
+                // 何もしない
                 break;
         }
     }
 }
 
 void VirtualServer::setupRouter() {
-    LocationContextList locations = serverConfig_.getLocation();
-    for (LocationContextList::const_iterator it = locations.begin(); it != locations.end(); ++it) {
-        const LocationContext &location = *it;
-        // if (location.getRedirect().isSome()) {
-            // http::IHandler *handler = new http::RedirectHandler(location.getRedirect().unwrap());
-            // router_.addRoute(location.getAllowedMethods(), location.getPath(), handler);
+    http::RouterBuilder routerBuilder;
+    const LocationContextList locationContextList = serverConfig_.getLocation();
+    for (LocationContextList::const_iterator locationIterator = locationContextList.begin();
+         locationIterator != locationContextList.end();
+         ++locationIterator) {
+        const LocationContext &locationContext = *locationIterator;
+        // if (locationContext.getRedirect().isSome()) {
+            // http::IHandler *redirectHandler = new http::RedirectHandler(locationContext.getRedirect().unwrap());
+            // routerBuilder.route(locationContext.getAllowedMethods(), locationContext.getPath(), redirectHandler);
         // } else {
-            this->registerHandlers(location);
+            this->registerHandlers(routerBuilder, locationContext);
         // }
     }
 
-    router_.addMiddleware(new http::Logger());
-    router_.addMiddleware(new http::ErrorPage(serverConfig_.getErrorPage()));
+    // routerBuilder.middleware(new http::Logger());
+    // routerBuilder.middleware(new http::ErrorPage(serverConfig_.getErrorPage()));
+
+    if (router_ != NULL) {
+        delete router_;
+    }
+    router_ = routerBuilder.build();
 }

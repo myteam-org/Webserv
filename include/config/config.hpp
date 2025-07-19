@@ -10,8 +10,11 @@ class ConfigTokenizer;
 #include "locationContext.hpp"
 #include "parser.hpp"
 #include "serverContext.hpp"
+#include "status.hpp"
 
 #define FILE_NAME "./config_file/default.conf"
+
+typedef std::map<http::HttpStatusCode, std::string> ErrorPageMap;
 
 class Config {
    public:

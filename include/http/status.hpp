@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include "option.hpp"
 
 namespace http {
     enum HttpStatusCode {

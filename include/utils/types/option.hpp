@@ -1,9 +1,8 @@
 #pragma once
 #include <stdexcept>
-#include "status.hpp"
+#include "http/status.hpp"
 
 namespace types {
-
     template<typename T>
     struct Some {
     private:

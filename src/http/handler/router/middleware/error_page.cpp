@@ -57,11 +57,12 @@ Either<IAction*, Response> ErrorPage::intercept(const Request& requestContext, I
     if (errorPageIterator != errorPageMap_.end()) {
         errorPageBody = LoadErrorPageBodyFromFile(errorPageIterator->second);
     } else {
-        errorPageBody = BuildDefaultErrorPageBody(statusCode, types::getHttpStatusText(statusCode));
+        errorPageBody = BuildDefaultErrorPageBody(statusCode, http::getHttpStatusText(statusCode));
     }
 
     // 実装に応じて以下を有効化
     // return Right(ResponseBuilder().html(errorPageBody, statusCode).build());
+    return Right(Response(statusCode));
 }
 
 } // namespace http

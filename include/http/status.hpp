@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "option.hpp"
 
 namespace http {
     enum HttpStatusCode {
@@ -76,4 +77,9 @@ namespace http {
         kStatusNotExtended = 510,
         kStatusNetworkAuthenticationRequired = 511,
     };
+
+    types::Option<http::HttpStatusCode> httpStatusCodeFromInt(int code);
+
+    std::string getHttpStatusText(http::HttpStatusCode code);
+
 } //namespace http

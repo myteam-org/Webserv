@@ -1,6 +1,5 @@
 #pragma once
 #include <stdexcept>
-#include "http/status.hpp"
 
 namespace types {
     template<typename T>
@@ -81,10 +80,6 @@ namespace types {
 
 	template<typename T>
 	Option<T> none() { return Option<T>(None()); }
-
-    types::Option<http::HttpStatusCode> httpStatusCodeFromInt(int code);
-
-    std::string getHttpStatusText(http::HttpStatusCode code);
 
 } // namespace types
 

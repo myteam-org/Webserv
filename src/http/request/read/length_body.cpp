@@ -44,9 +44,8 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
     if (alreadyRead_ >= contentLength_) {
         tr.setBody(types::some(bodyBuffer_));
         tr.setStatus(types::ok(IState::kDone));
-    } else {
-        tr.setStatus(types::ok(IState::kSuspend));
+        return tr;
     }
-    return tr;
+    return tr.setStatus(types::ok(IState::kSuspend)), tr;
 }
 }  // namespace http

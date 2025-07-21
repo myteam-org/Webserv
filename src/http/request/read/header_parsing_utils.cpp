@@ -77,7 +77,7 @@ std::size_t extractContentLength(const RawHeaders& headers) {
 
     const std::string& value = it->second;
     char* end = NULL;
-    const unsigned long result = std:: strtoul(value.c_str(), &end, NUMBER);
+    const unsigned long result = std::strtoul(value.c_str(), &end, NUMBER);
 
     if (*end != '\0') {
         return 0;

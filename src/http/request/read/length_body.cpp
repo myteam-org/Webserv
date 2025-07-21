@@ -21,11 +21,11 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
                                                        ReadBuffer& buf) {
     (void)ctx;
     TransitionResult tr;
-    const ReadBuffer::LoadResult loadReault = buf.load();
-    if (loadReault.isErr()) {
-        return tr.setStatus(types::err(loadReault.unwrapErr())), tr;
+    const ReadBuffer::LoadResult loadResult = buf.load();
+    if (loadResult.isErr()) {
+        return tr.setStatus(types::err(loadResult.unwrapErr())), tr;
     }
-    const std::size_t loaded = loadReault.unwrap();
+    const std::size_t loaded = loadResult.unwrap();
     if (alreadyRead_ == 0 && contentLength_ > clientMaxBodySize_) {
         return tr.setStatus(types::err(error::kRequestEntityTooLarge)), tr;
     }

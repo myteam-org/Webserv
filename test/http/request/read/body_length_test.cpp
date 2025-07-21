@@ -71,7 +71,7 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfBufferEmpty) {
   DummyContext ctx(resolver, NULL);
 
   auto result = state.handle(ctx, buf);
-  EXPECT_TRUE(result.getStatus().isOk());
+  ASSERT_TRUE(result.getStatus().isOk());
   EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
 }
 
@@ -86,7 +86,7 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsDoneIfBodyFullyRead) {
   DummyContext ctx(resolver, NULL);
 
   auto result = state.handle(ctx, buf);
-  EXPECT_TRUE(result.getStatus().isOk());
+  ASSERT_TRUE(result.getStatus().isOk());
   EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
   EXPECT_EQ(result.getBody().unwrap(), "Hello");
 }
@@ -104,7 +104,7 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfPartiallyRead) {
     buf.load();  // "Hello"を読み込む
     auto result1 = state.handle(ctx, buf);
 
-    EXPECT_TRUE(result1.getStatus().isOk());
+    ASSERT_TRUE(result1.getStatus().isOk());
     EXPECT_EQ(result1.getStatus().unwrap(), http::IState::kSuspend);
     EXPECT_TRUE(result1.getBody().isNone());
 
@@ -116,9 +116,9 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfPartiallyRead) {
     // ここで読み取り状態を引き継いで再実行するには、state のインスタンスをそのまま使う必要あり
     auto result2 = state.handle(ctx, buf2);
 
-    EXPECT_TRUE(result2.getStatus().isOk());
+    ASSERT_TRUE(result2.getStatus().isOk());
     EXPECT_EQ(result2.getStatus().unwrap(), http::IState::kDone);
-    EXPECT_TRUE(result2.getBody().isSome());
+    ASSERT_TRUE(result2.getBody().isSome());
     EXPECT_EQ(result2.getBody().unwrap(), "HelloWorld");
 }
 

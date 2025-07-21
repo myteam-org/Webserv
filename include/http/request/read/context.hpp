@@ -29,6 +29,9 @@ class ReadContext {
   RawHeaders headers_;
   std::string body_;
   size_t maxBodySize_ ;
+
+  IState* createReadingBodyState(const RawHeaders& headers);
+
 };
 
 }  // namespace http

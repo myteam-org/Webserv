@@ -1,4 +1,3 @@
-
 add_executable(error_page_test error_page_test.cpp)
 
 target_link_libraries(error_page_test

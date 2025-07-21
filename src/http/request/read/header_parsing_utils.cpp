@@ -19,7 +19,7 @@ std::string extractHeader(const RawHeaders& headers, const std::string& key) {
 }
     
 std::string extractHost(const RawHeaders& headers) {
-    std::string value = extractHeader(headers, "Host");
+    const std::string value = extractHeader(headers, "Host");
     return utils::trim(value);
 }
 
@@ -70,14 +70,14 @@ http::BodyEncodingType detectEncoding(const RawHeaders& headers) {
 
 std::size_t extractContentLength(const RawHeaders& headers) {
     
-    RawHeaders::const_iterator it = headers.find("Content-Length");
+    const RawHeaders::const_iterator it = headers.find("Content-Length");
     if (it == headers.end()) {
         return 0;
     }
 
     const std::string& value = it->second;
     char* end = NULL;
-    unsigned long result = std:: strtoul(value.c_str(), &end, NUMBER);
+    const unsigned long result = std:: strtoul(value.c_str(), &end, NUMBER);
 
     if (*end != '\0') {
         return 0;

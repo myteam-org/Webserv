@@ -22,7 +22,7 @@ ReadingRequestHeadersState::~ReadingRequestHeadersState() {}
 // 3. 必要なら次の状態(ReadingRequestBodyState)へ遷移させる
 // 4. TransitionResultにヘッダーや次のステートをセットして返す
 
-TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx, ReadBuffer& buf) {
+TransitionResult ReadingRequestHeadersState::handle(ReadContext& /*ctx*/, ReadBuffer& buf) {
     TransitionResult tr;
     RawHeaders headers;
 

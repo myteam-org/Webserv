@@ -144,11 +144,11 @@ public:
 TEST(ReadingRequestLineStateTest, ReturnsSuspendWhenBufferIsEmpty) {
     DummyReader dummyReader("");
     ReadBuffer readBuffer(dummyReader);
-    http::ReadingRequestLineState state;
+    http::ReadingRequestLineState* state = new http::ReadingRequestLineState();
     DummyResolver resolver;
-    http::ReadContext ctx(resolver, &state);
+    http::ReadContext ctx(resolver, state);
 
-    http::TransitionResult transitionResult = state.handle(ctx, readBuffer);
+    http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
 
     ASSERT_TRUE(transitionResult.getStatus().isOk());
     EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kSuspend);
@@ -158,11 +158,11 @@ TEST(ReadingRequestLineStateTest, ReturnsSuspendWhenBufferIsEmpty) {
 TEST(ReadingRequestLineStateTest, ReturnsErrorWhenLineIsEmpty) {
     DummyReader dummyReader("\r\n");
     ReadBuffer readBuffer(dummyReader);
-    http::ReadingRequestLineState state;
+    http::ReadingRequestLineState* state = new http::ReadingRequestLineState();
     DummyResolver resolver;
-http::ReadContext ctx(resolver, &state);
+    http::ReadContext ctx(resolver, state);
 
-    http::TransitionResult transitionResult = state.handle(ctx, readBuffer);
+    http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
 
     ASSERT_TRUE(transitionResult.getStatus().isErr());
     EXPECT_EQ(transitionResult.getStatus().unwrapErr(), error::kIOUnknown);
@@ -172,15 +172,15 @@ http::ReadContext ctx(resolver, &state);
 TEST(ReadingRequestLineStateTest, ReturnsDoneWhenLineIsPresent) {
     DummyReader dummyReader("GET / HTTP/1.1\r\n");
     ReadBuffer readBuffer(dummyReader);
-    http::ReadingRequestLineState state;
+    http::ReadingRequestLineState* state = new http::ReadingRequestLineState();
     DummyResolver resolver;
-http::ReadContext ctx(resolver, &state);
+    http::ReadContext ctx(resolver, state);
 
-    http::TransitionResult transitionResult = state.handle(ctx, readBuffer);
+    http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
 
     ASSERT_TRUE(transitionResult.getStatus().isOk());
     EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kDone);
-    ASSERT_TRUE(transitionResult.getRequestLine().isSome());
+    EXPECT_FALSE(transitionResult.getRequestLine().isNone());
     EXPECT_EQ(transitionResult.getRequestLine().unwrap(), "GET / HTTP/1.1");
 }
 
@@ -188,3 +188,52 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+
+// TEST(ReadingRequestLineStateTest, ReturnsSuspendWhenBufferIsEmpty) {
+//     DummyReader dummyReader("");
+//     ReadBuffer readBuffer(dummyReader);
+//     http::ReadingRequestLineState state;
+//     DummyResolver resolver;
+//     http::ReadContext ctx(resolver, &state);
+
+//     http::TransitionResult transitionResult = state.handle(ctx, readBuffer);
+
+//     ASSERT_TRUE(transitionResult.getStatus().isOk());
+//     EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kSuspend);
+//     EXPECT_TRUE(transitionResult.getRequestLine().isNone());
+// }
+
+// TEST(ReadingRequestLineStateTest, ReturnsErrorWhenLineIsEmpty) {
+//     DummyReader dummyReader("\r\n");
+//     ReadBuffer readBuffer(dummyReader);
+//     http::ReadingRequestLineState state;
+//     DummyResolver resolver;
+// http::ReadContext ctx(resolver, &state);
+
+//     http::TransitionResult transitionResult = state.handle(ctx, readBuffer);
+
+//     ASSERT_TRUE(transitionResult.getStatus().isErr());
+//     EXPECT_EQ(transitionResult.getStatus().unwrapErr(), error::kIOUnknown);
+//     EXPECT_TRUE(transitionResult.getRequestLine().isNone());
+// }
+
+// TEST(ReadingRequestLineStateTest, ReturnsDoneWhenLineIsPresent) {
+//     DummyReader dummyReader("GET / HTTP/1.1\r\n");
+//     ReadBuffer readBuffer(dummyReader);
+//     http::ReadingRequestLineState state;
+//     DummyResolver resolver;
+// http::ReadContext ctx(resolver, &state);
+
+//     http::TransitionResult transitionResult = state.handle(ctx, readBuffer);
+
+//     ASSERT_TRUE(transitionResult.getStatus().isOk());
+//     EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kDone);
+//     ASSERT_TRUE(transitionResult.getRequestLine().isSome());
+//     EXPECT_EQ(transitionResult.getRequestLine().unwrap(), "GET / HTTP/1.1");
+// }
+
+// int main(int argc, char **argv) {
+//     ::testing::InitGoogleTest(&argc, argv);
+//     return RUN_ALL_TESTS();
+// }

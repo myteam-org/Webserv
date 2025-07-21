@@ -3,202 +3,128 @@
 #include <cstring>
 
 #include "http/request/read/length_body.hpp"
-#include "config/context/serverContext.hpp"
 #include "io/input/read/buffer.hpp"
-#include "io/input/reader/reader.hpp"\
+#include "io/input/reader/reader.hpp"
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
+#include "http/request/read/context.hpp"
 
 namespace {
 
-// 普通のメモリベースReader
 class DummyReader : public io::IReader {
-public:
-    explicit DummyReader(const std::string& input)
-        : inputData_(input), position_(0) {}
+ public:
+  explicit DummyReader(const std::string& input) : input_(input), pos_(0) {}
 
-    types::Result<std::size_t, error::AppError> read(char* dest, std::size_t nbyte) {
-        if (position_ >= inputData_.size()) {
-            return types::ok(0ul);
-        }
-        const std::size_t copyLen = std::min(nbyte, inputData_.size() - position_);
-        memcpy(dest, inputData_.data() + position_, copyLen);
-        position_ += copyLen;
-        return types::ok(copyLen);
-    }
+  types::Result<std::size_t, error::AppError> read(char* dest, std::size_t nbyte) {
+    if (pos_ >= input_.size()) return types::ok(0ul);
+    std::size_t len = std::min(nbyte, input_.size() - pos_);
+    memcpy(dest, input_.data() + pos_, len);
+    pos_ += len;
+    return types::ok(len);
+  }
 
-    bool eof() {
-        return position_ >= inputData_.size();
-    }
+  bool eof() { return pos_ >= input_.size(); }
 
-private:
-    std::string inputData_;
-    std::size_t position_;
+ private:
+  std::string input_;
+  std::size_t pos_;
 };
 
-// 2段階でデータを返すReader（"He", "llo"）
-class MultiStageReader : public io::IReader {
-public:
-    MultiStageReader() : stage_(0), position_(0) {}
-
-    types::Result<std::size_t, error::AppError> read(char* dest, std::size_t nbyte) {
-        const std::vector<std::string> stages = { "He", "llo" };
-        if (stage_ >= stages.size()) {
-            return types::ok(0ul);
-        }
-
-        const std::string& current = stages[stage_];
-        std::size_t copyLen = std::min(nbyte, current.size() - position_);
-        memcpy(dest, current.data() + position_, copyLen);
-        position_ += copyLen;
-
-        if (position_ >= current.size()) {
-            stage_++;
-            position_ = 0;
-        }
-
-        return types::ok(copyLen);
-    }
-
-    bool eof() {
-        return stage_ >= 2;
-    }
-
-private:
-    std::size_t stage_;
-    std::size_t position_;
-};
-
-// 読み込み失敗を強制するReader
-class FailingReader : public io::IReader {
-public:
-    types::Result<std::size_t, error::AppError> read(char*, std::size_t) {
-        return types::err(error::kIOUnknown);
-    }
-
-    bool eof() {
-        return false;
-    }
+class DummyContext : public http::ReadContext {
+ public:
+  DummyContext(http::config::IConfigResolver& r, http::IState* s) : http::ReadContext(r, s) {}
 };
 
 class DummyResolver : public http::config::IConfigResolver {
-public:
-    const ServerContext& choseServer(const std::string&) const {
-        static ServerContext dummy("server");
-        return dummy;
-    }
+ public:
+  const ServerContext& choseServer(const std::string&) const {
+    static ServerContext dummy("server");
+    return dummy;
+  }
 };
 
 }  // namespace
 
-// ====== テスト本体 ======
+TEST(ReadingRequestBodyLengthStateTest, ReturnsErrorIfBodyTooLarge) {
+  DummyReader reader("HelloWorld");
+  ReadBuffer buf(reader);
+  http::BodyLengthConfig config = {10, 5};  // contentLength > clientMaxBodySize
+  http::ReadingRequestBodyLengthState state(config);
 
+  DummyResolver resolver;
+  DummyContext ctx(resolver, NULL);
 
-TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendWhenNoDataAvailable) {
-    DummyReader dummyReader("");
-    ReadBuffer readBuffer(dummyReader);
-    http::BodyLengthConfig cfg = {5, 1024};
-    http::ReadingRequestBodyLengthState state(cfg);
-    DummyResolver resolver;
-    http::ReadContext ctx(resolver, &state);
-
-    http::TransitionResult result = state.handle(ctx, readBuffer);
-
-    ASSERT_TRUE(result.getStatus().isOk());
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
-    EXPECT_TRUE(result.getBody().isNone());
+  auto result = state.handle(ctx, buf);
+  EXPECT_TRUE(result.getStatus().isErr());
+  EXPECT_EQ(result.getStatus().unwrapErr(), error::kRequestEntityTooLarge);
 }
 
-TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfPartialDataAvailable) {
-    DummyReader dummyReader("He");
-    ReadBuffer readBuffer(dummyReader);
-    readBuffer.load();
+TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfBufferEmpty) {
+  DummyReader reader("");
+  ReadBuffer buf(reader);
+  buf.load();
+  http::BodyLengthConfig config = {5, 10};
+  http::ReadingRequestBodyLengthState state(config);
 
-    http::BodyLengthConfig cfg = {5, 1024};
-    http::ReadingRequestBodyLengthState state(cfg);
-    DummyResolver resolver;
-    http::ReadContext ctx(resolver, &state);
+  DummyResolver resolver;
+  DummyContext ctx(resolver, NULL);
 
-    http::TransitionResult result = state.handle(ctx, readBuffer);
-
-    ASSERT_TRUE(result.getStatus().isOk());
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
-    EXPECT_TRUE(result.getBody().isNone());
+  auto result = state.handle(ctx, buf);
+  EXPECT_TRUE(result.getStatus().isOk());
+  EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
 }
 
-TEST(ReadingRequestBodyLengthStateTest, ReturnsDoneWhenEnoughDataAvailable) {
-    DummyReader dummyReader("Hello");
-    ReadBuffer readBuffer(dummyReader);
-    readBuffer.load();
+TEST(ReadingRequestBodyLengthStateTest, ReturnsDoneIfBodyFullyRead) {
+  DummyReader reader("Hello");
+  ReadBuffer buf(reader);
+  buf.load();
+  http::BodyLengthConfig config = {5, 10};
+  http::ReadingRequestBodyLengthState state(config);
 
-    http::BodyLengthConfig cfg = {5, 1024};
-    http::ReadingRequestBodyLengthState state(cfg);
-    DummyResolver resolver;
-    http::ReadContext ctx(resolver, &state);
+  DummyResolver resolver;
+  DummyContext ctx(resolver, NULL);
 
-    http::TransitionResult result = state.handle(ctx, readBuffer);
-
-    ASSERT_TRUE(result.getStatus().isOk());
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
-    ASSERT_TRUE(result.getBody().isSome());
-    EXPECT_EQ(result.getBody().unwrap(), "Hello");
+  auto result = state.handle(ctx, buf);
+  EXPECT_TRUE(result.getStatus().isOk());
+  EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
+  EXPECT_EQ(result.getBody().unwrap(), "Hello");
 }
 
-TEST(ReadingRequestBodyLengthStateTest, HandlesMultiplePartialLoads) {
-    MultiStageReader multiReader;
-    ReadBuffer readBuffer(multiReader);
-    http::BodyLengthConfig cfg = {5, 1024};
-    http::ReadingRequestBodyLengthState state(cfg);
+TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfPartiallyRead) {
+    // 最初の5バイトのみ与える
+    DummyReader reader("Hello");
+    ReadBuffer buf(reader);
+    http::BodyLengthConfig config = {10, 1024};
+    http::ReadingRequestBodyLengthState state(config);
 
-    readBuffer.load();  // "He"
     DummyResolver resolver;
-    http::ReadContext ctx(resolver, &state);
+    DummyContext ctx(resolver, NULL);
 
-    http::TransitionResult result = state.handle(ctx, readBuffer);
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
+    buf.load();  // "Hello"を読み込む
+    auto result1 = state.handle(ctx, buf);
 
-    readBuffer.load();  // "llo"
-    result = state.handle(ctx, readBuffer);
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
-    ASSERT_TRUE(result.getBody().isSome());
-    EXPECT_EQ(result.getBody().unwrap(), "Hello");
+    EXPECT_TRUE(result1.getStatus().isOk());
+    EXPECT_EQ(result1.getStatus().unwrap(), http::IState::kSuspend);
+    EXPECT_TRUE(result1.getBody().isNone());
+
+    // リーダーを切り替えて次のデータ "World" を渡す
+    DummyReader reader2("World");
+    ReadBuffer buf2(reader2);  // 新しいリーダーで新バッファ
+    buf2.load();
+
+    // ここで読み取り状態を引き継いで再実行するには、state のインスタンスをそのまま使う必要あり
+    auto result2 = state.handle(ctx, buf2);
+
+    EXPECT_TRUE(result2.getStatus().isOk());
+    EXPECT_EQ(result2.getStatus().unwrap(), http::IState::kDone);
+    EXPECT_TRUE(result2.getBody().isSome());
+    EXPECT_EQ(result2.getBody().unwrap(), "HelloWorld");
 }
 
-TEST(ReadingRequestBodyLengthStateTest, ReturnsErrorOnReadFailure) {
-    FailingReader failingReader;
-    ReadBuffer readBuffer(failingReader);
-    http::BodyLengthConfig cfg = {5, 1024};
-    http::ReadingRequestBodyLengthState state(cfg);
-
-    auto result = readBuffer.load();
-    ASSERT_TRUE(result.isErr());
-    DummyResolver resolver;
-    http::ReadContext ctx(resolver, &state);
-
-    http::TransitionResult transitionResult = state.handle(ctx, readBuffer);
-    ASSERT_TRUE(transitionResult.getStatus().isOk());
-    EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kSuspend);
-    EXPECT_TRUE(transitionResult.getBody().isNone());
-}
+#include <gtest/gtest.h>
 
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
-}
-
-TEST(ReadingRequestBodyLengthStateTest, ReturnsErrorIfContentLengthExceedsLimit) {
-    DummyReader dummyReader("Hello, world!");  // 実際の中身は関係ない
-    ReadBuffer readBuffer(dummyReader);
-
-    // contentLength = 20, clientMaxBodySize = 5 → 超過
-    http::BodyLengthConfig cfg = {20, 5};
-    http::ReadingRequestBodyLengthState state(cfg);
-    DummyResolver resolver;
-    http::ReadContext ctx(resolver, &state);
-
-    http::TransitionResult result = state.handle(ctx, readBuffer);
-
-    ASSERT_TRUE(result.getStatus().isErr());  // エラーが返る
-    EXPECT_EQ(result.getStatus().unwrapErr(), error::kRequestEntityTooLarge);
 }

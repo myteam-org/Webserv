@@ -14,7 +14,7 @@ public:
     http::Router &getRouter();
 
 private:
-    void registerHandlers(http::RouterBuilder &routerBuilder, const LocationContext &locationContext) const;
+    static void registerHandlers(http::RouterBuilder &routerBuilder, const LocationContext &locationContext);
     void setupRouter();
 
     const ServerContext serverConfig_;

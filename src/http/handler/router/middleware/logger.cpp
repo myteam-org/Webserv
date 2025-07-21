@@ -5,7 +5,7 @@ namespace http {
 
 Either<IAction*, Response> Logger::intercept(const Request &requestContext, IHandler &nextHandler) {
     const std::string requestMethodString = httpMethodToString(requestContext.getMethod());
-    const std::string requestTargetString = requestContext.getRequestTarget();
+    const std::string &requestTargetString = requestContext.getRequestTarget();
 
     LOG_INFO("<-- " + requestMethodString + " " + requestTargetString);
 

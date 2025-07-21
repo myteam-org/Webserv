@@ -3,8 +3,8 @@
 #include "handler/router/builder.hpp"
 #include "middleware/chain.hpp"
 
-VirtualServer::VirtualServer(const ServerContext &serverContext, const std::string &bindAddress)
-    : serverConfig_(serverContext), bindAddress_(bindAddress), router_(NULL) {
+VirtualServer::VirtualServer(const ServerContext &serverConfig, const std::string &bindAddress)
+    : serverConfig_(serverConfig), bindAddress_(bindAddress), router_(NULL) {
     this->setupRouter();
 }
 
@@ -22,7 +22,8 @@ http::Router &VirtualServer::getRouter() {
     return *router_;
 }
 
-void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder, const LocationContext &locationContext) const {
+void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder, const LocationContext &locationContext) {
+    (void)routerBuilder; // 未使用パラメータ警告対策
     const std::vector<http::HttpMethod> allowedHttpMethods = locationContext.getAllowedMethods();
     for (std::vector<http::HttpMethod>::const_iterator methodIterator = allowedHttpMethods.begin();
          methodIterator != allowedHttpMethods.end();
@@ -57,7 +58,7 @@ void VirtualServer::setupRouter() {
             // http::IHandler *redirectHandler = new http::RedirectHandler(locationContext.getRedirect().unwrap());
             // routerBuilder.route(locationContext.getAllowedMethods(), locationContext.getPath(), redirectHandler);
         // } else {
-            this->registerHandlers(routerBuilder, locationContext);
+            registerHandlers(routerBuilder, locationContext);
         // }
     }
 

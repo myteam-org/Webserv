@@ -30,7 +30,7 @@ TEST(ErrorPageTest, InterceptSuccess) {
     ErrorPageMap errorPageMap;
     TestErrorPage errorPage(errorPageMap);
     http::Request request(http::kMethodGet, "/", "HTTP/1.1", "");
-    MockNextHandler successNextHandler(http::Response(http::kStatusOk));
+    MockNextHandler successNextHandler((http::Response(http::kStatusOk)));
 
     Either<IAction*, http::Response> result = errorPage.intercept(request, successNextHandler);
     EXPECT_TRUE(result.isRight());
@@ -41,7 +41,7 @@ TEST(ErrorPageTest, InterceptError) {
     ErrorPageMap errorPageMap;
     TestErrorPage errorPage(errorPageMap);
     http::Request request(http::kMethodGet, "/", "HTTP/1.1", "");
-    MockNextHandler errorNextHandler(http::Response(http::kStatusBadRequest));
+    MockNextHandler errorNextHandler((http::Response(http::kStatusBadRequest)));
 
     Either<IAction*, http::Response> result = errorPage.intercept(request, errorNextHandler);
     EXPECT_TRUE(result.isRight());

@@ -11,7 +11,7 @@ ErrorPage::ErrorPage(const ErrorPageMap& errorPageMap)
 namespace {
 
 std::string LoadErrorPageBodyFromFile(const std::string& filePath) {
-    std::ifstream fileStream(filePath.c_str());
+    const std::ifstream fileStream(filePath.c_str());
     std::ostringstream contentStream;
     if (fileStream) {
         contentStream << fileStream.rdbuf();

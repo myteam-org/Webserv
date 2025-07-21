@@ -1,6 +1,5 @@
 #pragma once
 
-#include "state.hpp"
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"

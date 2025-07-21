@@ -24,8 +24,8 @@ ReadingRequestBodyState::~ReadingRequestBodyState() {
 }
 
 TransitionResult ReadingRequestBodyState::handle(ReadContext& ctx, ReadBuffer& buf) {
-    TransitionResult tr;
     if (activeBodyState_ == NULL) {
+        TransitionResult tr;
         tr.setStatus(types::err(error::kIOUnknown));
         return tr;
     }

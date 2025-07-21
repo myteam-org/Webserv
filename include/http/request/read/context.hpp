@@ -21,6 +21,7 @@ class ReadContext {
   const std::string& getRequestLine() const;
   const RawHeaders& getHeaders() const;
   const std::string& getBody() const;
+  IState* createReadingBodyState(const RawHeaders& headers);
 
  private:
   IState* state_;
@@ -30,7 +31,6 @@ class ReadContext {
   std::string body_;
   size_t maxBodySize_ ;
 
-  IState* createReadingBodyState(const RawHeaders& headers);
 
 };
 

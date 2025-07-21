@@ -53,7 +53,6 @@ bool hasBody(const RawHeaders& headers) {
 
 }
 
-
 http::BodyEncodingType detectEncoding(const RawHeaders& headers) {
     for (RawHeaders::const_iterator it = headers.begin(); it != headers.end(); ++it) {
         const std::string key = utils::toLower(it->first);

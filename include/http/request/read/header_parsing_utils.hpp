@@ -17,6 +17,10 @@ namespace parser {
 	//"Content-Length"があればkContentLengthを返す
 	//"Transfer-Encoding: chunk"をチェックしてkChunkedを返す
 	http::BodyEncodingType detectEncoding(const RawHeaders& headers);
+	//Content-Lengtしゅとくする
+	static const int NUMBER = 10;
+	std::size_t extractContentLength(const RawHeaders& headers);
+
 
 } // namespace parser
 } // namespace http

@@ -8,7 +8,7 @@ namespace http {
 namespace parser {
 
 std::string extractHeader(const RawHeaders& headers, const std::string& key) {
-	std::string lowercaseKey = utils::toLower(key);
+	const std::string lowercaseKey = utils::toLower(key);
 
 	for (RawHeaders::const_iterator it = headers.begin(); it != headers.end(); ++it) {
 		if (utils::toLower(it->first) == lowercaseKey) {
@@ -19,7 +19,8 @@ std::string extractHeader(const RawHeaders& headers, const std::string& key) {
 }
     
 std::string extractHost(const RawHeaders& headers) {
-    return extractHeader(headers, "Hosst");
+    std::string value = extractHeader(headers, "Host");
+    return utils::trim(value);
 }
 
 std::string extractUri(const std::string& requestLine) {
@@ -55,8 +56,8 @@ bool hasBody(const RawHeaders& headers) {
 
 http::BodyEncodingType detectEncoding(const RawHeaders& headers) {
     for (RawHeaders::const_iterator it = headers.begin(); it != headers.end(); ++it) {
-        std::string key = utils::toLower(it->first);
-        std::string val = utils::toLower(it->second);
+        const std::string key = utils::toLower(it->first);
+        const std::string val = utils::toLower(it->second);
 
         if (key == "content-length") {
             return http::kContentLength;
@@ -66,6 +67,23 @@ http::BodyEncodingType detectEncoding(const RawHeaders& headers) {
         }
     }
     return http::kNone;
+}
+
+std::size_t extractContentLength(const RawHeaders& headers) {
+    
+    RawHeaders::const_iterator it = headers.find("Content-Length");
+    if (it == headers.end()) {
+        return 0;
+    }
+
+    const std::string& value = it->second;
+    char* end = NULL;
+    unsigned long result = std:: strtoul(value.c_str(), &end, NUMBER);
+
+    if (*end != '\0') {
+        return 0;
+    }
+    return static_cast<std::size_t>(result);
 }
 
 } // namespace parser

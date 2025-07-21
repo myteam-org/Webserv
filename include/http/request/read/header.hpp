@@ -11,8 +11,6 @@ class ReadingRequestHeadersState : public IState {
     ReadingRequestHeadersState();
     virtual ~ReadingRequestHeadersState();
     TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
-   private:
-    static IState* createBodyReadingState(const RawHeaders& headers, ReadContext& ctx);
 };
 
 }  // namespace http

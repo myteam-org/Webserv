@@ -28,41 +28,31 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx, ReadBuffer
 
     while (true) {
         const GetLineResult result = getLine(buf);
-        if (!result.canUnwrap()) {
+        if (result.isErr()) {
             return tr.setStatus(types::err(result.unwrapErr())), tr;
         }
+
         const types::Option<std::string> lineOpt = result.unwrap();
         if (lineOpt.isNone()) {
             return tr.setStatus(types::ok(kSuspend)), tr;
         }
+
         const std::string line = lineOpt.unwrap();
         if (line.empty()) {
-            tr.setHeaders(types::some(headers));//読み取ったヘッダーをセットする
+            tr.setHeaders(types::some(headers));
             tr.setStatus(types::ok(kDone));
-			if (parser::hasBody(headers)) {
-                tr.setNextState(createBodyReadingState(headers, ctx));
-            }
             return tr;
         }
+
         const std::string::size_type colon = line.find(':');
         if (colon == std::string::npos) {
             return tr.setStatus(types::err(error::kIOUnknown)), tr;
         }
+
         const std::string key = line.substr(0, colon);
         const std::string value = line.substr(colon + 1);
         headers.insert(std::make_pair(key, value));
     }
 }
-
-IState* ReadingRequestHeadersState::createBodyReadingState(const RawHeaders& headers, ReadContext& ctx) {
-    BodyEncodingType type = parser::detectEncoding(headers);
-    std::string host = parser::extractHeader(headers, "Host");
-    const ServerContext& serverConfig = ctx.getConfigResolver().choseServer(host);
-    BodyLengthConfig config;
-    config.contentLength = serverConfig.getClientMaxBodySize();
-    config.clientMaxBodySize = serverConfig.getClientMaxBodySize();
-    return new ReadingRequestBodyState(type, config);
-}
-
 
 }  // namespace http

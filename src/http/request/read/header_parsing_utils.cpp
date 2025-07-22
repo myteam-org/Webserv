@@ -18,7 +18,7 @@ std::string extractHeader(const RawHeaders& headers, const std::string& key) {
             return it->second;
         }
     }
-    return "";
+    return std::string();
 }
 
 std::string extractHost(const RawHeaders& headers) {
@@ -36,7 +36,7 @@ std::string extractUri(const std::string& requestLine) {
 }
 
 bool hasBody(const RawHeaders& headers) {
-    // Content-LengthまたはTransfer-Encodeing*
+    // Content-LengthまたはTransfer-Encoding*
     // chungedのいずれががあればボディあり
 
     RawHeaders::const_iterator it;

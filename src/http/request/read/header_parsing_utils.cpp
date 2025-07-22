@@ -6,6 +6,8 @@
 #include "http/request/read/body.hpp"
 #include "utils/string.hpp"
 
+static const int DECIMAL_BASE = 10;
+
 namespace http {
 namespace parser {
 
@@ -37,7 +39,7 @@ std::string extractUri(const std::string& requestLine) {
 
 bool hasBody(const RawHeaders& headers) {
     // Content-LengthまたはTransfer-Encoding*
-    // chungedのいずれががあればボディあり
+    // chunkedのいずれががあればボディあり
 
     RawHeaders::const_iterator it;
 

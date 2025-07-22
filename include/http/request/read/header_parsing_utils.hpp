@@ -19,7 +19,6 @@ bool hasBody(const RawHeaders& headers);
 //"Transfer-Encoding: chunk"をチェックしてkChunkedを返す
 http::BodyEncodingType detectEncoding(const RawHeaders& headers);
 // get Content-Len
-static const int DECIMAL_BASE = 10;
 std::size_t extractContentLength(const RawHeaders& headers);
 
 }  // namespace parser

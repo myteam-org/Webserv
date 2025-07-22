@@ -9,21 +9,26 @@
 
 namespace http {
 
-ReadingRequestBodyState::ReadingRequestBodyState(BodyEncodingType type, const BodyLengthConfig& config)
+ReadingRequestBodyState::ReadingRequestBodyState(BodyEncodingType type,
+                                                 const BodyLengthConfig& config)
     : activeBodyState_(NULL), type_(type), config_(config) {
-    if (type == kContentLength) {
-        activeBodyState_ = new ReadingRequestBodyLengthState(config);
-    } 
-    // else if (type == kChunked) {
-    //     activeBodyState_ = new ReadingRequestBodyChunkedState();
-    // }
+    switch (type) {
+        case kContentLength:
+            activeBodyState_ = new ReadingRequestBodyLengthState(config);
+            break;
+        // case kChunked:
+        //     activeBodyState_ = new ReadingRequestBodyChunkedState();
+        //     break;
+        default:
+            activeBodyState_ = NULL;  // Handle unsupported types
+            break;
+    }
 }
 
-ReadingRequestBodyState::~ReadingRequestBodyState() {
-    delete activeBodyState_;
-}
+ReadingRequestBodyState::~ReadingRequestBodyState() { delete activeBodyState_; }
 
-TransitionResult ReadingRequestBodyState::handle(ReadContext& ctx, ReadBuffer& buf) {
+TransitionResult ReadingRequestBodyState::handle(ReadContext& ctx,
+                                                 ReadBuffer& buf) {
     if (activeBodyState_ == NULL) {
         TransitionResult tr;
         tr.setStatus(types::err(error::kIOUnknown));

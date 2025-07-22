@@ -21,33 +21,33 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
                                                        ReadBuffer& buf) {
     (void)ctx;
     TransitionResult tr;
-    const ReadBuffer::LoadResult loadResult = buf.load();
-    if (loadResult.isErr()) {
-        tr.setStatus(types::err(loadResult.unwrapErr()));
-        return tr;
-    }
-    const std::size_t loaded = loadResult.unwrap();
-    if (alreadyRead_ == 0 && contentLength_ > clientMaxBodySize_) {
-        tr.setStatus(types::err(error::kRequestEntityTooLarge));
-        return tr;
-    }
 
+    if (alreadyRead_ == 0 && contentLength_ > clientMaxBodySize_) {
+        return tr.setStatus(types::err(error::kRequestEntityTooLarge)), tr;
+    }
+    if (buf.size() == 0) {
+        const ReadBuffer::LoadResult loadResult = buf.load();
+        if (loadResult.isErr()) {
+            return tr.setStatus(types::err(loadResult.unwrapErr())), tr;
+        }
+        if (loadResult.unwrap() == 0) {
+            return tr.setStatus(types::ok(IState::kSuspend)), tr;
+        }
+    }
     const std::size_t remain = contentLength_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
     if (toRead == 0) {
-        tr.setStatus(types::ok(IState::kSuspend));
-        return tr;  // データ待ち
+        return tr.setStatus(types::ok(IState::kSuspend)), tr;  // データ待ち
     }
-
     const std::string segment = buf.consume(toRead);  // 読み取って消費
     bodyBuffer_ += segment;
     alreadyRead_ += segment.size();
-
     if (alreadyRead_ >= contentLength_) {
         tr.setBody(types::some(bodyBuffer_));
         tr.setStatus(types::ok(IState::kDone));
         return tr;
     }
-    return tr.setStatus(types::ok(IState::kSuspend)), tr;
+    tr.setStatus(types::ok(IState::kSuspend));
+    return tr;
 }
 }  // namespace http

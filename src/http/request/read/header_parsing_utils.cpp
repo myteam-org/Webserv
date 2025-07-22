@@ -47,8 +47,7 @@ bool hasBody(const RawHeaders& headers) {
     }
     it = headers.find("Transfer-Encoding");
     if (it != headers.end()) {
-        std::string value = it->second;
-        std::transform(value.begin(), value.end(), value.begin(), ::tolower);
+        const std::string value = utils::toLower(it->second);
         if (value.find("chunked") != std::string::npos) {
             return true;
         }
@@ -81,7 +80,7 @@ std::size_t extractContentLength(const RawHeaders& headers) {
 
     const std::string& value = it->second;
     char* end = NULL;
-    const unsigned long result = std::strtoul(value.c_str(), &end, NUMBER);
+    const unsigned long result = std::strtoul(value.c_str(), &end, DECIMAL_BASE);
 
     if (*end != '\0') {
         return 0;

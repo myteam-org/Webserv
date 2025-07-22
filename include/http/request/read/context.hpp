@@ -21,7 +21,7 @@ class ReadContext {
   const std::string& getRequestLine() const;
   const RawHeaders& getHeaders() const;
   const std::string& getBody() const;
-  IState* createReadingBodyState(const RawHeaders& headers);
+  types::Option<IState*> createReadingBodyState(const RawHeaders& headers);
 
  private:
   IState* state_;

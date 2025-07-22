@@ -1,11 +1,11 @@
 #include "context.hpp"
 
+#include "body.hpp"
 #include "config/context/serverContext.hpp"
 #include "header.hpp"
 #include "header_parsing_utils.hpp"
 #include "http/config/config_resolver.hpp"
 #include "reader.hpp"
-#include "body.hpp"
 
 namespace http {
 
@@ -25,7 +25,6 @@ HandleResult ReadContext::handle(ReadBuffer& buf) {
     if (state_ == NULL) {
         return types::ok(IState::kDone);
     }
-
     const TransitionResult tr = state_->handle(*this, buf);
     if (tr.getRequestLine().isSome()) {
         requestLine_ = tr.getRequestLine().unwrap();
@@ -39,9 +38,10 @@ HandleResult ReadContext::handle(ReadBuffer& buf) {
     if (tr.getStatus().isOk() && tr.getStatus().unwrap() == IState::kDone) {
         if (dynamic_cast<ReadingRequestHeadersState*>(state_) != NULL) {
             if (parser::hasBody(headers_)) {
-                IState* next = createReadingBodyState(headers_);
-                if (next != NULL) {
-                    changeState(next);
+                const types::Option<IState*> opt = createReadingBodyState(headers_);
+                if (opt.isSome()) {
+                    IState* state = opt.unwrap();
+                    this->changeState(state);
                 } else {
                     return types::err(error::kBadRequest);
                 }
@@ -62,19 +62,21 @@ void ReadContext::changeState(IState* next) {
     state_ = next;
 }
 
-IState* ReadContext::createReadingBodyState(const RawHeaders& headers) {
-  const BodyEncodingType type = parser::detectEncoding(headers);
-  if (type == kNone) {
-    return NULL;
-  }
-  const std::string host = parser::extractHeader(headers, "Host");
-  const ServerContext& config = resolver_.choseServer(host);
+types::Option<IState*> ReadContext::createReadingBodyState(
+    const RawHeaders& headers) {
+    const BodyEncodingType type = parser::detectEncoding(headers);
+    if (type == kNone) {
+        return types::none<IState*>();
+    }
+    const std::string host = parser::extractHeader(headers, "Host");
+    const ServerContext& config = resolver_.choseServer(host);
 
-  BodyLengthConfig bodyConfig;
-  bodyConfig.contentLength = parser::extractContentLength(headers);
-  bodyConfig.clientMaxBodySize = config.getClientMaxBodySize();
+    BodyLengthConfig bodyConfig;
+    bodyConfig.contentLength = parser::extractContentLength(headers);
+    bodyConfig.clientMaxBodySize = config.getClientMaxBodySize();
 
-  return new ReadingRequestBodyState(type, bodyConfig);
+    IState* next = new ReadingRequestBodyState(type, bodyConfig);
+    return types::some(next);
 }
 
 const IState* ReadContext::getState() const { return state_; }

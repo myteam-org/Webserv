@@ -1,25 +1,28 @@
-#include <gtest/gtest.h>
-#include <string>
 #include "http/request/read/context.hpp"
-#include "http/request/read/state.hpp"
+
+#include <gtest/gtest.h>
+
+#include <string>
+
 #include "http/config/config_resolver.hpp"
-#include "utils/types/result.hpp"
+#include "http/request/read/state.hpp"
 #include "io/input/read/buffer.hpp"
 #include "io/input/reader/reader.hpp"
+#include "utils/types/result.hpp"
 
 // ---- Begin: IConfigResolver仮実装 ----
 namespace http {
 class IConfigResolver {
-public:
+   public:
     virtual ~IConfigResolver() {}
     // 必要であれば純粋仮想関数をここに追加
 };
-}
+}  // namespace http
 // ---- End: IConfigResolver仮実装 ----
 
 // ダミーConfigResolver
 class DummyConfigResolver : public http::config::IConfigResolver {
-public:
+   public:
     DummyConfigResolver() {}
     virtual ~DummyConfigResolver() {}
     const ServerContext& choseServer(const std::string& host) const {
@@ -31,11 +34,12 @@ public:
 
 // テスト用ダミーState
 class DummyState : public http::IState {
-public:
+   public:
     DummyState() : handleCallCount_(0) {}
     virtual ~DummyState() {}
 
-    virtual http::TransitionResult handle(http::ReadContext& ctx, ReadBuffer& buf) {
+    virtual http::TransitionResult handle(http::ReadContext& ctx,
+                                          ReadBuffer& buf) {
         (void)ctx;
         (void)buf;
         ++handleCallCount_;
@@ -49,19 +53,8 @@ public:
         return result;
     }
 
-private:
-    int handleCallCount_;  // ← これを追加
-//     virtual http::TransitionResult handle() {
-//         ++handleCallCount_;
-//         http::TransitionResult result;
-//         if (handleCallCount_ == 1) {
-//             result.setStatus(types::ok(http::IState::kDone));
-//             result.setRequestLine(types::Option<std::string>(types::some(std::string("REQLINE"))));
-//         }
-//         return result;
-//     }
-
-//     int handleCallCount_;
+   private:
+    int handleCallCount_;
 };
 
 TEST(ReadContextTest, HandleUpdatesRequestLineAndStatus) {
@@ -69,14 +62,18 @@ TEST(ReadContextTest, HandleUpdatesRequestLineAndStatus) {
     http::ReadContext context(resolver, new DummyState());
 
     class DummyReader : public io::IReader {
-    public:
+       public:
         DummyReader() {}
-        virtual types::Result<std::size_t, error::AppError> read(char*, std::size_t) { return types::ok(0ul); }
+        virtual types::Result<std::size_t, error::AppError> read(char*,
+                                                                 std::size_t) {
+            return types::ok(0ul);
+        }
         virtual bool eof() { return true; }
     } dummyReader;
     ReadBuffer buffer(dummyReader);
 
-    types::Result< http::IState::HandleStatus, error::AppError> result = context.handle(buffer);
+    types::Result<http::IState::HandleStatus, error::AppError> result =
+        context.handle(buffer);
 
     ASSERT_TRUE(result.isOk());
     EXPECT_EQ(result.unwrap(), http::IState::kDone);

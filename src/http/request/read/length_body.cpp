@@ -23,18 +23,20 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
     TransitionResult tr;
     const ReadBuffer::LoadResult loadResult = buf.load();
     if (loadResult.isErr()) {
-        return tr.setStatus(types::err(loadResult.unwrapErr())), tr;
+        tr.setStatus(types::err(loadResult.unwrapErr()));
+        return tr;
     }
     const std::size_t loaded = loadResult.unwrap();
     if (alreadyRead_ == 0 && contentLength_ > clientMaxBodySize_) {
-        return tr.setStatus(types::err(error::kRequestEntityTooLarge)), tr;
+        tr.setStatus(types::err(error::kRequestEntityTooLarge));
+        return tr;
     }
 
     const std::size_t remain = contentLength_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
-
     if (toRead == 0) {
-        return tr.setStatus(types::ok(IState::kSuspend)), tr;  // データ待ち
+        tr.setStatus(types::ok(IState::kSuspend));
+        return tr;  // データ待ち
     }
 
     const std::string segment = buf.consume(toRead);  // 読み取って消費

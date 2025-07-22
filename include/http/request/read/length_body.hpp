@@ -13,9 +13,8 @@ struct BodyLengthConfig {
 class ReadingRequestBodyLengthState : public IState {
    public:
     explicit ReadingRequestBodyLengthState(const BodyLengthConfig& config);
-    // explicit ReadingRequestBodyLengthState(std::size_t contentLength, std::size_t clientMaxBodySize);
     virtual ~ReadingRequestBodyLengthState();
-    virtual TransitionResult handle(ReadBuffer& buf);
+    virtual TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
 
    private:
     std::size_t contentLength_;

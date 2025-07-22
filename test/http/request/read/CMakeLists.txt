@@ -36,6 +36,11 @@ target_link_libraries(header_test
     PRIVATE webserv_lib gtest
 )
 
+add_executable(body_test body_test.cpp)
+target_link_libraries(body_test
+    PRIVATE webserv_lib gtest
+)
+
 add_executable(body_length_test body_length_test.cpp)
 target_link_libraries(body_length_test
     PRIVATE webserv_lib gtest)
@@ -45,5 +50,6 @@ gtest_discover_tests(getline_test)
 gtest_discover_tests(reader_test)
 gtest_discover_tests(line_test)
 gtest_discover_tests(context_test)
-gtest_discover_tests(header_test) 
+gtest_discover_tests(header_test)
+gtest_discover_tests(body_test) 
 gtest_discover_tests(body_length_test)

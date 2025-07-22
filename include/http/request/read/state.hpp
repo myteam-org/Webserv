@@ -18,11 +18,13 @@ namespace http {
 //   ・ReadingHeadersState
 //   ・ReadingBodyState
 
+class ReadContext;
+
 class IState {
  public:
   enum HandleStatus { kSuspend, kDone };
   virtual ~IState() {}
-  virtual struct TransitionResult handle(ReadBuffer& buf) = 0;
+  virtual struct TransitionResult handle(ReadContext& ctx, ReadBuffer& buf) = 0;
 };
 
 // TransitionResult

@@ -15,7 +15,7 @@ class ConfigResolver : public IConfigResolver {
    public:
     explicit ConfigResolver(const std::vector<ServerContext>& servers) : servers_(servers) {}
 
-    const ServerContext& choseServer(const std::string& host) const {
+    const ServerContext& resolve(const std::string& host) const {
         for (std::size_t i = 0; i < servers_.size(); ++i) {
             if (servers_[i].getHost() == host) {
                 return servers_[i];

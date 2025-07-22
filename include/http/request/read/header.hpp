@@ -1,8 +1,8 @@
 #pragma once
 #include "buffer.hpp"
 #include "state.hpp"
+#include "context.hpp"
 
-// class ReadBuffer;
 
 namespace http {
 
@@ -10,7 +10,7 @@ class ReadingRequestHeadersState : public IState {
    public:
     ReadingRequestHeadersState();
     virtual ~ReadingRequestHeadersState();
-    TransitionResult handle(ReadBuffer& buf);
+    TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
 };
 
 }  // namespace http

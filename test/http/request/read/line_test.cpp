@@ -32,14 +32,25 @@ private:
     std::size_t position_;
 };
 
+class DummyResolver : public http::config::IConfigResolver {
+public:
+    const ServerContext& choseServer(const std::string&) const {
+        static ServerContext dummy("server");
+        return dummy;
+    }
+};
+
+
 } // namespace
 
 TEST(ReadingRequestLineStateTest, ReturnsSuspendWhenBufferIsEmpty) {
     DummyReader dummyReader("");
     ReadBuffer readBuffer(dummyReader);
-    http::ReadingRequestLineState state;
+    http::ReadingRequestLineState* state = new http::ReadingRequestLineState();
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, state);
 
-    http::TransitionResult transitionResult = state.handle(readBuffer);
+    http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
 
     ASSERT_TRUE(transitionResult.getStatus().isOk());
     EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kSuspend);
@@ -49,9 +60,11 @@ TEST(ReadingRequestLineStateTest, ReturnsSuspendWhenBufferIsEmpty) {
 TEST(ReadingRequestLineStateTest, ReturnsErrorWhenLineIsEmpty) {
     DummyReader dummyReader("\r\n");
     ReadBuffer readBuffer(dummyReader);
-    http::ReadingRequestLineState state;
+    http::ReadingRequestLineState* state = new http::ReadingRequestLineState();
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, state);
 
-    http::TransitionResult transitionResult = state.handle(readBuffer);
+    http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
 
     ASSERT_TRUE(transitionResult.getStatus().isErr());
     EXPECT_EQ(transitionResult.getStatus().unwrapErr(), error::kIOUnknown);
@@ -61,13 +74,15 @@ TEST(ReadingRequestLineStateTest, ReturnsErrorWhenLineIsEmpty) {
 TEST(ReadingRequestLineStateTest, ReturnsDoneWhenLineIsPresent) {
     DummyReader dummyReader("GET / HTTP/1.1\r\n");
     ReadBuffer readBuffer(dummyReader);
-    http::ReadingRequestLineState state;
+    http::ReadingRequestLineState* state = new http::ReadingRequestLineState();
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, state);
 
-    http::TransitionResult transitionResult = state.handle(readBuffer);
+    http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
 
     ASSERT_TRUE(transitionResult.getStatus().isOk());
     EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kDone);
-    ASSERT_TRUE(transitionResult.getRequestLine().isSome());
+    EXPECT_FALSE(transitionResult.getRequestLine().isNone());
     EXPECT_EQ(transitionResult.getRequestLine().unwrap(), "GET / HTTP/1.1");
 }
 

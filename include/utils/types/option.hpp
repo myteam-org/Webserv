@@ -2,7 +2,6 @@
 #include <stdexcept>
 
 namespace types {
-
     template<typename T>
     struct Some {
     private:
@@ -81,6 +80,7 @@ namespace types {
 
 	template<typename T>
 	Option<T> none() { return Option<T>(None()); }
+
 } // namespace types
 
 // C++ における Rust風の Option<T> 型 を実装したもの

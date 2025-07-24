@@ -57,14 +57,6 @@ TEST(ReadingRequestBodyChunkedStateTest, ReadsChunkedBodyFully) {
                                    << static_cast<int>(result.unwrapErr()) << std::endl;
     } while (result.unwrap() == http::IState::kSuspend);
 
-        // 再読み込み（simulate ソケットがデータ到着する様子）
-        // const ReadBuffer::LoadResult reload = buf.load();
-        // ASSERT_TRUE(reload.isOk()) << "buf.load() failed on retry";
-        // if (reload.unwrap() == 0) {
-            // break;  // EOF
-        // }
-    // }
-
     EXPECT_EQ(result.unwrap(), http::IState::kDone);
     EXPECT_EQ(ctx.getBody(), "Hello");
 }

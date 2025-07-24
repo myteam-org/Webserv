@@ -18,7 +18,6 @@ ReadingRequestBodyChunkedState::~ReadingRequestBodyChunkedState() {}
 
 TransitionResult ReadingRequestBodyChunkedState::handle(ReadContext& ctx,
                                                         ReadBuffer& buf) {
-    // (void)ctx;
     TransitionResult tr;
 
     while (true) {

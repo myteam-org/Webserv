@@ -74,8 +74,8 @@ bool ReadingRequestBodyLengthState::ensureData_(ReadBuffer& buf, TransitionResul
         tr.setStatus(types::err(loadResult.unwrapErr()));
         return false;
     }
-    if (loadResult.canUnwrap() == 0) {
-        tr.setStatus((types::ok(IState::kSuspend)));
+    if (loadResult.unwrap() == 0) {
+        tr.setStatus(types::ok(IState::kSuspend));
         return false;
     }
     return true;

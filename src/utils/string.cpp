@@ -3,6 +3,7 @@
 #include <cctype>
 
 static const size_t HEX = 16;
+static const size_t TEN = 10;
 
 bool utils::startsWith(const std::string &str, const std::string &prefix) {
     return str.find(prefix) == 0;
@@ -43,9 +44,9 @@ types::Result<std::size_t, error::AppError> utils::parseHex(const std::string &h
         if (chr >= '0' && chr <= '9') {
             result += static_cast<std::size_t>(hex[i] - '0');
         } else if (chr >= 'a' && chr <= 'f') {
-            result += static_cast<std::size_t>(hex[i] - 'a');
+            result += static_cast<std::size_t>(hex[i] - 'a') + TEN;
         } else if (chr >= 'A' && chr <= 'F') {
-            result += static_cast<std::size_t>(hex[i] - 'A');
+            result += static_cast<std::size_t>(hex[i] - 'A') + TEN;
         } else {
             return types::err(error::kBadRequest);
         }

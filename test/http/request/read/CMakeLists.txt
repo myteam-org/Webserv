@@ -48,7 +48,7 @@ target_link_libraries(body_length_test
 
 add_executable(body_chunked_test body_chunked_test.cpp)
 target_link_libraries(body_chunked_test
-    PRIVATE webserv_lib gtest)
+    PRIVATE webserv_lib gtest gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(getline_test)

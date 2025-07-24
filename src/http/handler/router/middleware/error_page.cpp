@@ -19,23 +19,31 @@ std::string LoadErrorPageBodyFromFile(const std::string& filePath) {
     return contentStream.str();
 }
 
-std::string BuildDefaultErrorPageBody(int statusCode, const std::string& statusText) {
+const char* const kHtmlHeader =
+    "<!DOCTYPE html>\n"
+    "<html>\n"
+    "<head><title>";
+
+const char* const kHtmlMidHead =
+    "</title></head>\n"
+    "<body>\n"
+    "<center><h1>";
+
+const char* const kHtmlAfterBody =
+    "</h1></center>\n"
+    "<hr>\n"
+    "<center>webserv/0.1.0</center>\n"
+    "</body>\n"
+    "</html>\n";
+
+std::string BuildDefaultErrorPageBody(const int statusCode, const std::string& statusText) {
     std::ostringstream statusLineStream;
     statusLineStream << statusCode << " " << statusText;
-    const std::string statusLineString = statusLineStream.str();
+    const std::string statusLine = statusLineStream.str();
 
-    std::ostringstream htmlBodyStream;
-    htmlBodyStream
-        << "<!DOCTYPE html>\n"
-        << "<html>\n"
-        << "<head><title>" << statusLineString << "</title></head>\n"
-        << "<body>\n"
-        << "<center><h1>" << statusLineString << "</h1></center>\n"
-        << "<hr>\n"
-        << "<center>webserv/0.1.0</center>\n"
-        << "</body>\n"
-        << "</html>\n";
-    return htmlBodyStream.str();
+    std::ostringstream htmlStream;
+    htmlStream << kHtmlHeader << statusLine << kHtmlMidHead << statusLine << kHtmlAfterBody;
+    return htmlStream.str();
 }
 
 }  // namespace

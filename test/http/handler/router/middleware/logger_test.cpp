@@ -15,7 +15,7 @@ namespace http {
 class DummyHandler : public IHandler {
 public:
     // Test function
-    virtual Either<IAction*, Response> serve(const Request& request) {
+    Either<IAction*, Response> serve(const Request& request) {
         (void)request;
         Response response(http::kStatusOk, types::none<std::string>(), "");
         return Right<Response>(response);

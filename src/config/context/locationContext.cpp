@@ -46,7 +46,7 @@ const DocumentRootConfig& LocationContext::getDocumentRootConfig() const {
 
 std::vector<http::HttpMethod> LocationContext::getAllowedMethods() const {
     std::vector<http::HttpMethod> methods;
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < METHOD_COUNT; ++i) {
         if (allowedMethod_[i] == ON) {
             methods.push_back(static_cast<http::HttpMethod>(i));
         }

@@ -23,12 +23,13 @@ http::Router &VirtualServer::getRouter() {
 }
 
 void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder, const LocationContext &locationContext) {
-    (void)routerBuilder; // 未使用パラメータ警告対策
-    const std::vector<http::HttpMethod> allowedHttpMethods = locationContext.getAllowedMethods();
+    (void)routerBuilder; // 未使用パラメータ警告対策 FileHandler系実装時に削除
+    const std::vector<http::HttpMethod>& allowedHttpMethods = locationContext.getAllowedMethods();
     for (std::vector<http::HttpMethod>::const_iterator methodIterator = allowedHttpMethods.begin();
          methodIterator != allowedHttpMethods.end();
          ++methodIterator) {
         const DocumentRootConfig documentRootConfig = locationContext.getDocumentRootConfig(); // NOLINT
+        // TODO(FileHandler)
         switch (*methodIterator) {
             case http::kMethodGet: { // NOLINT(bugprone-branch-clone)
                 // http::IHandler *getHandler = new http::StaticFileHandler(documentRootConfig);

@@ -122,6 +122,87 @@ TEST(ReadingRequestBodyLengthStateTest, ReturnsSuspendIfPartiallyRead) {
     EXPECT_EQ(result2.getBody().unwrap(), "HelloWorld");
 }
 
+TEST(ReadingRequestBodyLengthStateTest, TruncatesBodyToExactContentLength) {
+    DummyReader reader("HelloWorldExtra");  // 15バイト
+    ReadBuffer buf(reader);
+    buf.load();
+
+    http::BodyLengthConfig config = {5, 1024};  // Content-Length = 5
+    http::ReadingRequestBodyLengthState state(config);
+
+    DummyResolver resolver;
+    DummyContext ctx(resolver, NULL);
+
+    auto result = state.handle(ctx, buf);
+    ASSERT_TRUE(result.getStatus().isOk());
+    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
+    EXPECT_EQ(result.getBody().unwrap(), "Hello");  // Extra は無視
+}
+
+TEST(ReadingRequestBodyLengthStateTest, HandlesEmptyBodyCorrectly) {
+    DummyReader reader("");
+    ReadBuffer buf(reader);
+
+    const ReadBuffer::LoadResult loadResult = buf.load();
+    ASSERT_TRUE(loadResult.isOk()) << "buf.load() failed";
+    
+
+    http::BodyLengthConfig config = {0, 1024};  // 空ボディ
+    http::ReadingRequestBodyLengthState state(config);
+
+    DummyResolver resolver;
+    DummyContext ctx(resolver, NULL);
+
+    auto result = state.handle(ctx, buf);
+    ASSERT_TRUE(result.getStatus().isOk());
+    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
+    EXPECT_TRUE(result.getBody().isSome());
+    EXPECT_EQ(result.getBody().unwrap(), "");
+}
+
+TEST(ReadingRequestBodyLengthStateTest, FailsGracefullyWhenReaderFails) {
+    // エラーを返すReaderを定義
+    class FailingReader : public io::IReader {
+     public:
+      types::Result<std::size_t, error::AppError> read(char*, std::size_t) {
+        return types::err(error::kIOUnknown);  // 強制エラー
+      }
+      bool eof() { return false; }
+    };
+
+    FailingReader reader;
+    ReadBuffer buf(reader);
+    buf.load();  // loadは成功してしまうが、handleで失敗するはず
+
+    http::BodyLengthConfig config = {5, 1024};
+    http::ReadingRequestBodyLengthState state(config);
+
+    DummyResolver resolver;
+    DummyContext ctx(resolver, NULL);
+
+    auto result = state.handle(ctx, buf);
+    EXPECT_TRUE(result.getStatus().isErr());
+    EXPECT_EQ(result.getStatus().unwrapErr(), error::kIOUnknown);
+}
+
+TEST(ReadingRequestBodyLengthStateTest, DoesNotReadBeyondLimitAcrossMultipleBuffers) {
+    DummyReader reader("12345");
+    ReadBuffer buf(reader);
+    buf.load();
+
+    http::BodyLengthConfig config = {3, 1024};  // Content-Length < 実際のデータ
+    http::ReadingRequestBodyLengthState state(config);
+
+    DummyResolver resolver;
+    DummyContext ctx(resolver, NULL);
+
+    auto result = state.handle(ctx, buf);
+    ASSERT_TRUE(result.getStatus().isOk());
+    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
+    EXPECT_EQ(result.getBody().unwrap(), "123");
+}
+
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

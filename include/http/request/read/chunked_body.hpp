@@ -2,6 +2,7 @@
 
 #include "buffer.hpp"
 #include "state.hpp"
+#include "context.hpp"
 
 namespace http {
 
@@ -14,10 +15,15 @@ class ReadingRequestBodyChunkedState : public IState {
     TransitionResult handleReadSize(ReadBuffer& buf, TransitionResult& tr);
     TransitionResult handleReadData(ReadBuffer& buf, TransitionResult& tr);
     TransitionResult handleReadTrailer(ReadBuffer& buf, TransitionResult& tr);
-    TransitionResult handleDone(TransitionResult& tr);
+    TransitionResult handleDone(ReadContext& ctx, TransitionResult& tr);
 
    private:
-    enum Phase { kChunkReadSize, kChunkReadData, kChunkReadTrailer, kChunkDone };
+    enum Phase {
+        kChunkReadSize,
+        kChunkReadData,
+        kChunkReadTrailer,
+        kChunkDone
+    };
 
     Phase phase_;
     std::string buffer_;            // 一時的に読み込んだ未処理データ

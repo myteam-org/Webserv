@@ -11,10 +11,13 @@ class ReadingRequestBodyChunkedState : public IState {
     virtual ~ReadingRequestBodyChunkedState();
 
     virtual TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
-    std::size_t parseHex(const std::string& hex);  // 16進数を変換する
+    TransitionResult handleReadSize(ReadBuffer& buf, TransitionResult& tr);
+    TransitionResult handleReadData(ReadBuffer& buf, TransitionResult& tr);
+    TransitionResult handleReadTrailer(ReadBuffer& buf, TransitionResult& tr);
+    TransitionResult handleDone(TransitionResult& tr);
 
    private:
-    enum Phase { kReadSize, kReadData, kReadTrailer, kDone };
+    enum Phase { kChunkReadSize, kChunkReadData, kChunkReadTrailer, kChunkDone };
 
     Phase phase_;
     std::string buffer_;            // 一時的に読み込んだ未処理データ

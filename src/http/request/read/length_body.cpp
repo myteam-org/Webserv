@@ -1,5 +1,6 @@
 #include "length_body.hpp"
 
+#include "buffer.hpp"
 #include "state.hpp"
 #include "utils/types/error.hpp"
 #include "utils/types/option.hpp"
@@ -22,23 +23,23 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
     (void)ctx;
     TransitionResult tr;
 
+    if (contentLength_ == 0) {
+        return done_(std::string(""));
+    }
     if (alreadyRead_ == 0 && contentLength_ > clientMaxBodySize_) {
-        return tr.setStatus(types::err(error::kRequestEntityTooLarge)), tr;
+        return error_(tr, error::kRequestEntityTooLarge);
     }
-    if (buf.size() == 0) {
-        const ReadBuffer::LoadResult loadResult = buf.load();
-        if (loadResult.isErr()) {
-            return tr.setStatus(types::err(loadResult.unwrapErr())), tr;
-        }
-        if (loadResult.unwrap() == 0) {
-            return tr.setStatus(types::ok(IState::kSuspend)), tr;
-        }
+    if (!ensureData_(buf, tr)) {
+        return tr;
     }
+
     const std::size_t remain = contentLength_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
+
     if (toRead == 0) {
-        return tr.setStatus(types::ok(IState::kSuspend)), tr;  // データ待ち
+        return suspend_(tr);
     }
+
     const std::string segment = buf.consume(toRead);  // 読み取って消費
     bodyBuffer_ += segment;
     alreadyRead_ += segment.size();
@@ -50,4 +51,39 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
     tr.setStatus(types::ok(IState::kSuspend));
     return tr;
 }
+
+TransitionResult ReadingRequestBodyLengthState::done_(const std::string& body) {
+    TransitionResult tr;
+
+    tr.setBody(types::some(body));
+    tr.setStatus(types::ok(IState::kDone));
+    return tr;
+}
+
+TransitionResult ReadingRequestBodyLengthState::error_(TransitionResult& tr, error::AppError err) {
+    tr.setStatus(types::err(err));
+    return tr;
+}
+
+bool ReadingRequestBodyLengthState::ensureData_(ReadBuffer& buf, TransitionResult& tr) {
+    if (buf.size() > 0) {
+        return true;
+    }
+    const ReadBuffer::LoadResult loadResult = buf.load();
+    if (loadResult.isErr()) {
+        tr.setStatus(types::err(loadResult.unwrapErr()));
+        return false;
+    }
+    if (loadResult.canUnwrap() == 0) {
+        tr.setStatus((types::ok(IState::kSuspend)));
+        return false;
+    }
+    return true;
+}
+
+TransitionResult ReadingRequestBodyLengthState::suspend_(TransitionResult& tr) {
+    tr.setStatus(types::ok(IState::kSuspend));
+    return tr;
+}
+
 }  // namespace http

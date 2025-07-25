@@ -42,11 +42,11 @@ types::Result<std::size_t, error::AppError> utils::parseHex(const std::string &h
         result *= HEX;
 
         if (chr >= '0' && chr <= '9') {
-            result += static_cast<std::size_t>(hex[i] - '0');
+            result += static_cast<std::size_t>(chr - '0');
         } else if (chr >= 'a' && chr <= 'f') {
-            result += static_cast<std::size_t>(hex[i] - 'a') + TEN;
+            result += static_cast<std::size_t>(chr - 'a') + TEN;
         } else if (chr >= 'A' && chr <= 'F') {
-            result += static_cast<std::size_t>(hex[i] - 'A') + TEN;
+            result += static_cast<std::size_t>(chr - 'A') + TEN;
         } else {
             return types::err(error::kBadRequest);
         }

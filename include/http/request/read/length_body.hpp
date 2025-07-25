@@ -22,9 +22,9 @@ class ReadingRequestBodyLengthState : public IState {
     std::size_t alreadyRead_;
     std::string bodyBuffer_;
 
-    static TransitionResult done_(const std::string& body);
-    static TransitionResult error_(TransitionResult& tr, error::AppError err);
-    static bool ensureData_(ReadBuffer& buf, TransitionResult& tr);
-    static TransitionResult suspend_(TransitionResult& tr);
+    static TransitionResult done(const std::string& body);
+    static TransitionResult error(TransitionResult& tr, error::AppError err);
+    static bool ensureData(ReadBuffer& buf, TransitionResult& tr);
+    static TransitionResult suspend(TransitionResult& tr);
 };
 }  // namespace http

@@ -53,7 +53,8 @@ add_library(webserv_lib STATIC
     http/status.cpp
     http/handler/file/delete.cpp
     http/handler/file/static.cpp
-    http/handler/file/post.cpp
+    http/handler/file/upload.cpp
+    http/handler/file/redirect.cpp
     http/mime.cpp
 )
 

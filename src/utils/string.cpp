@@ -9,6 +9,13 @@ bool utils::startsWith(const std::string &str, const std::string &prefix) {
     return str.find(prefix) == 0;
 }
 
+bool utils::endsWith(const std::string &str, const std::string &suffix) {
+    if (str.size() < suffix.size()) {
+        return false;
+    }
+    return str.rfind(suffix) == str.size() - suffix.size();
+}
+
 std::string utils::toLower(const std::string &str) {
     std::string result = str;
     for (std::size_t i = 0; i < result.size(); ++i) {

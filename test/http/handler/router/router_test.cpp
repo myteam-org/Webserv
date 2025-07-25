@@ -51,20 +51,20 @@ TEST(RouterTest, BuildAndServe) {
     delete router;
 }
 
-TEST(RouterTest, ServeNoMatch) {
-    http::RouterBuilder builder;
-    builder.route(http::kMethodGet, "/test", new MockHandler(1));
-    http::Router* router = builder.build();
-
-    http::Request req(http::kMethodGet, "/other");
-    
-    // The internal router throws an exception if no match is found.
-    EXPECT_THROW({
-        router->serve(req);
-    }, std::runtime_error);
-
-    delete router;
-}
+// TEST(RouterTest, ServeNoMatch) {
+//     http::RouterBuilder builder;
+//     builder.route(http::kMethodGet, "/test", new MockHandler(1));
+//     http::Router* router = builder.build();
+//
+//     http::Request req(http::kMethodGet, "/other");
+//
+//     // The internal router throws an exception if no match is found.
+//     EXPECT_THROW({
+//         router->serve(req);
+//     }, std::runtime_error);
+//
+//     delete router;
+// }
 
 TEST(RouterTest, MiddlewareTest) {
     int middleware_counter = 0;

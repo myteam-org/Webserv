@@ -5,12 +5,13 @@
 #include <string>
 
 #include "http/config/config_resolver.hpp"
-// #include "http/request/read/chunked_body.hpp"
+#include "http/request/read/chunked_body.hpp"
 #include "config/context/serverContext.hpp"
 #include "http/request/read/context.hpp"
 #include "http/request/read/raw_headers.hpp"
 #include "io/input/read/buffer.hpp"
 #include "io/input/reader/reader.hpp"
+#include "state.hpp"
 #include "utils/types/error.hpp"
 
 namespace {
@@ -75,27 +76,30 @@ TEST(ReadingRequestBodyStateTest,
 // === TEST 2 ===
 // Transfer-Encoding: chunked がある場合、ChunkedState
 // に切り替わるか（モックが必要なため簡易検証）
-// TEST(ReadingRequestBodyStateTest,
-// SwitchesToChunkedStateWhenTransferEncodingPresent) {
-//     DummyReader reader("5\r\nHello\r\n0\r\n\r\n");
-//     ReadBuffer buf(reader);
-//     buf.load();
+TEST(ReadingRequestBodyStateTest,
+SwitchesToChunkedStateWhenTransferEncodingPresent) {
+    DummyReader reader("5\r\nHello\r\n0\r\n\r\n");
+    ReadBuffer buf(reader);
+    buf.load();
 
-//     http::RawHeaders headers;
-//     headers["Transfer-Encoding"] = "chunked";
+    RawHeaders headers;
+    headers["Transfer-Encoding"] = "chunked";
 
-//     http::BodyLengthConfig cfg = {0, 1024};  // Content-Length 無視
-//     http::ReadingRequestBodyState* state = new
-//     http::ReadingRequestBodyState(http::kChunked, cfg);
+    http::BodyLengthConfig cfg = {0, 1024};  // Content-Length 無視
+    http::ReadingRequestBodyState* state = new
+    http::ReadingRequestBodyState(http::kChunked, cfg);
 
-//     DummyResolver resolver;
-//     http::ReadContext ctx(resolver, state);
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, state);
 
-//     http::HandleResult result = ctx.handle(buf);
-//     EXPECT_TRUE(result.isOk());
-//     EXPECT_EQ(result.unwrap(), http::IState::kDone);
-//     EXPECT_EQ(ctx.getBody(), "Hello");
-// }
+    http::HandleResult result = types::ok(http::IState::kSuspend);
+    do {
+        result = ctx.handle(buf);
+    } while (result.isOk() && result.unwrap() == http::IState::kSuspend);
+    EXPECT_TRUE(result.isOk());
+    EXPECT_EQ(result.unwrap(), http::IState::kDone);
+    EXPECT_EQ(ctx.getBody(), "Hello");
+}
 
 // === TEST 3 ===
 // 不正なボディ種別を渡した場合のエラー処理（例として kNone を想定）

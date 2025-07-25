@@ -20,6 +20,7 @@ class ReadContext {
   config::IConfigResolver& getConfigResolver() const;
   const std::string& getRequestLine() const;
   const RawHeaders& getHeaders() const;
+  void setBody(const std::string& body);
   const std::string& getBody() const;
   types::Option<IState*> createReadingBodyState(const RawHeaders& headers);
 

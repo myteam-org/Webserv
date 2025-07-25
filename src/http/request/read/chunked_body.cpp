@@ -84,7 +84,7 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadData(
     if (alreadyRead_ == currentChunkSize_) {
         if (!handleReadCRLFIfDone(buf, tr)) {
             return tr;
-        }
+        }    
     }
     return tr.setStatus(types::ok(kSuspend)), tr;
 }

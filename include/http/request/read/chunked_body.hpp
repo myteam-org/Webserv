@@ -14,7 +14,7 @@ class ReadingRequestBodyChunkedState : public IState {
     virtual TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
     TransitionResult handleReadSize(ReadBuffer& buf, TransitionResult& tr);
     TransitionResult handleReadData(ReadBuffer& buf, TransitionResult& tr);
-    bool tryLoadBufferIfEmpty(ReadBuffer& buf, TransitionResult& tr);
+    bool tryLoadBufferIfEmpty(ReadBuffer& buf, TransitionResult& tr) const;
     bool handleReadCRLFIfDone(ReadBuffer& buf, TransitionResult& tr);
     TransitionResult handleReadTrailer(ReadBuffer& buf, TransitionResult& tr,
                                        ReadContext& ctx);

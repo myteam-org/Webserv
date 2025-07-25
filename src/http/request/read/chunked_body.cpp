@@ -70,42 +70,58 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadSize(
 
 TransitionResult ReadingRequestBodyChunkedState::handleReadData(
     ReadBuffer& buf, TransitionResult& tr) {
+    if (!tryLoadBufferIfEmpty(buf, tr)) {
+        return tr;
+    }
     const std::size_t remain = currentChunkSize_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
     if (toRead == 0) {
-        const ReadBuffer::LoadResult loadResult = buf.load();
-        if (loadResult.isErr()) {
-            return tr.setStatus(types::err(loadResult.unwrapErr())), tr;
-        }
-    }
-    const std::size_t remainAfterLoad = currentChunkSize_ - alreadyRead_;
-    const std::size_t toReadAfterLoad = std::min(remainAfterLoad, buf.size());
-    if (toReadAfterLoad == 0) {
         return tr.setStatus(types::ok(kSuspend)), tr;
     }
     const std::string chunk = buf.consume(toRead);
     body_ += chunk;
     alreadyRead_ += chunk.size();
     if (alreadyRead_ == currentChunkSize_) {
-        const GetLineResult crlf = getLine(buf);
-        if (crlf.isErr()) {
-            return tr.setStatus(types::err(crlf.unwrapErr())), tr;
+        if (!handleReadCRLFIfDone(buf, tr)) {
+            return tr;
         }
-        const types::Option<std::string> lineOpt = crlf.unwrap();
-        if (lineOpt.isNone()) {
-            return tr.setStatus(types::ok(kSuspend)), tr;
-        }
-        const std::string& line = lineOpt.unwrap();
-        if (!line.empty()) {
-            return tr.setStatus(types::err(error::kBadRequest)), tr;
-        }
-        phase_ = kChunkReadSize;
     }
     return tr.setStatus(types::ok(kSuspend)), tr;
 }
 
-bool ReadingRequestBodyChunkedState::tryLoadBufferIfEmpty(ReadBuffer& buf, TransitionResult& tr) {
-    
+bool ReadingRequestBodyChunkedState::tryLoadBufferIfEmpty(
+    ReadBuffer& buf, TransitionResult& tr) const {
+    const std::size_t remain = currentChunkSize_ - alreadyRead_;
+    if (std::min(remain, buf.size()) != 0) {
+        return true;
+    }
+    const ReadBuffer::LoadResult loadResult = buf.load();
+    if (loadResult.isErr()) {
+        tr.setStatus(types::err(loadResult.unwrapErr()));
+        return false;
+    }
+    return true;
+}
+
+bool ReadingRequestBodyChunkedState::handleReadCRLFIfDone(
+    ReadBuffer& buf, TransitionResult& tr) {
+    const GetLineResult crlf = getLine(buf);
+    if (crlf.isErr()) {
+        tr.setStatus(types::err(crlf.unwrapErr()));
+        return false;
+    }
+    const types::Option<std::string> lineOpt = crlf.unwrap();
+    if (lineOpt.isNone()) {
+        tr.setStatus(types::ok(kSuspend));
+        return false;
+    }
+    const std::string& line = lineOpt.unwrap();
+    if (!line.empty()) {
+        tr.setStatus(types::err(error::kBadRequest));
+        return false;
+    }
+    phase_ = kChunkReadSize;
+    return true;
 }
 
 TransitionResult ReadingRequestBodyChunkedState::handleReadTrailer(

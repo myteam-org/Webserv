@@ -3,9 +3,19 @@
 #include "types/error.hpp"
 #include "types/option.hpp"
 #include "types/result.hpp"
+#include <sstream>
 
 namespace utils {
-bool startsWith(const std::string& str, const std::string& prefix);
-std::string toLower(const std::string& str);
-std::string trim(const std::string& str);
+    template <class T>
+    std::string toString(T value) {
+        std::stringstream ss;
+        ss << value;
+
+        return ss.str();
+    }
+
+    bool startsWith(const std::string& str, const std::string& prefix);
+    bool endsWith(const std::string &str, const std::string &suffix);
+    std::string toLower(const std::string& str);
+    std::string trim(const std::string& str);
 }  // namespace utils

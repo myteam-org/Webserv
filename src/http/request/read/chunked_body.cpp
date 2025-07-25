@@ -1,13 +1,13 @@
 #include "chunked_body.hpp"
 
 #include "buffer.hpp"
-#include "state.hpp"
 #include "context.hpp"
+#include "state.hpp"
 #include "utils.hpp"
+#include "utils/string.hpp"
 #include "utils/types/error.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"
-#include "utils/string.hpp"
 
 namespace http {
 
@@ -17,8 +17,8 @@ ReadingRequestBodyChunkedState::ReadingRequestBodyChunkedState()
 ReadingRequestBodyChunkedState::~ReadingRequestBodyChunkedState() {}
 
 TransitionResult ReadingRequestBodyChunkedState::handle(ReadContext& ctx,
-                                                       ReadBuffer& buf) {
-    (void)ctx;
+                                                        ReadBuffer& buf) {
+    // (void)ctx;
     TransitionResult tr;
 
     while (true) {
@@ -30,12 +30,15 @@ TransitionResult ReadingRequestBodyChunkedState::handle(ReadContext& ctx,
             case kChunkReadTrailer:
                 return handleReadTrailer(buf, tr);
             case kChunkDone:
-                return handleDone(tr);
+                return handleDone(ctx, tr);
         }
     }
+    tr.setStatus(types::err(error::kIOUnknown));
+    return tr;
 }
 
-TransitionResult ReadingRequestBodyChunkedState::handleReadSize(ReadBuffer& buf, TransitionResult& tr) {
+TransitionResult ReadingRequestBodyChunkedState::handleReadSize(
+    ReadBuffer& buf, TransitionResult& tr) {
     const GetLineResult result = getLine(buf);
 
     if (result.isErr()) {
@@ -43,7 +46,7 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadSize(ReadBuffer& buf,
         return tr;
     }
 
-    const types::Option<std::string> lineOpt = result.unwrap();    
+    const types::Option<std::string> lineOpt = result.unwrap();
 
     if (lineOpt.isNone()) {
         tr.setStatus(types::ok(kSuspend));
@@ -51,7 +54,11 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadSize(ReadBuffer& buf,
     }
 
     const std::string line = lineOpt.unwrap();
-    currentChunkSize_ = utils::parseHex(line);
+    const types::Result<std::size_t, error::AppError> sizeResult = utils::parseHex(line);
+    if (sizeResult.isErr()) {
+        return tr.setStatus(types::err(sizeResult.unwrapErr())), tr;
+    }
+    currentChunkSize_ = sizeResult.unwrap();
     alreadyRead_ = 0;
 
     if (currentChunkSize_ == 0) {
@@ -64,7 +71,8 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadSize(ReadBuffer& buf,
     return tr;
 }
 
-TransitionResult ReadingRequestBodyChunkedState::handleReadData(ReadBuffer& buf, TransitionResult& tr) {
+TransitionResult ReadingRequestBodyChunkedState::handleReadData(
+    ReadBuffer& buf, TransitionResult& tr) {
     const std::size_t remain = currentChunkSize_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
 
@@ -80,19 +88,25 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadData(ReadBuffer& buf,
     body_ += chunk;
     alreadyRead_ += chunk.size();
     if (alreadyRead_ >= currentChunkSize_) {
-        phase_ = kChunkReadSize;
         const GetLineResult crlf = getLine(buf);
         if (crlf.isErr()) {
             return tr.setStatus(types::err(crlf.unwrapErr())), tr;
         }
-        if (crlf.unwrap().isNone()) {
+        const types::Option<std::string> lineOpt = crlf.unwrap();
+        if (lineOpt.isNone()) {
             return tr.setStatus(types::ok(kSuspend)), tr;
         }
+        const std::string& line = lineOpt.unwrap();
+        if (!line.empty()) {
+            return tr.setStatus(types::err(error::kBadRequest)), tr;
+        }
+        phase_ = kChunkReadSize;
     }
     return tr.setStatus(types::ok(kSuspend)), tr;
 }
 
-TransitionResult ReadingRequestBodyChunkedState::handleReadTrailer(ReadBuffer& buf, TransitionResult& tr) {
+TransitionResult ReadingRequestBodyChunkedState::handleReadTrailer(
+    ReadBuffer& buf, TransitionResult& tr) {
     const GetLineResult result = getLine(buf);
 
     if (result.isErr()) {
@@ -117,7 +131,9 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadTrailer(ReadBuffer& b
     return tr;
 }
 
-TransitionResult ReadingRequestBodyChunkedState::handleDone(TransitionResult& tr) {
+TransitionResult ReadingRequestBodyChunkedState::handleDone(
+    ReadContext& ctx, TransitionResult& tr) {
+    ctx.setBody(body_);
     tr.setBody(types::some(body_));
     tr.setStatus(types::ok(kDone));
     return tr;

@@ -47,10 +47,8 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadSize(
         return tr;
     }
     const std::string line = lineOpt.unwrap();
-    const std::string chunkSizePart = line.substr(0, line.find(';'));
-    std::cerr << "[debug] line = [" << line << "]" << std::endl;
-std::cerr << "[debug] chunkSizePart = [" << chunkSizePart << "]" << std::endl;
-
+    std::string chunkSizePart = line.substr(0, line.find(';'));
+    chunkSizePart = utils::trim(chunkSizePart);
     if (chunkSizePart.empty()) {
         return tr.setStatus(types::err(error::kBadRequest)), tr;
     }
@@ -66,7 +64,6 @@ std::cerr << "[debug] chunkSizePart = [" << chunkSizePart << "]" << std::endl;
     } else {
         phase_ = kChunkReadData;
     }
-
     tr.setStatus(types::ok(kSuspend));
     return tr;
 }
@@ -75,18 +72,21 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadData(
     ReadBuffer& buf, TransitionResult& tr) {
     const std::size_t remain = currentChunkSize_ - alreadyRead_;
     const std::size_t toRead = std::min(remain, buf.size());
-
     if (toRead == 0) {
         const ReadBuffer::LoadResult loadResult = buf.load();
         if (loadResult.isErr()) {
             return tr.setStatus(types::err(loadResult.unwrapErr())), tr;
         }
+    }
+    const std::size_t remainAfterLoad = currentChunkSize_ - alreadyRead_;
+    const std::size_t toReadAfterLoad = std::min(remainAfterLoad, buf.size());
+    if (toReadAfterLoad == 0) {
         return tr.setStatus(types::ok(kSuspend)), tr;
     }
     const std::string chunk = buf.consume(toRead);
     body_ += chunk;
     alreadyRead_ += chunk.size();
-    if (alreadyRead_ >= currentChunkSize_) {
+    if (alreadyRead_ == currentChunkSize_) {
         const GetLineResult crlf = getLine(buf);
         if (crlf.isErr()) {
             return tr.setStatus(types::err(crlf.unwrapErr())), tr;
@@ -102,6 +102,10 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadData(
         phase_ = kChunkReadSize;
     }
     return tr.setStatus(types::ok(kSuspend)), tr;
+}
+
+bool ReadingRequestBodyChunkedState::tryLoadBufferIfEmpty(ReadBuffer& buf, TransitionResult& tr) {
+    
 }
 
 TransitionResult ReadingRequestBodyChunkedState::handleReadTrailer(

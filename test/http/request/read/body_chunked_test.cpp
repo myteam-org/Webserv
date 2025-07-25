@@ -76,59 +76,57 @@ TEST(ReadingRequestBodyChunkedStateTest, ReadsChunkedBodyFully) {
 TEST(ReadingRequestBodyChunkedStateTest, ParsesChunkedBodyCorrectly) {
     DummyReader reader("5\r\nHello\r\n5\r\nWorld\r\n0\r\n\r\n");
     ReadBuffer buf(reader);
-    buf.load();
+    ASSERT_TRUE(buf.load().isOk());
 
-    http::BodyLengthConfig config = {0, 1024};
     http::ReadingRequestBodyChunkedState state;
-
     DummyResolver resolver;
     DummyContext ctx(resolver, NULL);
 
     http::TransitionResult result;
 
-    result = state.handle(ctx, buf);  // kChunkReadSize
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
+    do {
+        result = state.handle(ctx, buf);
+        ASSERT_TRUE(result.getStatus().isOk());
 
-    result = state.handle(ctx, buf);  // kChunkReadData
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
+        if (result.getStatus().unwrap() == http::IState::kSuspend) {
+            const ReadBuffer::LoadResult reload = buf.load();
+            ASSERT_TRUE(reload.isOk());
+        }
+    } while (result.getStatus().unwrap() == http::IState::kSuspend);
 
-    result = state.handle(ctx, buf);  // kChunkReadSize
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
-
-    result = state.handle(ctx, buf);  // kChunkReadData
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
-
-    result = state.handle(ctx, buf);  // kChunkReadSize (0)
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
-
-    result = state.handle(ctx, buf);  // kChunkReadTrailer
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
-
-    result = state.handle(ctx, buf);  // kChunkDone
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
+    ASSERT_TRUE(result.getBody().isSome());
     EXPECT_EQ(result.getBody().unwrap(), "HelloWorld");
 }
+
 
 TEST(ReadingRequestBodyChunkedStateTest, EndsImmediatelyWithZeroChunk) {
     DummyReader reader("0\r\n\r\n");
     ReadBuffer buf(reader);
-    buf.load();
+    ASSERT_TRUE(buf.load().isOk());
 
     http::ReadingRequestBodyChunkedState state;
     DummyResolver resolver;
     DummyContext ctx(resolver, NULL);
 
     http::TransitionResult result;
-    result = state.handle(ctx, buf);  // kChunkReadSize → 0
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
 
-    result = state.handle(ctx, buf);  // kChunkReadTrailer
-    EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
+    do {
+        result = state.handle(ctx, buf);
+        ASSERT_TRUE(result.getStatus().isOk());
 
-    result = state.handle(ctx, buf);  // kChunkDone
+        if (result.getStatus().unwrap() == http::IState::kSuspend) {
+            const ReadBuffer::LoadResult reload = buf.load();
+            ASSERT_TRUE(reload.isOk());
+        }
+    } while (result.getStatus().unwrap() == http::IState::kSuspend);
+
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kDone);
+    ASSERT_TRUE(result.getBody().isSome());
     EXPECT_EQ(result.getBody().unwrap(), "");
 }
+
+
 
 TEST(ReadingRequestBodyChunkedStateTest, FailsOnInvalidChunkSize) {
     DummyReader reader("G\r\nHello\r\n");  // Gは16進数ではない
@@ -182,30 +180,32 @@ TEST(ReadingRequestBodyChunkedStateTest, SuspendsIfTrailerMissingEmptyLine) {
 TEST(ReadingRequestBodyChunkedStateTest, IgnoresChunkExtensionAndReadsBody) {
     DummyReader reader("4;foo=bar\r\nWiki\r\n0\r\n\r\n");
     ReadBuffer buf(reader);
-    ASSERT_TRUE(buf.load().isOk());
+    DummyResolver resolver;
 
     http::ReadingRequestBodyChunkedState* state = new http::ReadingRequestBodyChunkedState();
-    DummyResolver resolver;
     http::ReadContext ctx(resolver, state);
 
     http::HandleResult result = types::ok(http::IState::kSuspend);
+
     while (result.unwrap() == http::IState::kSuspend) {
+        // 🔽 load() を先に呼ぶ
+        const ReadBuffer::LoadResult loadResult = buf.load();
+        ASSERT_TRUE(loadResult.isOk()) << "buf.load failed";
+
         result = ctx.handle(buf);
-        ASSERT_TRUE(result.isOk());
-        if (result.unwrap() == http::IState::kSuspend) {
-            const ReadBuffer::LoadResult reload = buf.load();
-            ASSERT_TRUE(reload.isOk());
+        ASSERT_TRUE(result.isOk()) << "ctx.handle failed: " << result.unwrapErr();
 
-            // 🔽 修正ポイント
-            if (reload.unwrap() == 0 && reader.eof()) break;
+        if (result.unwrap() == http::IState::kSuspend &&
+            loadResult.unwrap() == 0 &&
+            reader.eof() &&
+            buf.size() == 0) {
+            break;
         }
-}
 
+    }
 
     EXPECT_EQ(result.unwrap(), http::IState::kDone);
     EXPECT_EQ(ctx.getBody(), "Wiki");
-
-    // delete state;
 }
 
 int main(int argc, char** argv) {

@@ -89,6 +89,10 @@ const std::string& ReadContext::getRequestLine() const { return requestLine_; }
 
 const RawHeaders& ReadContext::getHeaders() const { return headers_; }
 
+void ReadContext::setBody(const std::string& body) {
+    body_ = body;
+}
+
 const std::string& ReadContext::getBody() const { return body_; }
 
 }  // namespace http

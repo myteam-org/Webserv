@@ -16,9 +16,9 @@ ReadingRequestBodyState::ReadingRequestBodyState(BodyEncodingType type,
         case kContentLength:
             activeBodyState_ = new ReadingRequestBodyLengthState(config);
             break;
-        // case kChunked:
-        //     activeBodyState_ = new ReadingRequestBodyChunkedState();
-        //     break;
+        case kChunked:
+            activeBodyState_ = new ReadingRequestBodyChunkedState();
+            break;
         default:
             activeBodyState_ = NULL;  // Handle unsupported types
             break;

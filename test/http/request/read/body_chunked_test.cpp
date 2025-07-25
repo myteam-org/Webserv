@@ -208,6 +208,35 @@ TEST(ReadingRequestBodyChunkedStateTest, IgnoresChunkExtensionAndReadsBody) {
     EXPECT_EQ(ctx.getBody(), "Wiki");
 }
 
+TEST(ReadingRequestBodyChunkedStateTest, ChunkExtensionBadCharacter) {
+    DummyReader reader("4;!@#\r\nWiki\r\n0\r\n\r\n");
+    ReadBuffer buf(reader);
+    DummyResolver resolver;
+
+    http::ReadingRequestBodyChunkedState* state = new http::ReadingRequestBodyChunkedState();
+    http::ReadContext ctx(resolver, state);
+
+    http::HandleResult result = types::ok(http::IState::kSuspend);
+
+    while (result.unwrap() == http::IState::kSuspend) {
+        const ReadBuffer::LoadResult loadResult = buf.load();
+        ASSERT_TRUE(loadResult.isOk()) << "buf.load failed";
+
+        result = ctx.handle(buf);
+        ASSERT_TRUE(result.isOk()) << "ctx.handle failed: " << result.unwrapErr();
+
+        if (result.unwrap() == http::IState::kSuspend &&
+            loadResult.unwrap() == 0 &&
+            reader.eof() &&
+            buf.size() == 0) {
+            break;
+        }
+    }
+
+    EXPECT_EQ(result.unwrap(), http::IState::kDone);
+    EXPECT_EQ(ctx.getBody(), "Wiki");
+}
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

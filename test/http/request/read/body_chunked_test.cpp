@@ -15,14 +15,17 @@ namespace {
 class DummyReader : public io::IReader {
    public:
     explicit DummyReader(const std::string& input) : input_(input), pos_(0) {}
-    types::Result<std::size_t, error::AppError> read(char* dest,
-                                                     std::size_t n) {
-        if (pos_ >= input_.size()) return types::ok(0ul);
-        std::size_t len = std::min(n, input_.size() - pos_);
+    types::Result<std::size_t, error::AppError> read(char* dest, std::size_t n) {
+        if (pos_ >= input_.size())
+            return types::ok(0ul);
+
+        // ★ フルデータ読み込み（nを無視）
+        std::size_t len = input_.size() - pos_;
         memcpy(dest, input_.data() + pos_, len);
         pos_ += len;
         return types::ok(len);
-    }
+}
+
     bool eof() { return pos_ >= input_.size(); }
 
    private:
@@ -36,6 +39,12 @@ class DummyResolver : public http::config::IConfigResolver {
         static ServerContext dummy("server");
         return dummy;
     }
+};
+
+class DummyContext : public http::ReadContext {
+   public:
+    DummyContext(http::config::IConfigResolver& r, http::IState* s)
+        : http::ReadContext(r, s) {}
 };
 
 }  // namespace
@@ -61,12 +70,6 @@ TEST(ReadingRequestBodyChunkedStateTest, ReadsChunkedBodyFully) {
     EXPECT_EQ(ctx.getBody(), "Hello");
 }
 
-
-class DummyContext : public http::ReadContext {
-   public:
-    DummyContext(http::config::IConfigResolver& r, http::IState* s)
-        : http::ReadContext(r, s) {}
-};
 
 // 追加先: test/http/request/read/body_chunked_test.cpp
 
@@ -174,6 +177,35 @@ TEST(ReadingRequestBodyChunkedStateTest, SuspendsIfTrailerMissingEmptyLine) {
     result = state.handle(
         ctx, buf);  // kChunkReadTrailer → \r\n 足りないので suspend
     EXPECT_EQ(result.getStatus().unwrap(), http::IState::kSuspend);
+}
+
+TEST(ReadingRequestBodyChunkedStateTest, IgnoresChunkExtensionAndReadsBody) {
+    DummyReader reader("4;foo=bar\r\nWiki\r\n0\r\n\r\n");
+    ReadBuffer buf(reader);
+    ASSERT_TRUE(buf.load().isOk());
+
+    http::ReadingRequestBodyChunkedState* state = new http::ReadingRequestBodyChunkedState();
+    DummyResolver resolver;
+    http::ReadContext ctx(resolver, state);
+
+    http::HandleResult result = types::ok(http::IState::kSuspend);
+    while (result.unwrap() == http::IState::kSuspend) {
+        result = ctx.handle(buf);
+        ASSERT_TRUE(result.isOk());
+        if (result.unwrap() == http::IState::kSuspend) {
+            const ReadBuffer::LoadResult reload = buf.load();
+            ASSERT_TRUE(reload.isOk());
+
+            // 🔽 修正ポイント
+            if (reload.unwrap() == 0 && reader.eof()) break;
+        }
+}
+
+
+    EXPECT_EQ(result.unwrap(), http::IState::kDone);
+    EXPECT_EQ(ctx.getBody(), "Wiki");
+
+    // delete state;
 }
 
 int main(int argc, char** argv) {

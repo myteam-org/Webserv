@@ -24,12 +24,12 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
     TransitionResult tr;
 
     if (contentLength_ == 0) {
-        return done_(std::string(""));
+        return done(std::string(""));
     }
     if (alreadyRead_ == 0 && contentLength_ > clientMaxBodySize_) {
-        return error_(tr, error::kRequestEntityTooLarge);
+        return error(tr, error::kRequestEntityTooLarge);
     }
-    if (!ensureData_(buf, tr)) {
+    if (!ensureData(buf, tr)) {
         return tr;
     }
 
@@ -37,7 +37,7 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
     const std::size_t toRead = std::min(remain, buf.size());
 
     if (toRead == 0) {
-        return suspend_(tr);
+        return suspend(tr);
     }
 
     const std::string segment = buf.consume(toRead);  // 読み取って消費
@@ -52,7 +52,7 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
     return tr;
 }
 
-TransitionResult ReadingRequestBodyLengthState::done_(const std::string& body) {
+TransitionResult ReadingRequestBodyLengthState::done(const std::string& body) {
     TransitionResult tr;
 
     tr.setBody(types::some(body));
@@ -60,12 +60,12 @@ TransitionResult ReadingRequestBodyLengthState::done_(const std::string& body) {
     return tr;
 }
 
-TransitionResult ReadingRequestBodyLengthState::error_(TransitionResult& tr, error::AppError err) {
+TransitionResult ReadingRequestBodyLengthState::error(TransitionResult& tr, error::AppError err) {
     tr.setStatus(types::err(err));
     return tr;
 }
 
-bool ReadingRequestBodyLengthState::ensureData_(ReadBuffer& buf, TransitionResult& tr) {
+bool ReadingRequestBodyLengthState::ensureData(ReadBuffer& buf, TransitionResult& tr) {
     if (buf.size() > 0) {
         return true;
     }
@@ -81,7 +81,7 @@ bool ReadingRequestBodyLengthState::ensureData_(ReadBuffer& buf, TransitionResul
     return true;
 }
 
-TransitionResult ReadingRequestBodyLengthState::suspend_(TransitionResult& tr) {
+TransitionResult ReadingRequestBodyLengthState::suspend(TransitionResult& tr) {
     tr.setStatus(types::ok(IState::kSuspend));
     return tr;
 }

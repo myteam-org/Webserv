@@ -1,8 +1,8 @@
 #pragma once
 
 #include "buffer.hpp"
-#include "state.hpp"
 #include "context.hpp"
+#include "state.hpp"
 
 namespace http {
 
@@ -14,7 +14,8 @@ class ReadingRequestBodyChunkedState : public IState {
     virtual TransitionResult handle(ReadContext& ctx, ReadBuffer& buf);
     TransitionResult handleReadSize(ReadBuffer& buf, TransitionResult& tr);
     TransitionResult handleReadData(ReadBuffer& buf, TransitionResult& tr);
-    TransitionResult handleReadTrailer(ReadBuffer& buf, TransitionResult& tr);
+    TransitionResult handleReadTrailer(ReadBuffer& buf, TransitionResult& tr,
+                                       ReadContext& ctx);
     TransitionResult handleDone(ReadContext& ctx, TransitionResult& tr);
 
    private:

@@ -20,17 +20,15 @@ TransitionResult ReadingRequestBodyChunkedState::handle(ReadContext& ctx,
                                                         ReadBuffer& buf) {
     TransitionResult tr;
 
-    while (true) {
-        switch (phase_) {
-            case kChunkReadSize:
-                return handleReadSize(buf, tr);
-            case kChunkReadData:
-                return handleReadData(buf, tr);
-            case kChunkReadTrailer:
-                return handleReadTrailer(buf, tr);
-            case kChunkDone:
-                return handleDone(ctx, tr);
-        }
+    switch (phase_) {
+        case kChunkReadSize:
+            return handleReadSize(buf, tr);
+        case kChunkReadData:
+            return handleReadData(buf, tr);
+        case kChunkReadTrailer:
+            return handleReadTrailer(buf, tr, ctx);
+        case kChunkDone:
+            return handleDone(ctx, tr);
     }
     tr.setStatus(types::err(error::kIOUnknown));
     return tr;
@@ -39,27 +37,30 @@ TransitionResult ReadingRequestBodyChunkedState::handle(ReadContext& ctx,
 TransitionResult ReadingRequestBodyChunkedState::handleReadSize(
     ReadBuffer& buf, TransitionResult& tr) {
     const GetLineResult result = getLine(buf);
-
     if (result.isErr()) {
         tr.setStatus(types::err(result.unwrapErr()));
         return tr;
     }
-
     const types::Option<std::string> lineOpt = result.unwrap();
-
     if (lineOpt.isNone()) {
         tr.setStatus(types::ok(kSuspend));
         return tr;
     }
-
     const std::string line = lineOpt.unwrap();
-    const types::Result<std::size_t, error::AppError> sizeResult = utils::parseHex(line);
+    const std::string chunkSizePart = line.substr(0, line.find(';'));
+    std::cerr << "[debug] line = [" << line << "]" << std::endl;
+std::cerr << "[debug] chunkSizePart = [" << chunkSizePart << "]" << std::endl;
+
+    if (chunkSizePart.empty()) {
+        return tr.setStatus(types::err(error::kBadRequest)), tr;
+    }
+    const types::Result<std::size_t, error::AppError> sizeResult =
+        utils::parseHex(chunkSizePart);
     if (sizeResult.isErr()) {
         return tr.setStatus(types::err(sizeResult.unwrapErr())), tr;
     }
     currentChunkSize_ = sizeResult.unwrap();
     alreadyRead_ = 0;
-
     if (currentChunkSize_ == 0) {
         phase_ = kChunkReadTrailer;
     } else {
@@ -82,7 +83,6 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadData(
         }
         return tr.setStatus(types::ok(kSuspend)), tr;
     }
-
     const std::string chunk = buf.consume(toRead);
     body_ += chunk;
     alreadyRead_ += chunk.size();
@@ -105,7 +105,7 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadData(
 }
 
 TransitionResult ReadingRequestBodyChunkedState::handleReadTrailer(
-    ReadBuffer& buf, TransitionResult& tr) {
+    ReadBuffer& buf, TransitionResult& tr, ReadContext& ctx) {
     const GetLineResult result = getLine(buf);
 
     if (result.isErr()) {
@@ -124,6 +124,7 @@ TransitionResult ReadingRequestBodyChunkedState::handleReadTrailer(
 
     if (line.empty()) {
         phase_ = kChunkDone;
+        return handleDone(ctx, tr);
     }
 
     tr.setStatus(types::ok(kSuspend));

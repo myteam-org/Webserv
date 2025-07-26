@@ -4,11 +4,13 @@
 #include "state.hpp"
 #include "body.hpp"
 #include "context.hpp"
+#include "length_body.hpp"
 #include "utils.hpp"
 #include "header_parsing_utils.hpp"
 #include "utils/types/error.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"
+#include "config/context/serverContext.hpp"
 #include "config/context/serverContext.hpp"
 
 namespace http {
@@ -22,7 +24,7 @@ ReadingRequestHeadersState::~ReadingRequestHeadersState() {}
 // 3. 必要なら次の状態(ReadingRequestBodyState)へ遷移させる
 // 4. TransitionResultにヘッダーや次のステートをセットして返す
 
-TransitionResult ReadingRequestHeadersState::handle(ReadContext& /*ctx*/, ReadBuffer& buf) {
+TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx, ReadBuffer& buf) {
     TransitionResult tr;
     RawHeaders headers;
 
@@ -39,6 +41,9 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& /*ctx*/, ReadBu
 
         const std::string line = lineOpt.unwrap();
         if (line.empty()) {
+            const std::string host = (headers, "Host");
+            const ServerContext& server = ctx.getConfigResolver().choseServer(host);
+            ctx.setServer(server);
             tr.setHeaders(types::some(headers));
             tr.setStatus(types::ok(kDone));
             return tr;

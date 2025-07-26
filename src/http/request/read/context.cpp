@@ -63,7 +63,7 @@ void ReadContext::changeState(IState* next) {
 }
 
 types::Option<IState*> ReadContext::createReadingBodyState(
-    const RawHeaders& headers) {
+    const RawHeaders& headers) const {
     const BodyEncodingType type = parser::detectEncoding(headers);
     if (type == kNone) {
         return types::none<IState*>();

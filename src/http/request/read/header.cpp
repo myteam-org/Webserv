@@ -11,7 +11,7 @@
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"
 #include "config/context/serverContext.hpp"
-#include "config/context/serverContext.hpp"
+#include "http/config/config_resolver.hpp"
 
 namespace http {
 
@@ -41,7 +41,7 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx, ReadBuffer
 
         const std::string line = lineOpt.unwrap();
         if (line.empty()) {
-            const std::string host = (headers, "Host");
+            const std::string host = parser::extractHeader(headers, "Host");
             const ServerContext& server = ctx.getConfigResolver().choseServer(host);
             ctx.setServer(server);
             tr.setHeaders(types::some(headers));

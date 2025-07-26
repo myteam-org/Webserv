@@ -23,6 +23,9 @@ class ReadContext {
   void setBody(const std::string& body);
   const std::string& getBody() const;
   types::Option<IState*> createReadingBodyState(const RawHeaders& headers);
+  void setServer(const ServerContext& server);
+  const ServerContext& getServer() const;
+  bool hasServer() const;
 
  private:
   IState* state_;
@@ -31,8 +34,7 @@ class ReadContext {
   RawHeaders headers_;
   std::string body_;
   size_t maxBodySize_ ;
-
-
+  const ServerContext* server_;
 };
 
 }  // namespace http

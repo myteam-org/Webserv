@@ -95,6 +95,12 @@ void ReadContext::setBody(const std::string& body) {
 
 const std::string& ReadContext::getBody() const { return body_; }
 
+void ReadContext::setServer(const ServerContext& server) { server_ = &server; }
+
+const ServerContext& ReadContext::getServer() const { return *server_; }
+
+bool ReadContext::hasServer() const { return server_ != NULL; }
+
 }  // namespace http
 
 // HTTPリクエストの読み取り処理におけるstateマシンの実行環境

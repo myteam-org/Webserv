@@ -18,4 +18,6 @@ static const int MAX_PAGE_NUM = 505;
 
 namespace Validator {
 bool number(const std::string& number, int type);
+bool isValidIndexFile(const std::string& indexPage);
+bool isValidRoot(const std::string& root);
 }  // namespace Validator

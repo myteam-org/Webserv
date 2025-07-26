@@ -24,3 +24,26 @@ bool Validator::number(const std::string& number, int type) {
     }
     return (true);
 }
+
+bool Validator::isValidIndexFile(const std::string& indexFile) {
+    if (indexFile.empty()) {
+        return false;
+    }
+    if (indexFile.find(".html") == std::string::npos &&
+        indexFile.find(".htm") == std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
+bool Validator::isValidRoot(const std::string& root) {
+    if (root.empty()) {
+        return false;
+    }
+
+    struct stat s;
+    if (stat(root.c_str(), &s) != 0 || !S_ISDIR(s.st_mode)) {
+        return false;
+    }
+    return true;
+}

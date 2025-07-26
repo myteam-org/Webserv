@@ -166,7 +166,8 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
         const std::string text = this->tokens_[index].getText();
         const int type = this->tokens_[index].getType();
         const int lineNum = this->tokens_[index].getLineNumber();
-        if (type == SERVER || type == LOCATION || (type >= LISTEN && type <= MAX_SIZE)) {
+        if (type == SERVER || type == LOCATION ||
+            (type >= LISTEN && type <= MAX_SIZE)) {
             throwErr(text, ": server or location in location error: line",
                      lineNum);
         } else if (type == BRACE) {
@@ -198,6 +199,10 @@ void ConfigParser::setRoot_(LocationContext& location, size_t& index) {
     DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
 
     if (this->tokens_[index].getType() == VALUE) {
+        if (!Validator::isValidRoot(root)) {
+            throwErr(root, ": Invalid root directory: line ",
+                     this->tokens_[index].getLineNumber());
+        }
         documentRootConfig.setRoot(root);
     } else {
         throwErr(this->tokens_[index].getText(), ": Root value error: line ",
@@ -236,6 +241,10 @@ void ConfigParser::setIndex_(LocationContext& location, size_t& index) {
     DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
 
     if (this->tokens_[index].getType() == VALUE) {
+        if (!Validator::isValidIndexFile(indexPage)) {
+            throwErr(indexPage, " : Invalid index file: line ",
+                     this->tokens_[index].getLineNumber());
+        }
         documentRootConfig.setIndex(indexPage);
     } else {
         throwErr(this->tokens_[index].getText(),

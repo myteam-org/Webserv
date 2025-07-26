@@ -68,8 +68,8 @@ types::Option<IState*> ReadContext::createReadingBodyState(
     if (type == kNone) {
         return types::none<IState*>();
     }
-    const std::string host = parser::extractHeader(headers, "Host");
-    const ServerContext& config = resolver_.choseServer(host);
+
+    const ServerContext& config = this->getServer();
 
     BodyLengthConfig bodyConfig;
     bodyConfig.contentLength = parser::extractContentLength(headers);

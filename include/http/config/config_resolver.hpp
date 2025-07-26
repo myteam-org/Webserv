@@ -13,9 +13,13 @@ class IConfigResolver {
 
 class ConfigResolver : public IConfigResolver {
    public:
-    explicit ConfigResolver(const std::vector<ServerContext>& servers) : servers_(servers) {}
+    explicit ConfigResolver(const std::vector<ServerContext>& servers)
+        : servers_(servers) {}
 
     const ServerContext& choseServer(const std::string& host) const {
+        const std::size_t colon = host.find(':');
+        const std::string& hostname =
+            (colon != std::string::npos) ? host.substr(0, colon) : host;
         for (std::size_t i = 0; i < servers_.size(); ++i) {
             if (servers_[i].getHost() == host) {
                 return servers_[i];
@@ -27,5 +31,5 @@ class ConfigResolver : public IConfigResolver {
    private:
     std::vector<ServerContext> servers_;
 };
-} // namespace config
-} // namespace http
+}  // namespace config
+}  // namespace http

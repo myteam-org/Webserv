@@ -1,32 +1,38 @@
 #pragma once
 
-#include "state.hpp"
+#include "http/request/read/state.hpp"
 #include "http/request/read/raw_headers.hpp"
+#include "http/config/config_resolver.hpp"
 
 namespace http {
 
-class IConfigResolver;
+class IState;
 
 class ReadContext {
  public:
-  ReadContext(IConfigResolver& resolver, IState* initial);
+  ReadContext(config::IConfigResolver& resolver, IState* initial);
   ~ReadContext();
 
   HandleResult handle(ReadBuffer& buf);
   void changeState(IState* next);
 
   const IState* getState() const;
-  IConfigResolver& getConfigResolver() const;
+  config::IConfigResolver& getConfigResolver() const;
   const std::string& getRequestLine() const;
   const RawHeaders& getHeaders() const;
+  void setBody(const std::string& body);
   const std::string& getBody() const;
+  types::Option<IState*> createReadingBodyState(const RawHeaders& headers);
 
  private:
   IState* state_;
-  IConfigResolver& resolver_;
+  http::config::IConfigResolver& resolver_;
   std::string requestLine_;
   RawHeaders headers_;
   std::string body_;
+  size_t maxBodySize_ ;
+
+
 };
 
 }  // namespace http

@@ -24,7 +24,7 @@ namespace http {
     HttpMethod getMethod() const;
     const std::string &getRequestTarget() const;
     const std::string &getHttpVersion() const;
-    types::Option<std::string> getHeader(const std::string &key) const;
+    static types::Option<std::string> getHeader(const std::string &key);
     const std::string &getBody() const;
 
   private:

@@ -1,10 +1,12 @@
 #include "line.hpp"
+#include "context.hpp"
 #include "state.hpp"
 #include "header.hpp"
 #include "utils/types/try.hpp"
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
+#include "http/request/read/header.hpp"
 
 namespace http {
 
@@ -21,9 +23,10 @@ ReadingRequestLineState::~ReadingRequestLineState() {}
 // 5. 正常に行が読めた時
 //    ・TransitionResultに requestLine と status をセットしreturnする
 
-TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
+TransitionResult ReadingRequestLineState::handle(ReadContext& ctx, ReadBuffer& buf) {
   TransitionResult tr;
 
+  (void)ctx;
   const GetLineResult result = getLine(buf);
   if (!result.canUnwrap()) {
     tr.setStatus(types::err(result.unwrapErr()));
@@ -44,7 +47,7 @@ TransitionResult ReadingRequestLineState::handle(ReadBuffer& buf) {
   }
 
   tr.setRequestLine(types::Option<std::string>(types::some(line)));
-  // tr.setNextState(new ReadingHeadersState());
+  tr.setNextState(new ReadingRequestHeadersState());
   tr.setStatus(types::ok(IState::kDone));
   return tr;
 }

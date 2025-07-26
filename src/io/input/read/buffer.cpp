@@ -63,6 +63,9 @@ ReadBuffer::LoadResult ReadBuffer::load() {
     return OK(bytesRead);
 }
 
+size_t ReadBuffer::size() const {
+    return buf_.size();
+}
 // 低レベルなリーダーIReaderからバッファ付きで文字列を読み取るラッパー
 // ・ReadBufferはIReader(例えばFdReader)のラッパー
 // ・内部にstd::vector<char> buf_を持ち、読み込み済みのデータを一時保持する

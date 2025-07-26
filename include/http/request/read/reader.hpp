@@ -5,12 +5,14 @@
 
 namespace http {
 
-class IConfigResolver;
+  namespace config {
+    class IConfigResolver;
+  }
 class Request;
 
 class RequestReader {
  public:
-  explicit RequestReader(IConfigResolver& resolver);
+  explicit RequestReader(config::IConfigResolver& resolver);
 
   typedef types::Result<types::Option<Request>, error::AppError>
       ReadRequestResult;

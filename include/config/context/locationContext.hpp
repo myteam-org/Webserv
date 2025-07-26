@@ -6,6 +6,9 @@
 #include "documentRootConfig.hpp"
 #include "parser.hpp"
 #include "token.hpp"
+#include "method.hpp"
+
+typedef std::vector<LocationContext> LocationContextList;
 
 class LocationContext {
    public:
@@ -21,6 +24,7 @@ class LocationContext {
     const std::string& getRedirect() const;
     DocumentRootConfig& getDocumentRootConfig();
     const DocumentRootConfig& getDocumentRootConfig() const;
+    std::vector<http::HttpMethod> getAllowedMethods() const;
 
    private:
     static const int METHOD_COUNT = 3;

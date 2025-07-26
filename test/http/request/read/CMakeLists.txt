@@ -1,3 +1,4 @@
+enable_testing()
 cmake_minimum_required(VERSION 3.14)
 project(getline_test CXX)
 
@@ -31,8 +32,30 @@ target_link_libraries(context_test
     PRIVATE webserv_lib gtest
 )
 
+add_executable(header_test header_test.cpp)
+target_link_libraries(header_test
+    PRIVATE webserv_lib gtest
+)
+
+add_executable(body_test body_test.cpp)
+target_link_libraries(body_test
+    PRIVATE webserv_lib gtest
+)
+
+add_executable(body_length_test body_length_test.cpp)
+target_link_libraries(body_length_test
+    PRIVATE webserv_lib gtest gtest_main)
+
+add_executable(body_chunked_test body_chunked_test.cpp)
+target_link_libraries(body_chunked_test
+    PRIVATE webserv_lib gtest gtest_main)
+
 include(GoogleTest)
 gtest_discover_tests(getline_test)
 gtest_discover_tests(reader_test)
 gtest_discover_tests(line_test)
 gtest_discover_tests(context_test)
+gtest_discover_tests(header_test)
+gtest_discover_tests(body_test) 
+gtest_discover_tests(body_length_test)
+gtest_discover_tests(body_chunked_test)

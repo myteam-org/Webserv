@@ -14,7 +14,7 @@
 
 namespace http {
 
-RequestReader::RequestReader(IConfigResolver& resolver)
+RequestReader::RequestReader(config::IConfigResolver& resolver)
     : ctx_(resolver, new ReadingRequestLineState()) {
 }
 

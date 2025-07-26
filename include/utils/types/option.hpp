@@ -2,7 +2,6 @@
 #include <stdexcept>
 
 namespace types {
-
     template<typename T>
     struct Some {
     private:
@@ -66,10 +65,22 @@ namespace types {
     };
 
     template<typename T>
+    bool operator==(const Option<T>& lhs, const Option<T>& rhs) {
+        if (lhs.isNone() && rhs.isNone()) {
+            return true;
+        }
+        if (lhs.isSome() && rhs.isSome()) {
+            return lhs.unwrap() == rhs.unwrap();
+        }
+        return false;
+    }
+
+    template<typename T>
 	Option<T> some(const T& val) { return Option<T>(Some<T>(val)); }
 
 	template<typename T>
 	Option<T> none() { return Option<T>(None()); }
+
 } // namespace types
 
 // C++ における Rust風の Option<T> 型 を実装したもの

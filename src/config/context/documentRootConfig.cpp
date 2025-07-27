@@ -1,7 +1,7 @@
 #include "documentRootConfig.hpp"
 
 DocumentRootConfig::DocumentRootConfig()
-    : root_(), index_("index.html"), autoIndex_(OFF), cgiExtensions_(OFF) {
+    : index_("index.html"), autoIndex_(OFF), cgiExtensions_(OFF) {
 }
 
 DocumentRootConfig::~DocumentRootConfig() {
@@ -40,8 +40,5 @@ OnOff DocumentRootConfig::getCgiExtensions() const {
 }
 
 bool DocumentRootConfig::isAutoindexEnabled() const {
-    if (autoIndex_ == ON) {
-        return true;
-    }
-    return false;
+    return autoIndex_ == ON;
 }

@@ -7,11 +7,6 @@
 
 namespace http {
 
-// struct BodyLengthConfig {
-//     std::size_t contentLength;
-//     std::size_t clientMaxBodySize;
-// };
-
 class ReadingRequestBodyLengthState : public IState {
    public:
     explicit ReadingRequestBodyLengthState(const BodyLengthConfig& config);

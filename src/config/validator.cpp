@@ -1,5 +1,7 @@
 #include "validator.hpp"
 
+#include <unistd.h>
+
 #include <stdexcept>
 
 #include "token.hpp"
@@ -30,7 +32,7 @@ bool Validator::isValidIndexFile(const std::string& indexFile) {
         return false;
     }
     return indexFile.find(".html") != std::string::npos ||
-             indexFile.find(".htm") != std::string::npos;
+           indexFile.find(".htm") != std::string::npos;
 }
 
 bool Validator::isValidRoot(const std::string& root) {
@@ -39,5 +41,6 @@ bool Validator::isValidRoot(const std::string& root) {
     }
 
     struct stat sta;
-    return stat(root.c_str(), &sta) == 0 && S_ISDIR(sta.st_mode);
+    return stat(root.c_str(), &sta) == 0 && S_ISDIR(sta.st_mode) &&
+           access(root.c_str(), R_OK | X_OK) == 0;
 }

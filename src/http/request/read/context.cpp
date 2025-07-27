@@ -10,7 +10,7 @@
 namespace http {
 
 ReadContext::ReadContext(config::IConfigResolver& resolver, IState* initial)
-    : state_(initial), resolver_(resolver) {}
+    : state_(initial), resolver_(resolver), server_(NULL) {}
 
 ReadContext::~ReadContext() { delete state_; }
 

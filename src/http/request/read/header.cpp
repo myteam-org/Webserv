@@ -64,7 +64,12 @@ TransitionResult ReadingRequestHeadersState::handleHeadersComplete(
         tr.setStatus(types::err(result.unwrapErr()));
         return tr;
     }
-    ctx.setServer(*result.unwrap());
+    const ServerContext* serverContext = result.unwrap();
+    if (serverContext == NULL) {
+        tr.setStatus(types::err(error::kIOUnknown));
+        return tr;
+    }
+    ctx.setServer(*serverContext);
     tr.setHeaders(types::some(headers));
     tr.setStatus(types::ok(kDone));
     return tr;

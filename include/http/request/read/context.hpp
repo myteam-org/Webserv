@@ -26,8 +26,6 @@ class ReadContext {
   void setServer(const ServerContext& server);
   const ServerContext& getServer() const;
   bool hasServer() const;
-  void setLocation();
-  void setDocumentRootConfig();
 
  private:
   IState* state_;
@@ -37,8 +35,6 @@ class ReadContext {
   std::string body_;
   size_t maxBodySize_ ;
   const ServerContext* server_;
-  LocationContext* location_;
-  DocumentRootConfig* rootConfig_;
 };
 
 }  // namespace http

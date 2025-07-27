@@ -101,11 +101,6 @@ const ServerContext& ReadContext::getServer() const { return *server_; }
 
 bool ReadContext::hasServer() const { return server_ != NULL; }
 
-// void ReadContext::setLocation() {
-//     const std::string url = parser::extractUri(requestLine_);
-//     const std::vector<LocationContext>&
-// }
-
 }  // namespace http
 
 // HTTPリクエストの読み取り処理におけるstateマシンの実行環境

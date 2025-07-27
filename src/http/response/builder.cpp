@@ -25,7 +25,9 @@ namespace http {
         return *this;
     }
 
-    ResponseBuilder &ResponseBuilder::header([[maybe_unused]] const std::string &name, [[maybe_unused]] const std::string &value) { // NOLINT
+    ResponseBuilder &ResponseBuilder::header(const std::string &name, const std::string &value) { // NOLINT
+        (void)name;
+        (void)value;
         // headers_[name] = value;
         return *this;
     }

@@ -29,11 +29,8 @@ bool Validator::isValidIndexFile(const std::string& indexFile) {
     if (indexFile.empty()) {
         return false;
     }
-    if (indexFile.find(".html") == std::string::npos &&
-        indexFile.find(".htm") == std::string::npos) {
-        return false;
-    }
-    return true;
+    return indexFile.find(".html") != std::string::npos ||
+             indexFile.find(".htm") != std::string::npos;
 }
 
 bool Validator::isValidRoot(const std::string& root) {
@@ -41,9 +38,6 @@ bool Validator::isValidRoot(const std::string& root) {
         return false;
     }
 
-    struct stat s;
-    if (stat(root.c_str(), &s) != 0 || !S_ISDIR(s.st_mode)) {
-        return false;
-    }
-    return true;
+    struct stat sta;
+    return stat(root.c_str(), &sta) != 0 && !S_ISDIR(sta.st_mode);
 }

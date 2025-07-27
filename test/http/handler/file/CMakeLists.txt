@@ -1,0 +1,18 @@
+add_executable(delete_test delete_test.cpp)
+add_executable(redirect_test redirect_test.cpp)
+add_executable(static_test static_test.cpp)
+
+# 依存関係を追加
+add_dependencies(delete_test webserv_lib)
+add_dependencies(redirect_test webserv_lib)
+add_dependencies(static_test webserv_lib)
+
+# ライブラリをリンク
+target_link_libraries(delete_test PRIVATE webserv_lib gtest_main gmock_main)
+target_link_libraries(redirect_test PRIVATE webserv_lib gtest_main gmock_main)
+target_link_libraries(static_test PRIVATE webserv_lib gtest_main gmock_main)
+
+# テストを検出
+gtest_discover_tests(delete_test)
+gtest_discover_tests(redirect_test)
+gtest_discover_tests(static_test)

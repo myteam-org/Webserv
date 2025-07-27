@@ -28,3 +28,12 @@ target_link_libraries(virtual_server_test
 
 include(GoogleTest)
 gtest_discover_tests(virtual_server_test)
+
+add_executable(mime_test mime_test.cpp)
+
+target_link_libraries(mime_test
+    PRIVATE webserv_lib gtest gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(mime_test)

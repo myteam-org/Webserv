@@ -1,6 +1,5 @@
 #pragma once
 #include "handler.hpp"
-#include "delete.hpp"
 #include "config/config.hpp"
 
 namespace http {

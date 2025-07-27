@@ -39,5 +39,5 @@ bool Validator::isValidRoot(const std::string& root) {
     }
 
     struct stat sta;
-    return stat(root.c_str(), &sta) != 0 && !S_ISDIR(sta.st_mode);
+    return stat(root.c_str(), &sta) == 0 && S_ISDIR(sta.st_mode);
 }

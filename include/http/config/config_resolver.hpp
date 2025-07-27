@@ -33,28 +33,6 @@ class ConfigResolver : public IConfigResolver {
         return types::err(error::kBadRequest);
     }
 
-    // types::Result<const LocationContext*, error::AppError> choseLocation(
-    //     const ServerContext& server, std::string& uri) const {
-    //     const std::vector<LocationContext>& locations = server.getLocation();
-    //     const LocationContext* bestMatch = NULL;
-    //     std::size_t longest = 0;
-
-    //     for (std::size_t i = 0; i < locations.size(); ++i) {
-    //         const std::string& path = locations[i].getPath();
-    //         if (uri.compare(0, path.size(), path) == 0) {
-    //             if (path.size() > longest) {
-    //                 longest = path.size();
-    //                 bestMatch = &locations[i];
-    //             }
-    //             return types::ok(&locations[i]);
-    //         }
-    //     }
-    //     if (bestMatch) {
-    //         return types::ok(bestMatch);
-    //     }
-    //     return types::err(error::kBadRequest);
-    // }
-
    private:
     std::vector<ServerContext> servers_;
 };

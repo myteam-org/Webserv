@@ -32,30 +32,42 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
     while (true) {
         const GetLineResult result = getLine(buf);
         if (result.isErr()) {
-            return tr.setStatus(types::err(result.unwrapErr())), tr;
+            tr.setStatus(types::err(result.unwrapErr()));
+            return tr;
         }
         const types::Option<std::string> lineOpt = result.unwrap();
         if (lineOpt.isNone()) {
-            return tr.setStatus(types::ok(kSuspend)), tr;
+            tr.setStatus(types::ok(kSuspend));
+            return tr;
         }
         const std::string line = lineOpt.unwrap();
         if (line.empty()) {
-            const std::string host = parser::extractHeader(headers, "Host");
-            const ServerContext& server =
-                ctx.getConfigResolver().choseServer(host);
-            ctx.setServer(server);
-            tr.setHeaders(types::some(headers));
-            tr.setStatus(types::ok(kDone));
-            return tr;
+            return handleHeadersComplete(ctx, tr, headers);
         }
         const std::string::size_type colon = line.find(':');
         if (colon == std::string::npos) {
-            return tr.setStatus(types::err(error::kIOUnknown)), tr;
+            tr.setStatus(types::err(error::kIOUnknown));
+            return tr;
         }
         const std::string key = line.substr(0, colon);
         const std::string value = line.substr(colon + 1);
         headers.insert(std::make_pair(key, value));
     }
+}
+
+TransitionResult ReadingRequestHeadersState::handleHeadersComplete(
+    ReadContext& ctx, TransitionResult& tr, const RawHeaders& headers) {
+    const std::string host = parser::extractHeader(headers, "Host");
+    const types::Result<const ServerContext*, error::AppError> result =
+        ctx.getConfigResolver().choseServer(host);
+    if (result.isErr()) {
+        tr.setStatus(types::err(result.unwrapErr()));
+        return tr;
+    }
+    ctx.setServer(*result.unwrap());
+    tr.setHeaders(types::some(headers));
+    tr.setStatus(types::ok(kDone));
+    return tr;
 }
 
 }  // namespace http

@@ -38,11 +38,12 @@ class DummyReader : public io::IReader {
 };
 
 class DummyResolver : public http::config::IConfigResolver {
- public:
-  const ServerContext& choseServer(const std::string&) const {
-    static ServerContext dummy("server");
-    return dummy;
-  }
+public:
+    types::Result<const ServerContext*, error::AppError>
+    choseServer(const std::string&) const {
+        static ServerContext dummy("server");
+        return types::ok<const ServerContext*>(&dummy);  // ポインタを返す
+    }
 };
 
 }  // namespace

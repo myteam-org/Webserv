@@ -1,5 +1,6 @@
 #include "body.hpp"
 
+#include "length_body.hpp"
 #include "raw_headers.hpp"
 #include "state.hpp"
 #include "utils.hpp"

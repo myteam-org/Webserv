@@ -34,9 +34,10 @@ private:
 
 class DummyResolver : public http::config::IConfigResolver {
 public:
-    const ServerContext& choseServer(const std::string&) const {
+    types::Result<const ServerContext*, error::AppError>
+    choseServer(const std::string&) const {
         static ServerContext dummy("server");
-        return dummy;
+        return types::ok<const ServerContext*>(&dummy);  // ポインタを返す
     }
 };
 

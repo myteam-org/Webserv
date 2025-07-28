@@ -1,14 +1,11 @@
 #pragma once
 
+#include "body.hpp"
+#include "read/utils.hpp"
 #include "buffer.hpp"
 #include "state.hpp"
 
 namespace http {
-
-struct BodyLengthConfig {
-    std::size_t contentLength;
-    std::size_t clientMaxBodySize;
-};
 
 class ReadingRequestBodyLengthState : public IState {
    public:

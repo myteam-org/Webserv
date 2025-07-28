@@ -10,7 +10,7 @@
 namespace http {
 
 ReadContext::ReadContext(config::IConfigResolver& resolver, IState* initial)
-    : state_(initial), resolver_(resolver) {}
+    : state_(initial), resolver_(resolver), server_(NULL) {}
 
 ReadContext::~ReadContext() { delete state_; }
 
@@ -63,13 +63,13 @@ void ReadContext::changeState(IState* next) {
 }
 
 types::Option<IState*> ReadContext::createReadingBodyState(
-    const RawHeaders& headers) {
+    const RawHeaders& headers) const {
     const BodyEncodingType type = parser::detectEncoding(headers);
     if (type == kNone) {
         return types::none<IState*>();
     }
-    const std::string host = parser::extractHeader(headers, "Host");
-    const ServerContext& config = resolver_.choseServer(host);
+
+    const ServerContext& config = this->getServer();
 
     BodyLengthConfig bodyConfig;
     bodyConfig.contentLength = parser::extractContentLength(headers);
@@ -94,6 +94,12 @@ void ReadContext::setBody(const std::string& body) {
 }
 
 const std::string& ReadContext::getBody() const { return body_; }
+
+void ReadContext::setServer(const ServerContext& server) { server_ = &server; }
+
+const ServerContext& ReadContext::getServer() const { return *server_; }
+
+bool ReadContext::hasServer() const { return server_ != NULL; }
 
 }  // namespace http
 

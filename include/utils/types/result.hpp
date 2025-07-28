@@ -23,6 +23,9 @@ public:
 };
 
 namespace types {
+
+    struct Unit {}; // Rustに相当
+
     template<typename T, typename E>
     class Result {
         Ok<T>* ok_;

@@ -12,6 +12,7 @@
 #include "utils/types/error.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"
+#include "utils/string.hpp"
 
 namespace http {
 
@@ -49,8 +50,8 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
             tr.setStatus(types::err(error::kIOUnknown));
             return tr;
         }
-        const std::string key = line.substr(0, colon);
-        const std::string value = line.substr(colon + 1);
+        const std::string key = utils::trim(line.substr(0, colon));
+        const std::string value = utils::trim(line.substr(colon + 1));
         headers.insert(std::make_pair(key, value));
     }
 }

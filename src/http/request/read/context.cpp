@@ -85,7 +85,15 @@ config::IConfigResolver& ReadContext::getConfigResolver() const {
     return resolver_;
 }
 
+void ReadContext::setRequestLine(const std::string& line) {
+    requestLine_ = line;
+}
+
 const std::string& ReadContext::getRequestLine() const { return requestLine_; }
+
+void ReadContext::setHeaders(const RawHeaders& headers) {
+    headers_ = headers;
+}
 
 const RawHeaders& ReadContext::getHeaders() const { return headers_; }
 

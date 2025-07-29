@@ -10,3 +10,4 @@ target_link_libraries(request_test PRIVATE webserv_lib gtest)
 gtest_discover_tests(request_test)
 
 add_subdirectory(read)
+add_subdirectory(parse)

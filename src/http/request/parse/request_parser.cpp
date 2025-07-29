@@ -1,17 +1,19 @@
 #include "request_parser.hpp"
+
+#include <sstream>
+#include <string>
+
+#include "context.hpp"
 #include "http_request.hpp"
 #include "locationContext.hpp"
-#include "context.hpp"
 #include "utils/string.hpp"
-#include <string>
-#include <sstream>
-
+#include "utils/types/either.hpp"
+#include "utils/types/result.hpp"
 
 namespace http {
 namespace parse {
 
-RequestParser::RequestParser(const ReadContext& ctx) 
-    : ctx_(ctx) {}
+RequestParser::RequestParser(const ReadContext& ctx) : ctx_(ctx) {}
 
 RequestParser::~RequestParser() {}
 
@@ -88,16 +90,40 @@ bool RequestParser::validateTransferEncoding() const {
 
 types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
     const std::string& raw = ctx_.getBody();
-    body_.assign(raw.begin(), raw.end()); // バイナリ対応のため vector<char> に詰め直す
+    body_.assign(raw.begin(),
+                 raw.end());  // バイナリ対応のため vector<char> に詰め直す
     return OK(types::Unit());
 }
 
-HttpRequest RequestParser::buildRequest() const {
+types::Result<HttpRequest, error::AppError> RequestParser::buildRequest() const {
+    std::string uri = uri_;
+    types::Result<const LocationContext*, error::AppError> result =
+        choseLocation(uri);
+    if (result.isErr()) {
+        return ERR(error::kBadLocationContext);
+    }
+    const LocationContext* location = result.unwrap();
 
+    std::string queryString;
+    std::string pathOnly = uri;
+    const std::size_t queryMarkPos = uri.find('?');
+    if (queryMarkPos != std::string::npos) {
+        pathOnly = uri.substr(0, queryMarkPos);
+        queryString = uri.substr(queryMarkPos + 1);
+    }
+    HttpRequest req;
+    // req.setMethod(method_);
+    // req.setUri(pathOnly);
+    // req.setVersion(version_);
+    // req.setHeaders(headers_);
+    // req.setBody(body_);
+    // req.setLocation(*location);
+    // req.setQeryString(queryString);
+    return OK(req);
 }
 
-types::Result<const LocationContext*, error::AppError> RequestParser::choseLocation(
-    std::string& uri) {
+types::Result<const LocationContext*, error::AppError>
+RequestParser::choseLocation(const std::string& uri) const {
     const ServerContext& server = ctx_.getServer();
     const std::vector<LocationContext>& locations = server.getLocation();
     const LocationContext* bestMatch = NULL;
@@ -118,6 +144,5 @@ types::Result<const LocationContext*, error::AppError> RequestParser::choseLocat
     return types::err(error::kBadRequest);
 }
 
-} // namespace parse
-}
-
+}  // namespace parse
+}  // namespace http

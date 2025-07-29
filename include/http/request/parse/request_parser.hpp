@@ -1,8 +1,8 @@
 #pragma once
 
-#include "utils/types/result.hpp"
-#include "utils/types/error.hpp"
 #include "raw_headers.hpp"
+#include "utils/types/error.hpp"
+#include "utils/types/result.hpp"
 
 class ReadContext;
 class RequestParser;
@@ -12,38 +12,38 @@ class Request;
 namespace http {
 namespace parse {
 
-    class RequestParser {
-       public:
-        explicit RequestParser(const ReadContext& ctx);
-        ~RequestParser();
-    
-        types::Result<Request, error::AppError> parseRequest();
+class RequestParser {
+   public:
+    explicit RequestParser(const ReadContext& ctx);
+    ~RequestParser();
 
-       private:
-        const ReadContext& ctx_;
-        std::string method_;
-        std::string uri_;
-        std::string version_;
+    types::Result<Request, error::AppError> parseRequest();
 
-        RawHeaders headers_;
+   private:
+    const ReadContext& ctx_;
+    std::string method_;
+    std::string uri_;
+    std::string version_;
 
-        std::vector<char> body_;
+    RawHeaders headers_;
 
-        const LocationContext* location_;
-        const ServerContext* server_;
-        const DocumentRootConfig* documentRoot_;
+    std::vector<char> body_;
 
-        types::Result<types::Unit, error::AppError> parseRequestLine();
-        types::Result<types::Unit, error::AppError> parseHeaders();
-        bool checkMissingHost() const;
-        bool validateContentLength() const;
-        bool containNonDigit(const std::string& val) const;
-        bool validateTransferEncoding() const;
-        types::Result<types::Unit, error::AppError> parseBody();
-        Request buildRequest() const;
-        types::Result<const LocationContext*, error::AppError> choseLocation(std::string& uri);
-    };
+    const LocationContext* location_;
+    const ServerContext* server_;
+    const DocumentRootConfig* documentRoot_;
 
-} // namespace parse
-} // namespace http
+    types::Result<types::Unit, error::AppError> parseRequestLine();
+    types::Result<types::Unit, error::AppError> parseHeaders();
+    bool checkMissingHost() const;
+    bool validateContentLength() const;
+    bool containNonDigit(const std::string& val) const;
+    bool validateTransferEncoding() const;
+    types::Result<types::Unit, error::AppError> parseBody();
+    types::Result<HttpRequest, error::AppError> buildRequest() const;
+    types::Result<const LocationContext*, error::AppError> choseLocation(
+        const std::string& uri) const;
+};
 
+}  // namespace parse
+}  // namespace http

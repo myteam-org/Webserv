@@ -12,5 +12,6 @@ namespace error {
         kInvalidTransferEncoding,
         kHasContentLengthAndTransferEncoding,
         kContainNonDigit,
+        kBadLocationContext,
     };
 } // namespace error

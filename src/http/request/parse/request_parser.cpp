@@ -13,7 +13,7 @@
 namespace http {
 namespace parse {
 
-RequestParser::RequestParser(http::ReadContext* ctx) : ctx_(ctx) {}
+RequestParser::RequestParser(http::ReadContext& ctx) : ctx_(&ctx) {}
 
 RequestParser::~RequestParser() {}
 
@@ -48,7 +48,7 @@ types::Result<types::Unit, error::AppError> RequestParser::parseHeaders() {
     }
     const bool hasCL = headers_.find("Content-Length") != headers_.end();
     if (hasCL && !validateContentLength()) {
-        return Err(error::kInvalidContentLength);
+        return ERR(error::kInvalidContentLength);
     }
     const bool hasTE = headers_.find("Transfer-Encoding") != headers_.end();
     if (hasTE && !validateTransferEncoding()) {
@@ -70,18 +70,7 @@ bool RequestParser::validateContentLength() const {
         return false;
     }
     const std::string& val = it->second;
-    return !val.empty() && !containNonDigit(val);
-}
-
-bool RequestParser::containNonDigit(const std::string& val) {
-    for (std::size_t i = 0; i < val.size(); ++i) {
-        const char chr = val[i];
-
-        if (!std::isdigit(static_cast<unsigned char>(chr))) {
-            return true;
-        }
-    }
-    return false;
+    return !val.empty() && !utils::containsNonDigit(val);
 }
 
 bool RequestParser::validateTransferEncoding() const {
@@ -95,12 +84,12 @@ bool RequestParser::validateTransferEncoding() const {
 
 types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
     const std::string& raw = ctx_->getBody();
-    body_.assign(raw.begin(),
-                 raw.end());  // バイナリ対応のため vector<char> に詰め直す
+    // バイナリ対応のため vector<char> に詰め直す    body_.assign(raw.begin(), raw.end());
     return OK(types::Unit());
 }
 
-types::Result<HttpRequest, error::AppError> RequestParser::buildRequest() const {
+types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
+    const {
     const std::string uri = uri_;
     const types::Result<const LocationContext*, error::AppError> result =
         choseLocation(uri);
@@ -123,7 +112,7 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest() const 
     // req.setHeaders(headers_);
     // req.setBody(body_);
     // req.setLocation(*location);
-    // req.setQeryString(queryString);
+    // req.setQueryString(queryString);
     return OK(req);
 }
 
@@ -150,6 +139,13 @@ RequestParser::choseLocation(const std::string& uri) const {
         return types::ok(bestMatch);
     }
     return types::err(error::kBadRequest);
+}
+
+types::Result<HttpRequest, error::AppError> RequestParser::parseAll() {
+    RETURN_IF_ERR(parseRequestLine());
+    RETURN_IF_ERR(parseHeaders());
+    RETURN_IF_ERR(parseBody());
+    return buildRequest();
 }
 
 }  // namespace parse

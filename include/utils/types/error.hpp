@@ -11,7 +11,7 @@ namespace error {
         kInvalidContentLength,
         kInvalidTransferEncoding,
         kHasContentLengthAndTransferEncoding,
-        kContainNonDigit,
+        kcontainsNonDigit,
         kBadLocationContext,
     };
 } // namespace error

@@ -19,15 +19,15 @@ class HttpRequest;
 
 class RequestParser {
    public:
-    explicit RequestParser(http::ReadContext* ctx);
+    explicit RequestParser(http::ReadContext& ctx);
     ~RequestParser();
 
-    // types::Result<Request, error::AppError> parseRequest();
     types::Result<types::Unit, error::AppError> parseRequestLine();
     types::Result<types::Unit, error::AppError> parseHeaders();
     types::Result<types::Unit, error::AppError> parseBody();
     types::Result<const LocationContext*, error::AppError> choseLocation(
         const std::string& uri) const;
+    types::Result<HttpRequest, error::AppError> parseAll();
 
    private:
     ReadContext* ctx_;
@@ -45,7 +45,6 @@ class RequestParser {
 
     bool checkMissingHost() const;
     bool validateContentLength() const;
-    static bool containNonDigit(const std::string& val);
     bool validateTransferEncoding() const;
     types::Result<HttpRequest, error::AppError> buildRequest() const;
 };

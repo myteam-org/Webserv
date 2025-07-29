@@ -30,10 +30,10 @@ RawHeaders makeValidHeaders() {
 // parseRequestLine
 TEST(RequestParserTest, ParsesValidRequestLine) {
   DummyResolver resolver;
-  http::ReadContext ctx(resolver, NULL);  // const を外した
+  http::ReadContext ctx(resolver, 0);
 
   ctx.setRequestLine("GET /index.html HTTP/1.1");
-  http::parse::RequestParser parser(&ctx);
+  http::parse::RequestParser parser(ctx);
   types::Result<types::Unit, error::AppError> result = parser.parseRequestLine();
 
   EXPECT_TRUE(result.isOk());
@@ -45,7 +45,7 @@ TEST(RequestParserTest, ParsesValidHeaders) {
   http::ReadContext ctx(resolver, NULL);
   ctx.setHeaders(makeValidHeaders());
 
-  http::parse::RequestParser parser(&ctx);
+  http::parse::RequestParser parser(ctx);
   types::Result<types::Unit, error::AppError> result = parser.parseHeaders();
 
   EXPECT_TRUE(result.isOk());
@@ -60,7 +60,7 @@ TEST(RequestParserTest, ReturnsErrorWhenHostMissing) {
   headers["Content-Length"] = "10";  // Host がない
   ctx.setHeaders(headers);
 
-  http::parse::RequestParser parser(&ctx);
+  http::parse::RequestParser parser(ctx);
   types::Result<types::Unit, error::AppError> result = parser.parseHeaders();
 
   EXPECT_TRUE(result.isErr());
@@ -73,7 +73,7 @@ TEST(RequestParserTest, ParsesBodyCorrectly) {
   http::ReadContext ctx(resolver, NULL);
   ctx.setBody("ABCDE");
 
-  http::parse::RequestParser parser(&ctx);
+  http::parse::RequestParser parser(ctx);
   types::Result<types::Unit, error::AppError> result = parser.parseBody();
 
   EXPECT_TRUE(result.isOk());
@@ -93,7 +93,7 @@ TEST(RequestParserTest, ChoosesCorrectLocation) {
 
   ctx.setServer(server);
 
-  http::parse::RequestParser parser(&ctx);
+  http::parse::RequestParser parser(ctx);
   std::string uri = "/";
 
   types::Result<const LocationContext*, error::AppError> result = parser.choseLocation(uri);

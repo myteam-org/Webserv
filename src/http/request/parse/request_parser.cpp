@@ -13,12 +13,12 @@
 namespace http {
 namespace parse {
 
-RequestParser::RequestParser(const ReadContext& ctx) : ctx_(ctx) {}
+RequestParser::RequestParser(http::ReadContext* ctx) : ctx_(ctx) {}
 
 RequestParser::~RequestParser() {}
 
 types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
-    const std::string& line = ctx_.getRequestLine();
+    const std::string& line = ctx_->getRequestLine();
     std::istringstream iss(line);
     std::string method, uri, version;
 
@@ -38,6 +38,8 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
 }
 
 types::Result<types::Unit, error::AppError> RequestParser::parseHeaders() {
+    headers_ = ctx_->getHeaders();
+
     if (checkMissingHost()) {
         return ERR(error::kMissingHost);
     }
@@ -89,7 +91,7 @@ bool RequestParser::validateTransferEncoding() const {
 }
 
 types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
-    const std::string& raw = ctx_.getBody();
+    const std::string& raw = ctx_->getBody();
     body_.assign(raw.begin(),
                  raw.end());  // バイナリ対応のため vector<char> に詰め直す
     return OK(types::Unit());
@@ -124,7 +126,8 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest() const 
 
 types::Result<const LocationContext*, error::AppError>
 RequestParser::choseLocation(const std::string& uri) const {
-    const ServerContext& server = ctx_.getServer();
+    if (!ctx_) return types::err(error::kBadRequest);
+    const ServerContext& server = ctx_->getServer();
     const std::vector<LocationContext>& locations = server.getLocation();
     const LocationContext* bestMatch = NULL;
     std::size_t longest = 0;

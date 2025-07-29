@@ -28,6 +28,7 @@ class ServerContext {
     void setserverName(const std::string& serverName);
     void addMap(int number, const std::string& fileName);
     void setClientMaxBodySize(size_t size);
+    void addLocation(const LocationContext& location);
 
     const std::string& getValue() const;
     u_int16_t getListen() const;

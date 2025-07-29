@@ -27,6 +27,10 @@ void ServerContext::setClientMaxBodySize(size_t size) {
     this->clientMaxBodySize_ = size;
 }
 
+void ServerContext::addLocation(const LocationContext& location) {
+    locations_.push_back(location);
+}
+
 const std::string& ServerContext::getValue() const { return (this->value_); }
 
 u_int16_t ServerContext::getListen() const { return (this->listen_); }

@@ -20,7 +20,9 @@ RequestParser::~RequestParser() {}
 types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     const std::string& line = ctx_->getRequestLine();
     std::istringstream iss(line);
-    std::string method, uri, version;
+    std::string method;
+    std::string uri;
+    std::string version;
 
     if (!(iss >> method >> uri >> version)) {
         return ERR(error::kBadRequest);
@@ -28,7 +30,8 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     if (method != "GET" && method != "POST" && method != "DELETE") {
         return ERR(error::kBadMethod);
     }
-    if (version.substr(0, 8) != "HTTP/1.1") {
+    const std::size_t kHttpVersionPreFixLen = 8;
+    if (version.substr(0, kHttpVersionPreFixLen) != "HTTP/1.1") {
         return ERR(error::kBadHttpVersion);
     }
     method_ = method;
@@ -62,7 +65,7 @@ bool RequestParser::checkMissingHost() const {
 }
 
 bool RequestParser::validateContentLength() const {
-    RawHeaders::const_iterator it = headers_.find("Content-Length");
+    const RawHeaders::const_iterator it = headers_.find("Content-Length");
     if (it == headers_.end()) {
         return false;
     }
@@ -70,7 +73,7 @@ bool RequestParser::validateContentLength() const {
     return !val.empty() && !containNonDigit(val);
 }
 
-bool RequestParser::containNonDigit(const std::string& val) const {
+bool RequestParser::containNonDigit(const std::string& val) {
     for (std::size_t i = 0; i < val.size(); ++i) {
         const char chr = val[i];
 
@@ -82,7 +85,7 @@ bool RequestParser::containNonDigit(const std::string& val) const {
 }
 
 bool RequestParser::validateTransferEncoding() const {
-    RawHeaders::const_iterator it = headers_.find("Transfer-Encoding");
+    const RawHeaders::const_iterator it = headers_.find("Transfer-Encoding");
     if (it == headers_.end()) {
         return false;
     }
@@ -98,8 +101,8 @@ types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
 }
 
 types::Result<HttpRequest, error::AppError> RequestParser::buildRequest() const {
-    std::string uri = uri_;
-    types::Result<const LocationContext*, error::AppError> result =
+    const std::string uri = uri_;
+    const types::Result<const LocationContext*, error::AppError> result =
         choseLocation(uri);
     if (result.isErr()) {
         return ERR(error::kBadLocationContext);
@@ -113,7 +116,7 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest() const 
         pathOnly = uri.substr(0, queryMarkPos);
         queryString = uri.substr(queryMarkPos + 1);
     }
-    HttpRequest req;
+    const HttpRequest req;
     // req.setMethod(method_);
     // req.setUri(pathOnly);
     // req.setVersion(version_);
@@ -126,7 +129,9 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest() const 
 
 types::Result<const LocationContext*, error::AppError>
 RequestParser::choseLocation(const std::string& uri) const {
-    if (!ctx_) return types::err(error::kBadRequest);
+    if (!ctx_) {
+        return types::err(error::kBadRequest);
+    }
     const ServerContext& server = ctx_->getServer();
     const std::vector<LocationContext>& locations = server.getLocation();
     const LocationContext* bestMatch = NULL;

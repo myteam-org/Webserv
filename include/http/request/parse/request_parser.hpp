@@ -8,10 +8,9 @@
 #include "config/context/locationContext.hpp"
 #include "config/context/documentRootConfig.hpp"
 
-class ReadContext;
-class RequestParser;
-class ReadBuffer;
-class Request;
+namespace http {
+    class ReadContext;
+}
 
 namespace http {
 namespace parse {
@@ -46,7 +45,7 @@ class RequestParser {
 
     bool checkMissingHost() const;
     bool validateContentLength() const;
-    bool containNonDigit(const std::string& val) const;
+    static bool containNonDigit(const std::string& val);
     bool validateTransferEncoding() const;
     types::Result<HttpRequest, error::AppError> buildRequest() const;
 };

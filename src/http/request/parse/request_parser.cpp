@@ -1,4 +1,5 @@
 #include "request_parser.hpp"
+#include "http_request.hpp"
 #include "locationContext.hpp"
 #include "context.hpp"
 #include "utils/string.hpp"
@@ -83,6 +84,16 @@ bool RequestParser::validateTransferEncoding() const {
     }
     const std::string& val = it->second;
     return !val.empty() && utils::toLower(val) == "chunked";
+}
+
+types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
+    const std::string& raw = ctx_.getBody();
+    body_.assign(raw.begin(), raw.end()); // バイナリ対応のため vector<char> に詰め直す
+    return OK(types::Unit());
+}
+
+HttpRequest RequestParser::buildRequest() const {
+
 }
 
 types::Result<const LocationContext*, error::AppError> RequestParser::choseLocation(

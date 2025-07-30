@@ -29,3 +29,7 @@ configure_file(
 
 add_subdirectory(read)
 add_subdirectory(parse)
+
+gtest_discover_tests(http_request_test
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)

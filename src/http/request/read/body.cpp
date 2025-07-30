@@ -21,7 +21,10 @@ ReadingRequestBodyState::ReadingRequestBodyState(BodyEncodingType type,
             activeBodyState_ = new ReadingRequestBodyChunkedState();
             break;
         default:
-            activeBodyState_ = NULL;  // Handle unsupported types
+            BodyLengthConfig config0;
+            config0.contentLength = 0;
+            config0.clientMaxBodySize = config_.clientMaxBodySize;
+            activeBodyState_ = new ReadingRequestBodyLengthState(config0); 
             break;
     }
 }

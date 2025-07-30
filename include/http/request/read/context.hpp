@@ -18,7 +18,9 @@ class ReadContext {
 
   const IState* getState() const;
   config::IConfigResolver& getConfigResolver() const;
+  void setRequestLine(const std::string& line);
   const std::string& getRequestLine() const;
+  void setHeaders(const RawHeaders& headers);
   const RawHeaders& getHeaders() const;
   void setBody(const std::string& body);
   const std::string& getBody() const;

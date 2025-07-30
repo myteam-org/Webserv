@@ -9,6 +9,7 @@
 #include "raw_headers.hpp"
 #include "state.hpp"
 #include "utils.hpp"
+#include "utils/string.hpp"
 #include "utils/types/error.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"
@@ -32,25 +33,27 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
     while (true) {
         const GetLineResult result = getLine(buf);
         if (result.isErr()) {
-            tr.setStatus(types::err(result.unwrapErr()));
-            return tr;
+            return tr.setStatus(types::err(result.unwrapErr())), tr;
         }
         const types::Option<std::string> lineOpt = result.unwrap();
         if (lineOpt.isNone()) {
-            tr.setStatus(types::ok(kSuspend));
-            return tr;
+            return tr.setStatus(types::ok(kSuspend)), tr;
         }
         const std::string line = lineOpt.unwrap();
+        if (!line.empty() && (line[0] == ' ' || line[0] == '\t')) {
+            return tr.setStatus(types::err(error::kBadRequest)), tr;
+        }
         if (line.empty()) {
             return handleHeadersComplete(ctx, tr, headers);
         }
         const std::string::size_type colon = line.find(':');
-        if (colon == std::string::npos) {
-            tr.setStatus(types::err(error::kIOUnknown));
+        if (colon == std::string::npos || colon == 0 ||
+            std::isspace(line[colon - 1])) {
+            tr.setStatus(types::err(error::kBadRequest));
             return tr;
         }
-        const std::string key = line.substr(0, colon);
-        const std::string value = line.substr(colon + 1);
+        const std::string key = utils::trim(line.substr(0, colon));
+        const std::string value = utils::trim(line.substr(colon + 1));
         headers.insert(std::make_pair(key, value));
     }
 }

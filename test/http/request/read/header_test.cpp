@@ -72,7 +72,7 @@ TEST(ReadingRequestHeadersStateTest, ReturnsErrorWhenHeaderIsMalformed) {
   http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
 
   ASSERT_TRUE(transitionResult.getStatus().isErr());
-  EXPECT_EQ(transitionResult.getStatus().unwrapErr(), error::kIOUnknown);
+  EXPECT_EQ(transitionResult.getStatus().unwrapErr(), error::kBadRequest);
 }
 
 TEST(ReadingRequestHeadersStateTest, ReturnsDoneWhenHeadersEndWithCRLF) {
@@ -89,8 +89,8 @@ TEST(ReadingRequestHeadersStateTest, ReturnsDoneWhenHeadersEndWithCRLF) {
   EXPECT_FALSE(transitionResult.getHeaders().isNone());
 
   const RawHeaders& headers = transitionResult.getHeaders().unwrap();
-  EXPECT_EQ(headers.find("Host")->second, " localhost");
-  EXPECT_EQ(headers.find("User-Agent")->second, " Test");
+  EXPECT_EQ(headers.find("Host")->second, "localhost");
+  EXPECT_EQ(headers.find("User-Agent")->second, "Test");
 }
 
 int main(int argc, char **argv) {

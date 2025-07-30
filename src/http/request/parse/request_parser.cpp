@@ -93,7 +93,8 @@ bool RequestParser::validateTransferEncoding() const {
 
 types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
     const std::string& raw = ctx_->getBody();
-    // バイナリ対応のため vector<char> に詰め直す    body_.assign(raw.begin(), raw.end());
+    // バイナリ対応のため vector<char> に詰め直す    body_.assign(raw.begin(),
+    // raw.end());
     return OK(types::Unit());
 }
 

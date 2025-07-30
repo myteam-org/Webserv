@@ -22,14 +22,63 @@ jobs:
           cmakeVersion: "~3.28.0"
           ninjaVersion: "^1.11.1"
 
-      - name: Set up ccach
+      - name: Install dependencies
+        run: |
+          for i in {1..30}; do
+            sudo lsof /var/lib/dpkg/lock-frontend && echo "Waiting for apt lock..." && sleep 1 || break
+          done
+          sudo apt-get update
+          sudo apt-get install -y ccache
+
+      - name: Set up ccache
         uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-unittest
+          max-size: 200M
 
       - name: Configure CMake
         run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: Build
-        run: cmake --build build -j  # buildディレクトリでビルドを並列実行
+        run: cmake --build build -j
 
-      - working-directory: build
-        run: ctest -j  # buildディレクトリでテストを並列実行
+      - name: Run unit tests
+        working-directory: build
+        run: ctest -j --output-on-failure
+
+
+# name: Unit Test (GoogleTest)
+
+# on:
+#   pull_request:
+#     paths:
+#       - '**.cpp'
+#       - '**.h'
+#       - '**/CMakeLists.txt'
+#   workflow_dispatch:
+
+# jobs:
+#   unittest:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout source code
+#         uses: actions/checkout@v4
+
+#       - name: Set up CMake
+#         uses: lukka/get-cmake@latest
+#         with:
+#           cmakeVersion: "~3.28.0"
+#           ninjaVersion: "^1.11.1"
+
+#       - name: Set up ccach
+#         uses: hendrikmuhs/ccache-action@v1.2
+
+#       - name: Configure CMake
+#         run: cmake -B build -G Ninja -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+#       - name: Build
+#         run: cmake --build build -j  # buildディレクトリでビルドを並列実行
+
+#       - working-directory: build
+#         run: ctest -j  # buildディレクトリでテストを並列実行

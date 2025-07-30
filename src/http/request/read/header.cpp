@@ -42,12 +42,16 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
             return tr;
         }
         const std::string line = lineOpt.unwrap();
+        if (!line.empty() && (line[0] == ' ' || line[0] == '\t')) {
+            tr.setStatus(types::err(error::kBadRequest));
+            return tr;
+        }
         if (line.empty()) {
             return handleHeadersComplete(ctx, tr, headers);
         }
         const std::string::size_type colon = line.find(':');
-        if (colon == std::string::npos) {
-            tr.setStatus(types::err(error::kIOUnknown));
+        if (colon == std::string::npos || colon == 0 || std::isspace(line[colon - 1])) {
+            tr.setStatus(types::err(error::kBadRequest));
             return tr;
         }
         const std::string key = utils::trim(line.substr(0, colon));

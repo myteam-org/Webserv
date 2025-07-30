@@ -72,7 +72,7 @@ TEST(ReadingRequestHeadersStateTest, ReturnsErrorWhenHeaderIsMalformed) {
   http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
 
   ASSERT_TRUE(transitionResult.getStatus().isErr());
-  EXPECT_EQ(transitionResult.getStatus().unwrapErr(), error::kIOUnknown);
+  EXPECT_EQ(transitionResult.getStatus().unwrapErr(), error::kBadRequest);
 }
 
 TEST(ReadingRequestHeadersStateTest, ReturnsDoneWhenHeadersEndWithCRLF) {

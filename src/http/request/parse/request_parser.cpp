@@ -19,6 +19,9 @@ RequestParser::~RequestParser() {}
 
 types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     const std::string& line = ctx_->getRequestLine();
+    if (!utils::endsWith(line, "\r\n")) {
+        return ERR(error::kBadRequest);
+    }
     std::istringstream iss(line);
     std::string method;
     std::string uri;
@@ -29,6 +32,9 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     }
     if (method != "GET" && method != "POST" && method != "DELETE") {
         return ERR(error::kBadMethod);
+    }
+    if (uri.length() > 8000) {
+        return ERR(error::kUriTooLong);
     }
     const std::size_t kHttpVersionPreFixLen = 8;
     if (version.substr(0, kHttpVersionPreFixLen) != "HTTP/1.1") {

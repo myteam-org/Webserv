@@ -32,7 +32,7 @@ TEST(RequestParserTest, ParsesValidRequestLine) {
   DummyResolver resolver;
   http::ReadContext ctx(resolver, 0);
 
-  ctx.setRequestLine("GET /index.html HTTP/1.1");
+  ctx.setRequestLine("GET /index.html HTTP/1.1\r\n");
   http::parse::RequestParser parser(ctx);
   types::Result<types::Unit, error::AppError> result = parser.parseRequestLine();
 

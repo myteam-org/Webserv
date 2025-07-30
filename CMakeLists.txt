@@ -9,6 +9,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # サブディレクトリを追加
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(test/http)
+
 
 # clang-tidyの設定
 find_program(CLANG_TIDY clang-tidy)

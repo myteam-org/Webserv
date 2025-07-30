@@ -35,7 +35,7 @@ DummyResolver DummyReadContext::staticResolver;
 // ---- テスト ----
 TEST(HttpRequestTest, CanSetServerAndLocationPointersFromConfig) {
     DummyReadContext dummyCtx;
-    http::HttpRequest req(dummyCtx);
+    http::HttpRequest req;
 
     const std::string confFile = "test_config/test.conf";
     Config config(confFile);

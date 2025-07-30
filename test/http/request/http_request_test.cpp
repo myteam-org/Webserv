@@ -39,7 +39,7 @@ TEST(HttpRequestTest, CanSetServerAndLocationPointersFromConfig) {
     DummyReadContext dummyCtx;
     http::HttpRequest req;
 
-    const std::string confFile = "test_config/test.conf";
+    const std::string confFile = "./test_config/test.conf";
     Config config(confFile);
 
     const std::vector<ServerContext>& servers = config.getParser().getServer();

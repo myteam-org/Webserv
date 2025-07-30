@@ -1,7 +1,7 @@
 #include "http_request.hpp"
 
 namespace http {
-    HttpRequest::HttpRequest(ReadContext& ctx) {}
+    HttpRequest::HttpRequest() {}
 
     HttpRequest::~HttpRequest() {}
     
@@ -89,4 +89,4 @@ namespace http {
         return documentRoot_;
     }
 
-}
+} // namespace http

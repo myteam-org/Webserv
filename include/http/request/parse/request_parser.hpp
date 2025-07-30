@@ -41,7 +41,7 @@ class RequestParser {
 
     const LocationContext* location_;
     const ServerContext* server_;
-    const DocumentRootConfig* documentRoot_;
+    // const DocumentRootConfig* documentRoot_;
 
     bool checkMissingHost() const;
     bool validateContentLength() const;

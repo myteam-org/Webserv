@@ -115,13 +115,15 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
         pathOnly = uri.substr(0, queryMarkPos);
         queryString = uri.substr(queryMarkPos + 1);
     }
-    HttpRequest req(*ctx_);
+    HttpRequest req;
     req.setMethod(method_);
     req.setUri(pathOnly);
     req.setVersion(version_);
     req.setHeaders(headers_);
     req.setBody(body_);
+    req.setServer(ctx_->getServer());
     req.setLocation(*location);
+    req.setDocumentRootConfig(location->getDocumentRootConfig());
     req.setQueryString(queryString);
     return OK(req);
 }

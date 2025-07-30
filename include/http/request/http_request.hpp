@@ -1,15 +1,16 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "header.hpp"        // RawHeaders を含む
+
 #include "context/locationContext.hpp"
+#include "header.hpp"  // RawHeaders を含む
 #include "raw_headers.hpp"
 
 namespace http {
 
 class HttpRequest {
    public:
-    HttpRequest(ReadContext& ctx);
+    explicit HttpRequest();
     ~HttpRequest();
     void setMethod(const std::string& method);
     void setUri(const std::string& uri);
@@ -20,7 +21,7 @@ class HttpRequest {
     void setBody(const std::vector<char>& body);
     void setServer(const ServerContext& server);
     void setLocation(const LocationContext& location);
-    void setDocumentRootConfig(const DocumentRootConfig& documentRoot);
+    void setDocumentRootConfig(const DocumentRootConfig& getDocumentRoot);
     const std::string& getMethod() const;
     const std::string& getRequestTarget() const;
     const std::string& getPath() const;

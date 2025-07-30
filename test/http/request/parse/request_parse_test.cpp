@@ -4,7 +4,7 @@
 #include "http/request/read/context.hpp"
 #include "context/locationContext.hpp"
 #include "config/context/serverContext.hpp"
-#include "http/request/parse/http_request.hpp"
+#include "http/request/http_request.hpp"
 
 namespace {
 

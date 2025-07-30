@@ -10,12 +10,12 @@
 
 namespace http {
     class ReadContext;
+    class HttpRequest;
 }
 
 namespace http {
 namespace parse {
 
-class HttpRequest;
 
 class RequestParser {
    public:

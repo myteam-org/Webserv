@@ -1,10 +1,10 @@
-#include "request_parser.hpp"
+#include "http/request/parse/request_parser.hpp"
 
 #include <sstream>
 #include <string>
 
 #include "context.hpp"
-#include "http_request.hpp"
+#include "http/request/http_request.hpp"
 #include "locationContext.hpp"
 #include "utils/string.hpp"
 #include "utils/types/either.hpp"
@@ -115,14 +115,14 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
         pathOnly = uri.substr(0, queryMarkPos);
         queryString = uri.substr(queryMarkPos + 1);
     }
-    const HttpRequest req;
-    // req.setMethod(method_);
-    // req.setUri(pathOnly);
-    // req.setVersion(version_);
-    // req.setHeaders(headers_);
-    // req.setBody(body_);
-    // req.setLocation(*location);
-    // req.setQueryString(queryString);
+    HttpRequest req(*ctx_);
+    req.setMethod(method_);
+    req.setUri(pathOnly);
+    req.setVersion(version_);
+    req.setHeaders(headers_);
+    req.setBody(body_);
+    req.setLocation(*location);
+    req.setQueryString(queryString);
     return OK(req);
 }
 

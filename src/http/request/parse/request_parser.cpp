@@ -4,7 +4,7 @@
 #include <string>
 
 #include "context.hpp"
-#include "http/request/http_request.hpp"
+#include "http_request.hpp"
 #include "locationContext.hpp"
 #include "utils/string.hpp"
 #include "utils/types/either.hpp"
@@ -123,7 +123,7 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
     req.setBody(body_);
     req.setServer(ctx_->getServer());
     req.setLocation(*location);
-    req.setDocumentRootConfig(location->getDocumentRootConfig());
+    req.setDocumentRootConfig((location)->getDocumentRootConfig());
     req.setQueryString(queryString);
     return OK(req);
 }
@@ -151,13 +151,6 @@ RequestParser::choseLocation(const std::string& uri) const {
         return types::ok(bestMatch);
     }
     return types::err(error::kBadRequest);
-}
-
-types::Result<HttpRequest, error::AppError> RequestParser::parseAll() {
-    RETURN_IF_ERR(parseRequestLine());
-    RETURN_IF_ERR(parseHeaders());
-    RETURN_IF_ERR(parseBody());
-    return buildRequest();
 }
 
 }  // namespace parse

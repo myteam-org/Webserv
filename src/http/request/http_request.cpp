@@ -1,7 +1,8 @@
 #include "http_request.hpp"
 
 namespace http {
-    HttpRequest::HttpRequest() {}
+    HttpRequest::HttpRequest() {
+}
 
     HttpRequest::~HttpRequest() {}
     

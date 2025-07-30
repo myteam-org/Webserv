@@ -5,8 +5,11 @@
 #include "context/locationContext.hpp"
 #include "header.hpp"  // RawHeaders を含む
 #include "raw_headers.hpp"
+// #include "request_parser.hpp"
 
 namespace http {
+
+class RequestParser;
 
 class HttpRequest {
    public:

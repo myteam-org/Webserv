@@ -34,6 +34,8 @@ DummyResolver DummyReadContext::staticResolver;
 
 // ---- テスト ----
 TEST(HttpRequestTest, CanSetServerAndLocationPointersFromConfig) {
+    ASSERT_TRUE(std::ifstream("test_config/test.conf").good()) 
+    << "Missing test_config/test.conf (maybe not copied correctly in CI)";
     DummyReadContext dummyCtx;
     http::HttpRequest req;
 

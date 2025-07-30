@@ -13,6 +13,8 @@
 namespace http {
 namespace parse {
 
+static const std::size_t kMaxRecommendedRequestLineLength = 8000;
+
 RequestParser::RequestParser(http::ReadContext& ctx) : ctx_(&ctx) {}
 
 RequestParser::~RequestParser() {}
@@ -33,7 +35,8 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     if (method != "GET" && method != "POST" && method != "DELETE") {
         return ERR(error::kBadMethod);
     }
-    if (uri.length() > 8000) {
+
+    if (uri.length() > kMaxRecommendedRequestLineLength) {
         return ERR(error::kUriTooLong);
     }
     const std::size_t kHttpVersionPreFixLen = 8;

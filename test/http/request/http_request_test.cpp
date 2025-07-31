@@ -11,12 +11,12 @@
 // ---- ダミー Resolver ----
 struct DummyResolver : public http::config::IConfigResolver {
     types::Result<const ServerContext*, error::AppError>
-    choseServer(const std::string&) const override {
+    chooseServer(const std::string&) const override {
         return types::ok(static_cast<const ServerContext*>(NULL));
     }
 
     types::Result<const LocationContext*, error::AppError>
-    choseLocation(const std::string&, const ServerContext&) const {
+    chooseLocation(const std::string&, const ServerContext&) const {
         return types::ok(static_cast<const LocationContext*>(NULL));
     }
 };

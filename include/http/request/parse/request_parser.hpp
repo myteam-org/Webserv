@@ -25,7 +25,7 @@ class RequestParser {
     types::Result<types::Unit, error::AppError> parseRequestLine();
     types::Result<types::Unit, error::AppError> parseHeaders();
     types::Result<types::Unit, error::AppError> parseBody();
-    types::Result<const LocationContext*, error::AppError> choseLocation(
+    types::Result<const LocationContext*, error::AppError> chooseLocation(
         const std::string& uri) const;
     const std::string& getMethod() const;
     const std::string& getRequestTarget() const;

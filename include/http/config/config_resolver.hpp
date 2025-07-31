@@ -10,7 +10,7 @@ namespace config {
 
 class IConfigResolver {
    public:
-    virtual types::Result<const ServerContext*, error::AppError> choseServer(
+    virtual types::Result<const ServerContext*, error::AppError> chooseServer(
         const std::string& host) const = 0;
     virtual ~IConfigResolver() {}
 };
@@ -20,7 +20,7 @@ class ConfigResolver : public IConfigResolver {
     explicit ConfigResolver(const std::vector<ServerContext>& servers)
         : servers_(servers) {}
 
-    types::Result<const ServerContext*, error::AppError> choseServer(
+    types::Result<const ServerContext*, error::AppError> chooseServer(
         const std::string& host) const {
         const std::size_t colon = host.find(':');
         const std::string& hostname =

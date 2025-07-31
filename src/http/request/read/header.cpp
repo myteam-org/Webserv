@@ -62,7 +62,7 @@ TransitionResult ReadingRequestHeadersState::handleHeadersComplete(
     ReadContext& ctx, TransitionResult& tr, const RawHeaders& headers) {
     const std::string host = parser::extractHeader(headers, "Host");
     const types::Result<const ServerContext*, error::AppError> result =
-        ctx.getConfigResolver().choseServer(host);
+        ctx.getConfigResolver().chooseServer(host);
     if (result.isErr()) {
         tr.setStatus(types::err(result.unwrapErr()));
         return tr;

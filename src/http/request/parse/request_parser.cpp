@@ -102,7 +102,7 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
     const {
     const std::string uri = uri_;
     const types::Result<const LocationContext*, error::AppError> result =
-        choseLocation(uri);
+        chooseLocation(uri);
     if (result.isErr()) {
         return ERR(error::kBadLocationContext);
     }
@@ -129,7 +129,7 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
 }
 
 types::Result<const LocationContext*, error::AppError>
-RequestParser::choseLocation(const std::string& uri) const {
+RequestParser::chooseLocation(const std::string& uri) const {
     if (!ctx_) {
         return types::err(error::kBadRequest);
     }

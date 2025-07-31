@@ -11,7 +11,7 @@ namespace {
 class DummyResolver : public http::config::IConfigResolver {
  public:
   types::Result<const ServerContext*, error::AppError>
-  choseServer(const std::string&) const override {
+  chooseServer(const std::string&) const override {
     static ServerContext dummy("server");
     return types::ok(static_cast<const ServerContext*>(&dummy));
   }
@@ -79,7 +79,7 @@ TEST(RequestParserTest, ParsesBodyCorrectly) {
   EXPECT_TRUE(result.isOk());
 }
 
-// テスト：choseLocation
+// テスト：chooseLocation
 TEST(RequestParserTest, ChoosesCorrectLocation) {
   DummyResolver resolver;
   http::ReadContext ctx(resolver, NULL);
@@ -96,7 +96,7 @@ TEST(RequestParserTest, ChoosesCorrectLocation) {
   http::parse::RequestParser parser(ctx);
   std::string uri = "/";
 
-  types::Result<const LocationContext*, error::AppError> result = parser.choseLocation(uri);
+  types::Result<const LocationContext*, error::AppError> result = parser.chooseLocation(uri);
 
   ASSERT_TRUE(result.isOk());
   EXPECT_EQ(result.unwrap()->getPath(), "/");

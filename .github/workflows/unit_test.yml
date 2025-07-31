@@ -32,4 +32,6 @@ jobs:
         run: cmake --build build -j  # buildディレクトリでビルドを並列実行
 
       - working-directory: build
-        run: ctest -j  # buildディレクトリでテストを並列実行
+        run: |
+          ctest --output-on-failure -j || (cat Testing/Temporary/LastTest.log && false)
+

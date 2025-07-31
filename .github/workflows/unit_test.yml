@@ -41,10 +41,11 @@ jobs:
 
       - name: Build
         run: cmake --build build -j
+        
+      - working-directory: build
+        run: |
+          ctest --output-on-failure -j || (cat Testing/Temporary/LastTest.log && false)
 
-      - name: Run unit tests
-        working-directory: build
-        run: ctest -j --output-on-failure
 
 
 # name: Unit Test (GoogleTest)

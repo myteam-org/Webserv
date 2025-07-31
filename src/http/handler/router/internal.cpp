@@ -1,4 +1,6 @@
+#include "http/request/request.hpp"
 #include "internal.hpp"
+#include "http/response/builder.hpp"
 namespace http {
     InternalRouter::InternalRouter(const RouteRegistry& registry) 
         : registry_(registry) {}
@@ -7,7 +9,7 @@ namespace http {
 
         const types::Option<std::string> matchResult = registry_.matchPath(req.getRequestTarget());
         if (matchResult.isNone()) {
-            // return Right(ResponseBuilder().status(kStatusNotFound).build());
+            return Right(ResponseBuilder().status(kStatusNotFound).build());
         }
         
         const std::string& matchedPath = matchResult.unwrap();
@@ -16,9 +18,9 @@ namespace http {
         if (!handler) {
             const std::vector<HttpMethod> allowedMethods = registry_.getAllowedMethods(matchedPath);
             if (!allowedMethods.empty()) {
-                // return Right(ResponseBuilder().status(kStatusMethodNotAllowed).build());
+                return Right(ResponseBuilder().status(kStatusMethodNotAllowed).build());
             }
-            // return Right(ResponseBuilder().status(kStatusNotFound).build());
+            return Right(ResponseBuilder().status(kStatusNotFound).build());
         }
         return handler->serve(req);
     }

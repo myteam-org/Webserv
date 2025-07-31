@@ -1,34 +1,44 @@
 #include "documentRootConfig.hpp"
 
 DocumentRootConfig::DocumentRootConfig()
-    : autoIndex_(OFF), cgiExtensions_(OFF), index_("index.html") {}
+    : index_("index.html"), autoIndex_(OFF), cgiExtensions_(OFF) {
+}
 
-DocumentRootConfig::~DocumentRootConfig() {}
+DocumentRootConfig::~DocumentRootConfig() {
+}
 
 void DocumentRootConfig::setRoot(const std::string& root) {
-    this->root_ = root;
+    root_ = root;
 }
 
 void DocumentRootConfig::setIndex(const std::string& index) {
-    this->index_ = index;
+    index_ = index;
 }
 
 void DocumentRootConfig::setAutoIndex(OnOff autoIndex) {
-    this->autoIndex_ = autoIndex;
+    autoIndex_ = autoIndex;
 }
 
 void DocumentRootConfig::setCgiExtensions(OnOff cgiExtensions) {
-    this->cgiExtensions_ = cgiExtensions;
+    cgiExtensions_ = cgiExtensions;
 }
 
-const std::string& DocumentRootConfig::getRoot() const { return (this->root_); }
+const std::string& DocumentRootConfig::getRoot() const {
+    return root_;
+}
 
 const std::string& DocumentRootConfig::getIndex() const {
-    return (this->index_);
+    return index_;
 }
 
-OnOff DocumentRootConfig::getAutoIndex() const { return (this->autoIndex_); }
+OnOff DocumentRootConfig::getAutoIndex() const {
+    return autoIndex_;
+}
 
 OnOff DocumentRootConfig::getCgiExtensions() const {
-    return (this->cgiExtensions_);
+    return cgiExtensions_;
+}
+
+bool DocumentRootConfig::isAutoindexEnabled() const {
+    return autoIndex_ == ON;
 }

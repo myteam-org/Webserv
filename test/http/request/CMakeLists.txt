@@ -40,6 +40,12 @@ gtest_discover_tests(request_test
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
+# test_config/html をビルドディレクトリにコピーする
+file(COPY
+  ${CMAKE_SOURCE_DIR}/test/test_config/html
+  DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test_config
+)
+
 # サブディレクトリ
 add_subdirectory(read)
 add_subdirectory(parse)

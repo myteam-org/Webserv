@@ -21,7 +21,7 @@ class DummyServerContext : public ServerContext {
   }
 };
 
-// テスト対象：ConfigResolver::choseServer の挙動
+// テスト対象：ConfigResolver::chooseServer の挙動
 
 TEST(ConfigResolverTest, ReturnsServerWhenExactHostMatches) {
   std::vector<ServerContext> servers;
@@ -31,7 +31,7 @@ TEST(ConfigResolverTest, ReturnsServerWhenExactHostMatches) {
   http::config::ConfigResolver resolver(servers);
 
   types::Result<const ServerContext*, error::AppError> result =
-      resolver.choseServer("example.com");
+      resolver.chooseServer("example.com");
 
   EXPECT_TRUE(result.isOk());
   EXPECT_EQ(result.unwrap()->getHost(), "example.com");
@@ -44,7 +44,7 @@ TEST(ConfigResolverTest, ReturnsServerWhenHostMatchesIgnoringPort) {
   http::config::ConfigResolver resolver(servers);
 
   types::Result<const ServerContext*, error::AppError> result =
-      resolver.choseServer("example.com:8080");
+      resolver.chooseServer("example.com:8080");
 
   EXPECT_TRUE(result.isOk());
   EXPECT_EQ(result.unwrap()->getHost(), "example.com");
@@ -57,7 +57,7 @@ TEST(ConfigResolverTest, ReturnsErrorWhenHostNotFound) {
   http::config::ConfigResolver resolver(servers);
 
   types::Result<const ServerContext*, error::AppError> result =
-      resolver.choseServer("unknown.com");
+      resolver.chooseServer("unknown.com");
 
   EXPECT_TRUE(result.isErr());
   EXPECT_EQ(result.unwrapErr(), error::kBadRequest);
@@ -70,7 +70,7 @@ TEST(ConfigResolverTest, ReturnsErrorWhenHostIsEmpty) {
   http::config::ConfigResolver resolver(servers);
 
   types::Result<const ServerContext*, error::AppError> result =
-      resolver.choseServer("");
+      resolver.chooseServer("");
 
   EXPECT_TRUE(result.isErr());
   EXPECT_EQ(result.unwrapErr(), error::kBadRequest);

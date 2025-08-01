@@ -10,12 +10,12 @@
 
 namespace http {
     class ReadContext;
+    class HttpRequest;
 }
 
 namespace http {
 namespace parse {
 
-class HttpRequest;
 
 class RequestParser {
    public:
@@ -25,9 +25,15 @@ class RequestParser {
     types::Result<types::Unit, error::AppError> parseRequestLine();
     types::Result<types::Unit, error::AppError> parseHeaders();
     types::Result<types::Unit, error::AppError> parseBody();
-    types::Result<const LocationContext*, error::AppError> choseLocation(
+    types::Result<const LocationContext*, error::AppError> chooseLocation(
         const std::string& uri) const;
-    types::Result<HttpRequest, error::AppError> parseAll();
+    const std::string& getMethod() const;
+    const std::string& getRequestTarget() const;
+    const std::string& getPath() const;
+    const std::string& getQueryString() const;
+    const std::string& getVersion() const;
+    const RawHeaders& getHeaders() const;
+    const std::vector<char>& getBody()const;
 
    private:
     ReadContext* ctx_;
@@ -41,7 +47,7 @@ class RequestParser {
 
     const LocationContext* location_;
     const ServerContext* server_;
-    const DocumentRootConfig* documentRoot_;
+    // const DocumentRootConfig* documentRoot_;
 
     bool checkMissingHost() const;
     bool validateContentLength() const;

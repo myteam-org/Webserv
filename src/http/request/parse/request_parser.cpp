@@ -1,4 +1,4 @@
-#include "request_parser.hpp"
+#include "http/request/parse/request_parser.hpp"
 
 #include <sstream>
 #include <string>
@@ -102,7 +102,7 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
     const {
     const std::string uri = uri_;
     const types::Result<const LocationContext*, error::AppError> result =
-        choseLocation(uri);
+        chooseLocation(uri);
     if (result.isErr()) {
         return ERR(error::kBadLocationContext);
     }
@@ -115,19 +115,21 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
         pathOnly = uri.substr(0, queryMarkPos);
         queryString = uri.substr(queryMarkPos + 1);
     }
-    const HttpRequest req;
-    // req.setMethod(method_);
-    // req.setUri(pathOnly);
-    // req.setVersion(version_);
-    // req.setHeaders(headers_);
-    // req.setBody(body_);
-    // req.setLocation(*location);
-    // req.setQueryString(queryString);
+    HttpRequest req;
+    req.setMethod(method_);
+    req.setUri(pathOnly);
+    req.setVersion(version_);
+    req.setHeaders(headers_);
+    req.setBody(body_);
+    req.setServer(ctx_->getServer());
+    req.setLocation(*location);
+    req.setDocumentRootConfig((location)->getDocumentRootConfig());
+    req.setQueryString(queryString);
     return OK(req);
 }
 
 types::Result<const LocationContext*, error::AppError>
-RequestParser::choseLocation(const std::string& uri) const {
+RequestParser::chooseLocation(const std::string& uri) const {
     if (!ctx_) {
         return types::err(error::kBadRequest);
     }
@@ -149,13 +151,6 @@ RequestParser::choseLocation(const std::string& uri) const {
         return types::ok(bestMatch);
     }
     return types::err(error::kBadRequest);
-}
-
-types::Result<HttpRequest, error::AppError> RequestParser::parseAll() {
-    RETURN_IF_ERR(parseRequestLine());
-    RETURN_IF_ERR(parseHeaders());
-    RETURN_IF_ERR(parseBody());
-    return buildRequest();
 }
 
 }  // namespace parse

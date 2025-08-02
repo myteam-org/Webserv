@@ -52,7 +52,7 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
             tr.setStatus(types::err(error::kBadRequest));
             return tr;
         }
-        const std::string key = utils::trim(line.substr(0, colon));
+        const std::string key = utils::toLower(utils::trim(line.substr(0, colon)));
         const std::string value = utils::trim(line.substr(colon + 1));
         headers.insert(std::make_pair(key, value));
     }

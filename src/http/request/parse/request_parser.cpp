@@ -4,8 +4,8 @@
 #include <string>
 
 #include "context.hpp"
-#include "http_request.hpp"
 #include "locationContext.hpp"
+#include "request.hpp"
 #include "utils/string.hpp"
 #include "utils/types/either.hpp"
 #include "utils/types/result.hpp"
@@ -28,14 +28,18 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     std::string method;
     std::string uri;
     std::string version;
-
     if (!(iss >> method >> uri >> version)) {
         return ERR(error::kBadRequest);
     }
     if (method != "GET" && method != "POST" && method != "DELETE") {
         return ERR(error::kBadMethod);
+    } else if (method == "GET") {
+        method_ = kMethodGet;
+    } else if (method == "POST") {
+        method_ = kMethodPost;
+    } else {
+        method_ = kMethodDelete;
     }
-
     if (uri.length() > kMaxRecommendedRequestLineLength) {
         return ERR(error::kUriTooLong);
     }
@@ -43,7 +47,6 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     if (version.substr(0, kHttpVersionPreFixLen) != "HTTP/1.1") {
         return ERR(error::kBadHttpVersion);
     }
-    method_ = method;
     uri_ = uri;
     version_ = version;
     return OK(types::Unit());
@@ -98,7 +101,7 @@ types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
     return OK(types::Unit());
 }
 
-types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
+types::Result<Request, error::AppError> RequestParser::buildRequest()
     const {
     const std::string uri = uri_;
     const types::Result<const LocationContext*, error::AppError> result =
@@ -115,16 +118,8 @@ types::Result<HttpRequest, error::AppError> RequestParser::buildRequest()
         pathOnly = uri.substr(0, queryMarkPos);
         queryString = uri.substr(queryMarkPos + 1);
     }
-    HttpRequest req;
-    req.setMethod(method_);
-    req.setUri(pathOnly);
-    req.setVersion(version_);
-    req.setHeaders(headers_);
-    req.setBody(body_);
-    req.setServer(ctx_->getServer());
-    req.setLocation(*location);
-    req.setDocumentRootConfig((location)->getDocumentRootConfig());
-    req.setQueryString(queryString);
+    Request req(method_, uri_, pathOnly, queryString, version_, headers_, body_,
+                server_, location_);
     return OK(req);
 }
 

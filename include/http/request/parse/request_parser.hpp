@@ -2,20 +2,18 @@
 
 #include "raw_headers.hpp"
 #include "context.hpp"
+#include "http/request/request.hpp"
 #include "utils/types/error.hpp"
 #include "utils/types/result.hpp"
 #include "config/context/serverContext.hpp"
 #include "config/context/locationContext.hpp"
-#include "config/context/documentRootConfig.hpp"
 
 namespace http {
     class ReadContext;
-    class HttpRequest;
 }
 
 namespace http {
 namespace parse {
-
 
 class RequestParser {
    public:
@@ -27,17 +25,10 @@ class RequestParser {
     types::Result<types::Unit, error::AppError> parseBody();
     types::Result<const LocationContext*, error::AppError> chooseLocation(
         const std::string& uri) const;
-    const std::string& getMethod() const;
-    const std::string& getRequestTarget() const;
-    const std::string& getPath() const;
-    const std::string& getQueryString() const;
-    const std::string& getVersion() const;
-    const RawHeaders& getHeaders() const;
-    const std::vector<char>& getBody()const;
 
    private:
     ReadContext* ctx_;
-    std::string method_;
+    HttpMethod method_;
     std::string uri_;
     std::string version_;
 
@@ -47,12 +38,11 @@ class RequestParser {
 
     const LocationContext* location_;
     const ServerContext* server_;
-    // const DocumentRootConfig* documentRoot_;
 
     bool checkMissingHost() const;
     bool validateContentLength() const;
     bool validateTransferEncoding() const;
-    types::Result<HttpRequest, error::AppError> buildRequest() const;
+    types::Result<Request, error::AppError> buildRequest() const;
 };
 
 }  // namespace parse

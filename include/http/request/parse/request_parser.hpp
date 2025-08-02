@@ -30,14 +30,13 @@ class RequestParser {
     ReadContext* ctx_;
     HttpMethod method_;
     std::string uri_;
+    std::string pathOnly_;
+    std::string queryString_;
     std::string version_;
 
     RawHeaders headers_;
 
     std::vector<char> body_;
-
-    const LocationContext* location_;
-    const ServerContext* server_;
 
     bool checkMissingHost() const;
     bool validateContentLength() const;

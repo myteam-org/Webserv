@@ -31,14 +31,14 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     if (!(iss >> method >> uri >> version)) {
         return ERR(error::kBadRequest);
     }
-    if (method != "GET" && method != "POST" && method != "DELETE") {
-        return ERR(error::kBadMethod);
-    } else if (method == "GET") {
+    if (method == "GET") {
         method_ = kMethodGet;
     } else if (method == "POST") {
         method_ = kMethodPost;
-    } else {
+    } else if (method == "DELETE") {
         method_ = kMethodDelete;
+    } else {
+        return ERR(error::kBadMethod);
     }
     if (uri.length() > kMaxRecommendedRequestLineLength) {
         return ERR(error::kUriTooLong);
@@ -101,8 +101,7 @@ types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
     return OK(types::Unit());
 }
 
-types::Result<Request, error::AppError> RequestParser::buildRequest()
-    const {
+types::Result<Request, error::AppError> RequestParser::buildRequest() const {
     const std::string uri = uri_;
     const types::Result<const LocationContext*, error::AppError> result =
         chooseLocation(uri);
@@ -118,8 +117,8 @@ types::Result<Request, error::AppError> RequestParser::buildRequest()
         pathOnly = uri.substr(0, queryMarkPos);
         queryString = uri.substr(queryMarkPos + 1);
     }
-    Request req(method_, uri_, pathOnly, queryString, version_, headers_, body_,
-                server_, location_);
+    const Request req(method_, uri_, pathOnly_, queryString_, "HTTP/1.1",
+                      headers_, body_, &ctx_->getServer(), result.unwrap());
     return OK(req);
 }
 

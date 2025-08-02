@@ -29,31 +29,39 @@ static std::vector<char> toVec(const std::string& s) {
 }
 
 TEST(RequestTest, ConstructorAndGetters_FullArgs) {
-    // ★ フィクスチャではなく、各テスト内で明示的に生成
-    ServerContext server("server");         // 実装に合わせて最低限の文字列
-    LocationContext location("location"); // 同上
+    ::ServerContext server("server");
+    ::LocationContext location("location");
 
     const http::HttpMethod method = http::kMethodGet;
     const std::string requestTarget = "/index.html?x=1";
     const std::string pathOnly      = "/index.html";
     const std::string queryString   = "x=1";
     const std::string version       = "HTTP/1.1";
-    RawHeaders headers              = makeHeaders({{"host", "example.com"}, {"content-length", "12"}});
-    std::vector<char> body          = toVec("body content");
 
-    http::Request req(method, requestTarget, pathOnly, queryString,
-                      version, headers, body, &server, &location);
+    // C++98: initializer_list は使わずに手で詰める
+    RawHeaders headers;
+    headers.insert(std::make_pair("host", "example.com"));
+    headers.insert(std::make_pair("content-length", "12"));
+
+    // C++98: toVec は (begin,end) で作る or 事前にヘルパーを用意
+    const std::string bodyStr = "body content";
+    std::vector<char> body(bodyStr.begin(), bodyStr.end());
+
+    http::Request req(
+        method, requestTarget, pathOnly, queryString,
+        version, headers, body, &server, &location
+    );
 
     EXPECT_EQ(req.getMethod(), method);
     EXPECT_EQ(req.getRequestTarget(), requestTarget);
     EXPECT_EQ(req.getPath(), pathOnly);
     EXPECT_EQ(req.getQueryString(), queryString);
     EXPECT_EQ(req.getHttpVersion(), version);
-    EXPECT_EQ(bodyToString(req), "body content");
+    EXPECT_EQ(std::string(req.getBody().begin(), req.getBody().end()), "body content");
 
-    // getHeader は Option（実装側がキー小文字化/検索時小文字化している前提）
-    auto h = req.getHeader("host");
-    EXPECT_TRUE(h.isSome());
+    // C++98: auto は使わない
+    types::Option<std::string> h = req.getHeader("host");
+    ASSERT_TRUE(h.isSome());
     EXPECT_EQ(h.unwrap(), "example.com");
 }
 
@@ -99,50 +107,6 @@ TEST(RequestTest, GetHeader_NoneByDefault) {
     auto h = req.getHeader("host");
     EXPECT_TRUE(h.isNone());
 }
-
-
-// #include <gtest/gtest.h>
-// #include "http/request/request.hpp"
-// #include "http/method.hpp"
-
-// using namespace http;
-
-// TEST(RequestTest, ConstructorAndGetters) {
-//     Request req(kMethodGet, "/index.html", "HTTP/1.1", "body content");
-//     EXPECT_EQ(req.getMethod(), kMethodGet);
-//     EXPECT_EQ(req.getRequestTarget(), "/index.html");
-//     EXPECT_EQ(req.getHttpVersion(), "HTTP/1.1");
-//     EXPECT_EQ(req.getBody(), "body content");
-// }
-
-// TEST(RequestTest, ConstructorWithDefaults) {
-//     Request req(kMethodPost, "/api/users");
-//     EXPECT_EQ(req.getMethod(), kMethodPost);
-//     EXPECT_EQ(req.getRequestTarget(), "/api/users");
-//     EXPECT_EQ(req.getHttpVersion(), "HTTP/1.1"); // Default value
-//     EXPECT_EQ(req.getBody(), ""); // Default value
-// }
-
-// TEST(RequestTest, EqualityOperator) {
-//     Request req1(kMethodGet, "/test", "HTTP/1.1", "");
-//     Request req2(kMethodGet, "/test", "HTTP/1.1", "");
-//     Request req3(kMethodPost, "/test", "HTTP/1.1", "");
-//     Request req4(kMethodGet, "/other", "HTTP/1.1", "");
-//     Request req5(kMethodGet, "/test", "HTTP/1.0", "");
-//     Request req6(kMethodGet, "/test", "HTTP/1.1", "body");
-
-//     EXPECT_TRUE(req1 == req2);
-//     EXPECT_FALSE(req1 == req3);
-//     EXPECT_FALSE(req1 == req4);
-//     EXPECT_FALSE(req1 == req5);
-//     EXPECT_FALSE(req1 == req6);
-// }
-
-// TEST(RequestTest, GetHeader) {
-//     Request req(kMethodGet, "/", "HTTP/1.1", "");
-//     types::Option<std::string> header = req.getHeader("Host");
-//     EXPECT_TRUE(header.isNone()); // Currently returns None
-// }
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

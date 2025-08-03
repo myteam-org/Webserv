@@ -117,8 +117,8 @@ types::Result<Request, error::AppError> RequestParser::buildRequest() const {
         pathOnly = uri.substr(0, queryMarkPos);
         queryString = uri.substr(queryMarkPos + 1);
     }
-    const Request req(method_, uri_, pathOnly_, queryString_, headers_, body_,
-                      &ctx_->getServer(), result.unwrap());
+    const Request req(method_, uri_, headers_, body_, &ctx_->getServer(),
+                      result.unwrap());
     return OK(req);
 }
 

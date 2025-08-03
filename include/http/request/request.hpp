@@ -21,7 +21,6 @@ namespace http {
       const std::string &requestTarget,
       const std::string &pathOnly,
       const std::string &queryString,
-      const std::string &httpVersion,
       const RawHeaders &headers,
       const std::vector<char> &body,
       const ServerContext *server,

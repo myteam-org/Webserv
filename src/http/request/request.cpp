@@ -6,24 +6,24 @@
 namespace http {
 Request::Request(HttpMethod method, const std::string &requestTarget,
                  const std::string &pathOnly, const std::string &queryString,
-                 const std::string &httpVersion, const RawHeaders &headers,
-                 const std::vector<char> &body, const ServerContext *server,
-                 const LocationContext *location)
+                 const RawHeaders &headers, const std::vector<char> &body,
+                 const ServerContext *server, const LocationContext *location)
     : method_(method),
       requestTarget_(requestTarget),
       pathOnly_(pathOnly),
       queryString_(queryString),
-      httpVersion_(httpVersion),
       headers_(headers),
       body_(body),
       server_(server),
       location_(location) {
+    httpVersion_ = "HTTP/1.1";
     documentRoot_ = &location_->getDocumentRootConfig();
 }
 
 bool Request::operator==(const Request &other) const {
     return method_ == other.method_ && requestTarget_ == other.requestTarget_ &&
-           httpVersion_ == other.httpVersion_ && body_ == other.body_;
+           httpVersion_ == other.httpVersion_ && headers_ == other.headers_ &&
+           body_ == other.body_;
 }
 
 HttpMethod Request::getMethod() const { return method_; }

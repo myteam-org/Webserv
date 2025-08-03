@@ -23,7 +23,7 @@ static http::Request makeRequest(http::HttpMethod m, const std::string& target,
     }
     RawHeaders headers;
     std::vector<char> body;
-    return http::Request(m, target, path, query, headers, body, &server,
+    return http::Request(m, target, headers, body, &server,
                          &location);
 }
 

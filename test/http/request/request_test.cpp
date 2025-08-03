@@ -50,8 +50,7 @@ TEST(RequestTest, ConstructorAndGetters_FullArgs) {
     const std::string bodyStr = "body content";
     std::vector<char> body(bodyStr.begin(), bodyStr.end());
 
-    http::Request req(method, requestTarget, pathOnly, queryString, headers,
-                      body, &server, &location);
+    http::Request req(method, requestTarget, headers, body, &server, &location);
 
     EXPECT_EQ(req.getMethod(), method);
     EXPECT_EQ(req.getRequestTarget(), requestTarget);
@@ -67,33 +66,35 @@ TEST(RequestTest, ConstructorAndGetters_FullArgs) {
     EXPECT_EQ(h.unwrap(), "example.com");
 }
 
-static http::Request mkReq(::ServerContext& server,
-                           ::LocationContext& location,
-                           http::HttpMethod method,
-                           const std::string& target,
-                           const std::string& path,
-                           const std::string& query,
+static http::Request mkReq(::ServerContext& server, ::LocationContext& location,
+                           http::HttpMethod method, const std::string& target,
+                           const std::string& path, const std::string& query,
                            const std::string& bodyStr,
                            const RawHeaders& headers /* = RawHeaders() */) {
-    return http::Request(method, target, path, query,
-                         headers, toVec(bodyStr), &server, &location);
+    return http::Request(method, target, headers, toVec(bodyStr), &server,
+                         &location);
 }
 
 TEST(RequestTest, EqualityOperator) {
     ::ServerContext server("server");
     ::LocationContext location("location");
-    RawHeaders empty; // 空ヘッダ
+    RawHeaders empty;  // 空ヘッダ
 
     // 同値
-    http::Request req1 = mkReq(server, location, http::kMethodGet, "/test", "/test", "", "", empty);
-    http::Request req2 = mkReq(server, location, http::kMethodGet, "/test", "/test", "", "", empty);
+    http::Request req1 = mkReq(server, location, http::kMethodGet, "/test",
+                               "/test", "", "", empty);
+    http::Request req2 = mkReq(server, location, http::kMethodGet, "/test",
+                               "/test", "", "", empty);
 
     // 差分（method / target / body）
-    http::Request req3 = mkReq(server, location, http::kMethodPost, "/test",  "/test",  "", "",    empty);
-    http::Request req4 = mkReq(server, location, http::kMethodGet,  "/other", "/other", "", "",    empty);
-    http::Request req6 = mkReq(server, location, http::kMethodGet,  "/test",  "/test",  "", "body", empty);
+    http::Request req3 = mkReq(server, location, http::kMethodPost, "/test",
+                               "/test", "", "", empty);
+    http::Request req4 = mkReq(server, location, http::kMethodGet, "/other",
+                               "/other", "", "", empty);
+    http::Request req6 = mkReq(server, location, http::kMethodGet, "/test",
+                               "/test", "", "body", empty);
 
-    EXPECT_TRUE (req1 == req2);
+    EXPECT_TRUE(req1 == req2);
     EXPECT_FALSE(req1 == req3);
     EXPECT_FALSE(req1 == req4);
     // HTTP/1.1 固定のため version での差は検証しない
@@ -104,8 +105,8 @@ TEST(RequestTest, GetHeader_NoneByDefault) {
     ServerContext server("server");
     LocationContext location("location");
 
-    http::Request req(http::kMethodGet, "/", "/", "", RawHeaders{},
-                      std::vector<char>{}, &server, &location);
+    http::Request req(http::kMethodGet, "/", RawHeaders{}, std::vector<char>{},
+                      &server, &location);
 
     auto h = req.getHeader("host");
     EXPECT_TRUE(h.isNone());

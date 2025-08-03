@@ -19,16 +19,15 @@ namespace http {
     explicit Request(
       HttpMethod method,
       const std::string &requestTarget,
-      const std::string &pathOnly,
-      const std::string &queryString,
       const RawHeaders &headers,
       const std::vector<char> &body,
       const ServerContext *server,
       const LocationContext *location
     );
 
+    
     bool operator==(const Request &other) const;
-
+    
     HttpMethod getMethod() const;
     const std::string &getRequestTarget() const;
     const std::string& getPath() const;
@@ -39,8 +38,9 @@ namespace http {
     const ServerContext* getServer() const;
     const LocationContext* getLocation() const;
     const DocumentRootConfig* getDocumentRoot() const;
-
+    
   private:
+    void splitTarget();
     HttpMethod method_;
     std::string requestTarget_;
     std::string pathOnly_;

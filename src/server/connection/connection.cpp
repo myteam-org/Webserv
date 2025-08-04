@@ -7,27 +7,19 @@ Connection::Connection(const ConnectionSocket& connSock)
       writeBuffer_(0),
       connState_(0),
       httpRequest_(0),
-      lastRecv(std::time(0)) {
+      httpResponse_(0),
+      lastRecv_(std::time(0)) {
 }
 
-
 Connection::~Connection() {
-    if (readBuffer_) {
-        delete readBuffer_;
-        readBuffer_ = 0;
-    }
-    if (writeBuffer_) {
-        delete writeBuffer_;
-        writeBuffer_ = 0;
-    }
     if (connState_) {
         delete connState_;
         connState_ = 0;
     }
-    if (httpRequest_) {
-        delete httpRequest_;
-        httpRequest_ = 0;
-    }
+    resetRequest();
+    resetResponse();
+    resetReadBuffer();
+    resetWriteBuffer();
 }
 
 const ConnectionSocket& Connection::getConnSock() const {
@@ -77,7 +69,7 @@ http::Request* Connection::getHttpRequest() const {
     return httpRequest_;
 }
 
-void Connection::setHttpRequest(http::Request* httpRequest) {
+void  Connection::setHttpRequest(http::Request* httpRequest) {
     if (httpRequest_ != httpRequest) {
         if (httpRequest_) {
             delete httpRequest_;
@@ -86,16 +78,56 @@ void Connection::setHttpRequest(http::Request* httpRequest) {
     }
 }
 
+http::Response* Connection::getHttpResponse() const {
+    return httpResponse_;
+}
+
+void Connection::setHttpResponse(http::Response* httpResponse) {
+    if (httpResponse_ != httpResponse) {
+        if (httpResponse_) {
+            delete httpResponse_;
+        }
+        httpResponse_ = httpResponse;
+    }
+}
+
 time_t Connection::getLastRecv() const {
-    return lastRecv;
+    return lastRecv_;
 }
 
 void Connection::setLastRecv(time_t lastRecvVal) {
-    lastRecv = lastRecvVal;
+    lastRecv_ = lastRecvVal;
 }
 
 bool Connection::isTimeout() {
     time_t now = std::time(0);
-    const int timeoutThreshold = 60;
-    return (now - lastRecv) > timeoutThreshold;
+    return (now - lastRecv_) > kTimeoutThresholdSec;
+}
+
+void Connection::resetRequest() {
+    if (httpRequest_) {
+        delete httpRequest_;
+        httpRequest_ = 0;
+    }
+}
+
+void Connection::resetResponse() {
+    if (httpResponse_) {
+        delete httpResponse_;
+        httpResponse_ = 0;
+    }
+}
+
+void Connection::resetReadBuffer() {
+    if (readBuffer_) {
+        delete readBuffer_;
+        readBuffer_ = 0;
+    }
+}
+
+void Connection::resetWriteBuffer() {
+    if (writeBuffer_) {
+        delete writeBuffer_;
+        writeBuffer_ = 0;
+    }
 }

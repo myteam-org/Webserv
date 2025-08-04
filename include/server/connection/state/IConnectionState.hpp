@@ -2,5 +2,7 @@
 #include "utils.hpp"
 
 class IConnectionState {
-    virtual types::Result<IConnectionState, int>onEvent() =0;
+public:
+    virtual types::Result<IConnectionState*, int>onEvent() =0;
+    virtual ~IConnectionState() {};
 };

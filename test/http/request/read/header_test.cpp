@@ -6,6 +6,7 @@
 #include "io/input/read/buffer.hpp"
 #include "io/input/reader/reader.hpp"
 #include "http/request/read/header.hpp"
+#include "utils/string.hpp"
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
@@ -75,22 +76,29 @@ TEST(ReadingRequestHeadersStateTest, ReturnsErrorWhenHeaderIsMalformed) {
   EXPECT_EQ(transitionResult.getStatus().unwrapErr(), error::kBadRequest);
 }
 
+static std::string getHeaderCI(const RawHeaders& h, const std::string& key) {
+    const std::string k = utils::toLower(key);
+    RawHeaders::const_iterator it = h.find(k);
+    return it == h.end() ? std::string() : it->second;
+}
+
+
 TEST(ReadingRequestHeadersStateTest, ReturnsDoneWhenHeadersEndWithCRLF) {
   DummyReader dummyReader("Host: localhost\r\nUser-Agent: Test\r\n\r\n");
   ReadBuffer readBuffer(dummyReader);
   http::ReadingRequestHeadersState* state = new http::ReadingRequestHeadersState();
   DummyResolver resolver;
   http::ReadContext ctx(resolver, state);
-
+  
   http::TransitionResult transitionResult = state->handle(ctx, readBuffer);
-
+  
   ASSERT_TRUE(transitionResult.getStatus().isOk());
   EXPECT_EQ(transitionResult.getStatus().unwrap(), http::IState::kDone);
   EXPECT_FALSE(transitionResult.getHeaders().isNone());
-
+  
   const RawHeaders& headers = transitionResult.getHeaders().unwrap();
-  EXPECT_EQ(headers.find("Host")->second, "localhost");
-  EXPECT_EQ(headers.find("User-Agent")->second, "Test");
+  EXPECT_EQ(getHeaderCI(headers, "Host"), "localhost");
+  EXPECT_EQ(getHeaderCI(headers, "User-Agent"), "Test");
 }
 
 int main(int argc, char **argv) {

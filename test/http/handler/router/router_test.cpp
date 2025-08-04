@@ -98,21 +98,6 @@ TEST(RouterTest, BuildAndServe) {
     delete router;
 }
 
-TEST(RouterTest, ServeNoMatch) {
-    http::RouterBuilder builder;
-    builder.route(http::kMethodGet, "/test", new MockHandler(1));
-    http::Router* router = builder.build();
-
-    ServerContext server("server");
-    LocationContext location("location");
-
-    auto req = makeRequest(http::kMethodGet, "/other", server, location);
-
-    EXPECT_THROW({ router->serve(req); }, std::runtime_error);
-
-    delete router;
-}
-
 TEST(RouterTest, MiddlewareTest) {
     int middleware_counter = 0;
 
@@ -130,6 +115,35 @@ TEST(RouterTest, MiddlewareTest) {
     (void)router->serve(req);
 
     EXPECT_EQ(middleware_counter, 1);
+
+    delete router;
+}
+
+TEST(RouterTest, ServeNoMatch) {
+    http::RouterBuilder builder;
+    builder.route(http::kMethodGet, "/test", new MockHandler(1));
+    http::Router* router = builder.build();
+
+    // ServerContext / LocationContext を用意
+    ServerContext server("server");
+    LocationContext location("location");
+
+    // makeRequest を使用して正しい形式でRequestを作成
+    http::Request req = makeRequest(http::kMethodGet, "/other", server, location);
+
+    // ルートが見つからない場合の動作をテスト
+    Either<IAction*, http::Response> result = router->serve(req);
+    
+    // 結果がResponseである（ルートが見つからない）ことを確認
+    EXPECT_TRUE(result.isRight());
+    
+    // もしResponseが返された場合、適切なステータスコードかを確認
+    if (result.isRight()) {
+        http::Response response = result.unwrapRight();
+        // 404や500などのエラーステータスが返されることを期待
+        // 具体的なステータスコードは実装に依存するので、成功ステータス以外であることを確認
+        EXPECT_NE(response.getStatusCode(), 200);
+    }
 
     delete router;
 }

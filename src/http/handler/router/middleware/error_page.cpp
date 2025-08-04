@@ -2,6 +2,7 @@
 #include "utils/string.hpp"
 #include <fstream>
 #include <sstream>
+#include "http/response/builder.hpp"
 
 namespace http {
 
@@ -68,8 +69,7 @@ Either<IAction*, Response> ErrorPage::intercept(const Request& requestContext, I
         errorPageBody = BuildDefaultErrorPageBody(statusCode, http::getHttpStatusText(statusCode));
     }
 
-    // 実装に応じて以下を有効化
-    // return Right(ResponseBuilder().html(errorPageBody, statusCode).build());
+    return Right(ResponseBuilder().html(errorPageBody, statusCode).build());
     return Right(Response(statusCode));
 }
 

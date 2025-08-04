@@ -9,3 +9,4 @@ target_link_libraries(matcher_test PRIVATE webserv_lib gtest)
 gtest_discover_tests(matcher_test)
 
 add_subdirectory(router)
+add_subdirectory(file)

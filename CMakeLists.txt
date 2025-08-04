@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(src)
 add_subdirectory(test)
 
+
 # clang-tidyの設定
 find_program(CLANG_TIDY clang-tidy)
 find_program(GIT git)

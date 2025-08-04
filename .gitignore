@@ -17,3 +17,4 @@ _deps/*
 CMakeCache.txt
 
 Testing/
+tmp/

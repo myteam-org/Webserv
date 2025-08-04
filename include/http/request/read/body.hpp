@@ -2,7 +2,6 @@
 
 #include "buffer.hpp"
 #include "state.hpp"
-#include "length_body.hpp"
 #include "chunked_body.hpp"
 
 namespace http {
@@ -11,6 +10,11 @@ enum BodyEncodingType {
     kNone,
     kContentLength,
     kChunked
+};
+
+struct BodyLengthConfig {
+    std::size_t contentLength;
+    std::size_t clientMaxBodySize;
 };
 
 class ReadingRequestBodyState : public IState {

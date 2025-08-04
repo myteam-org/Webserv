@@ -18,11 +18,16 @@ class ReadContext {
 
   const IState* getState() const;
   config::IConfigResolver& getConfigResolver() const;
+  void setRequestLine(const std::string& line);
   const std::string& getRequestLine() const;
+  void setHeaders(const RawHeaders& headers);
   const RawHeaders& getHeaders() const;
   void setBody(const std::string& body);
   const std::string& getBody() const;
-  types::Option<IState*> createReadingBodyState(const RawHeaders& headers);
+  types::Option<IState*> createReadingBodyState(const RawHeaders& headers) const;
+  void setServer(const ServerContext& server);
+  const ServerContext& getServer() const;
+  bool hasServer() const;
 
  private:
   IState* state_;
@@ -31,8 +36,7 @@ class ReadContext {
   RawHeaders headers_;
   std::string body_;
   size_t maxBodySize_ ;
-
-
+  const ServerContext* server_;
 };
 
 }  // namespace http

@@ -1,0 +1,9 @@
+add_executable(documentRootConfig_test documentRootConfig_test.cpp)
+
+# 依存関係を追加
+add_dependencies(documentRootConfig_test webserv_lib)
+
+# ライブラリをリンク
+target_link_libraries(documentRootConfig_test PRIVATE webserv_lib gtest_main gmock_main)
+
+gtest_discover_tests(documentRootConfig_test)

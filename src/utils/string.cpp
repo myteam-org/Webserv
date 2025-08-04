@@ -34,7 +34,8 @@ std::string utils::trim(const std::string &str) {
     return str.substr(start, end - start);
 }
 
-types::Result<std::size_t, error::AppError> utils::parseHex(const std::string &hex) {
+types::Result<std::size_t, error::AppError> utils::parseHex(
+    const std::string &hex) {
     std::size_t result = 0;
 
     for (std::size_t i = 0; i < hex.size(); ++i) {
@@ -52,4 +53,15 @@ types::Result<std::size_t, error::AppError> utils::parseHex(const std::string &h
         }
     }
     return types::ok(result);
+}
+
+bool utils::containsNonDigit(const std::string &val) {
+    for (std::size_t i = 0; i < val.size(); ++i) {
+        const char chr = val[i];
+
+        if (!std::isdigit(static_cast<unsigned char>(chr))) {
+            return true;
+        }
+    }
+    return false;
 }

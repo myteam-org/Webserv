@@ -25,12 +25,13 @@ class DummyConfigResolver : public http::config::IConfigResolver {
    public:
     DummyConfigResolver() {}
     virtual ~DummyConfigResolver() {}
-    const ServerContext& choseServer(const std::string& host) const {
-        (void)host;
-        static ServerContext dummy("dummy_server");
-        return dummy;  // テスト用の適当なオブジェクトを返す
+    types::Result<const ServerContext*, error::AppError>
+    chooseServer(const std::string&) const {
+        static ServerContext dummy("server");
+        return types::ok<const ServerContext*>(&dummy);  // ポインタを返す
     }
 };
+
 
 // テスト用ダミーState
 class DummyState : public http::IState {

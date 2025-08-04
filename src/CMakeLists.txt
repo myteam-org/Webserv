@@ -42,6 +42,7 @@ add_library(webserv_lib STATIC
     http/request/request.cpp
     http/method.cpp
     http/response/response.cpp
+    http/response/builder.cpp
     http/handler/router/builder.cpp
     http/handler/router/internal.cpp
     http/handler/router/registry.cpp
@@ -51,6 +52,11 @@ add_library(webserv_lib STATIC
     http/handler/router/middleware/error_page.cpp
     http/handler/router/middleware/logger.cpp
     http/status.cpp
+    http/handler/file/delete.cpp
+    http/handler/file/static.cpp
+    http/handler/file/upload.cpp
+    http/handler/file/redirect.cpp
+    http/mime.cpp
 )
 
 # includeディレクトリの設定（ターゲットベース）
@@ -73,6 +79,7 @@ target_include_directories(webserv_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include/action
     ${PROJECT_SOURCE_DIR}/include/http/response
     ${PROJECT_SOURCE_DIR}/include/http/handler/router/middleware
+    ${PROJECT_SOURCE_DIR}/include/http/handler/file
 )
 
 # 実行ファイルの生成

@@ -1,19 +1,19 @@
 #include "parser.hpp"
 
 #include <gtest/gtest.h>
+#include <sys/stat.h>   // mkdir
+#include <sys/types.h>  // mode_t
 
 #include <fstream>
 #include <sstream>
-#include <sys/stat.h>  // mkdir
-#include <sys/types.h> // mode_t
 
+#include "config.hpp"
 #include "serverContext.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
-#include "config.hpp"
 
 class ConfigParserTest : public ::testing::Test {
-protected:
+   protected:
     void TearDown() override {
         // 作成した一時ファイルを削除
         for (size_t i = 0; i < tempFiles_.size(); ++i) {
@@ -50,13 +50,12 @@ protected:
         return createTokenizerFromConfig(configContent, outFilename, dir);
     }
 
-private:
+   private:
     static int fileCounter_;
     std::vector<std::string> tempFiles_;
 };
 
 int ConfigParserTest::fileCounter_ = 0;
-
 
 // Test constructor and destructor
 TEST_F(ConfigParserTest, ConstructorDestructorTest) {
@@ -66,7 +65,7 @@ TEST_F(ConfigParserTest, ConstructorDestructorTest) {
     ConfigTokenizer* tokenizer = createTokenizerFromConfig("", filename, dir);
 
     EXPECT_NO_THROW({
-        ConfigParser parser(*tokenizer, filename); // ← filename が confFile
+        ConfigParser parser(*tokenizer, filename);  // ← filename が confFile
     });
 
     std::remove(filename.c_str());
@@ -118,7 +117,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test max body size - invalid number
@@ -132,7 +132,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - unmatched braces
@@ -147,7 +148,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - unmatched braces2
@@ -212,10 +214,11 @@ server {
 }
 )";
 
-     std::string filename;
+    std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid port number
@@ -229,7 +232,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid port number
@@ -243,7 +247,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error1
@@ -257,7 +262,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error2
@@ -271,7 +277,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error3
@@ -285,7 +292,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error4
@@ -299,7 +307,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error5
@@ -313,7 +322,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error6
@@ -327,7 +337,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error1
@@ -343,7 +354,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error2
@@ -360,7 +372,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error3
@@ -376,7 +389,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error4
@@ -392,7 +406,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error5
@@ -408,7 +423,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error6
@@ -424,7 +440,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error7
@@ -440,7 +457,8 @@ server {
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - no listen in server block
@@ -467,15 +485,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -504,15 +526,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -538,15 +564,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -575,15 +605,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -612,15 +646,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -641,7 +679,6 @@ TEST_F(ConfigParserTest, ThrowErrMethod) {
 
 // Test empty configuration
 TEST_F(ConfigParserTest, EmptyConfiguration) {
-
     std::string filename;
     ConfigTokenizer* tokenizer = makeTok("", filename);
     ConfigParser parser(*tokenizer, filename);

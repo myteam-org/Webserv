@@ -56,7 +56,7 @@ bool Validator::isValidRoot(const std::string& root,
         path = root;
     } else {
         std::string directory = dirOf(confPath);
-            directory = dirOf(directory);
+        directory = dirOf(directory);
         path = directory + "/" + root;
     }
 

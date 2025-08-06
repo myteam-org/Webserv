@@ -1,4 +1,4 @@
-#include "config.hpp"
+#include "config/config.hpp"
 
 int main(int argc, char** argv) {
         if (!Config::checkArgc(argc)) {

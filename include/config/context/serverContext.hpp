@@ -12,8 +12,8 @@ class LocationContext;
 
 #include "documentRootConfig.hpp"
 #include "locationContext.hpp"
-#include "token.hpp"
-#include "tokenizer.hpp"
+#include "../token.hpp"
+#include "../tokenizer.hpp"
 
 class ServerContext {
    public:

@@ -4,14 +4,14 @@ CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
 # CPPFLAG += -g -fsanitize=address
 INC_DIR	= include
 SRCS	= src/main.cpp \
-	  src/config/Config.cpp \
-	  src/config/ServerContext.cpp \
-	  src/config/LocationContext.cpp \
-	  src/config/DocumentRootConfig.cpp \
-	  src/validator/Validator.cpp \
-	  src/config/ConfigTokenizer.cpp \
-	  src/config/ConfigParser.cpp \
-	  src/config/Token.cpp
+	  src/config/config.cpp \
+	  src/config/context/serverContext.cpp \
+	  src/config/context/locationContext.cpp \
+	  src/config/context/documentRootConfig.cpp \
+	  src/config/validator.cpp \
+	  src/config/tokenizer.cpp \
+	  src/config/parser.cpp \
+	  src/config/token.cpp
 
 OBJS	= $(SRCS:.cpp=.o)
 

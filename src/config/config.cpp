@@ -2,10 +2,10 @@
 
 #include <cstddef>
 
-#include "data.hpp"
-#include "documentRootConfig.hpp"
-#include "locationContext.hpp"
-#include "serverContext.hpp"
+#include "config/data.hpp"
+#include "config/context/documentRootConfig.hpp"
+#include "config/context/locationContext.hpp"
+#include "config/context/serverContext.hpp"
 
 struct ConfigServerValueErrorEraser {
    private:

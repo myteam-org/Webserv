@@ -35,12 +35,31 @@ bool Validator::isValidIndexFile(const std::string& indexFile) {
            indexFile.find(".htm") != std::string::npos;
 }
 
-bool Validator::isValidRoot(const std::string& root) {
-    if (root.empty()) {
-        return false;
+std::string Validator::dirOf(const std::string& path) {
+    if (path.empty()) {
+        return ".";
+    }
+    const std::string::size_type pos = path.rfind('/');
+    if (pos == std::string::npos) {
+        return ".";
+    }
+    return pos ? path.substr(0, pos) : "/";
+}
+
+// NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
+bool Validator::isValidRoot(const std::string& root,
+                            const std::string& confPath) {
+    struct stat sta;
+    std::string path;
+
+    if (!root.empty() && root[0] == '/') {
+        path = root;
+    } else {
+        std::string directory = dirOf(confPath);
+            directory = dirOf(directory);
+        path = directory + "/" + root;
     }
 
-    struct stat sta;
-    return stat(root.c_str(), &sta) == 0 && S_ISDIR(sta.st_mode) &&
-           access(root.c_str(), R_OK | X_OK) == 0;
+    return stat(path.c_str(), &sta) == 0 && S_ISDIR(sta.st_mode) &&
+           access(path.c_str(), R_OK | X_OK) == 0;
 }

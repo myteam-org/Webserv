@@ -24,8 +24,8 @@ void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(
     &ConfigParser::setIndex_, &ConfigParser::setAutoIndex_,
     &ConfigParser::setIsCgi_, &ConfigParser::setRedirect_};
 
-ConfigParser::ConfigParser(ConfigTokenizer& tokenizer)
-    : tokens_(tokenizer.getTokens()), depth_(0) {
+ConfigParser::ConfigParser(ConfigTokenizer& tokenizer, const std::string& confFile)
+    : tokens_(tokenizer.getTokens()), depth_(0), confFile_(confFile) {
     makeVectorServer_();
 }
 
@@ -199,7 +199,7 @@ void ConfigParser::setRoot_(LocationContext& location, size_t& index) {
     DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
 
     if (this->tokens_[index].getType() == VALUE) {
-        if (!Validator::isValidRoot(root)) {
+        if (!Validator::isValidRoot(root, confFile_)) {
             throwErr(root, ": Invalid root directory: line ",
                      this->tokens_[index].getLineNumber());
         }

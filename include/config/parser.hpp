@@ -12,7 +12,7 @@ class ServerContext;
 
 class ConfigParser {
    public:
-    explicit ConfigParser(ConfigTokenizer& tokenizer);
+    explicit ConfigParser(ConfigTokenizer& tokenizer, const std::string& confFile);
     ~ConfigParser();
 
     std::vector<ServerContext>& getServer();
@@ -33,6 +33,7 @@ class ConfigParser {
     std::vector<Token> tokens_;
     int depth_;
     std::vector<ServerContext> servers_;
+    std::string confFile_;
 
     void makeVectorServer_();
     void updateDepth(const Token& token, int lineNumber);

@@ -30,8 +30,11 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
     if (lastSlash != std::string::npos) {
         const std::string dirPath = fullPath.substr(0, lastSlash);
         struct stat sta;
-        if (stat(dirPath.c_str(), &sta) != 0 || !(sta.st_mode & S_IFDIR)) {
+        if (stat(dirPath.c_str(), &sta) != 0) {
             return ResponseBuilder().status(kStatusNotFound).build();
+        }
+        if (!S_ISDIR(sta.st_mode)) {
+            return ResponseBuilder().status(kStatusForbidden).build();
         }
     }
     // write the body to a file

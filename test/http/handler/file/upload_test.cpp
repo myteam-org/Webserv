@@ -66,4 +66,55 @@ TEST_F(UploadFileHandlerTest, UploadsFileSuccessfully) {
     EXPECT_EQ(ss.str(), testContent);
 }
 
+TEST_F(UploadFileHandlerTest, Returns403IfFileCannotBeOpened) {
+    std::string unwritableDir = "/root";  // 多くの環境で一般ユーザ書き込み不可
+    if (access(unwritableDir.c_str(), W_OK) == 0) {
+        GTEST_SKIP() << "Running as root or /root is writable, skipping test.";
+    }
+
+    DocumentRootConfig config;
+    config.setRoot(unwritableDir);
+
+    UploadFileHandler handler(config);
+
+    RawHeaders headers;
+    std::vector<char> body(10, 'x');
+
+    Request request(
+        kMethodPost,
+        "/test.txt",
+        headers,
+        body,
+        NULL,
+        NULL
+    );
+
+    Either<IAction*, Response> result = handler.serve(request);
+    ASSERT_TRUE(result.isRight());
+    EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusForbidden);
+}
+
+TEST_F(UploadFileHandlerTest, Returns404IfDirectoryDoesNotExist) {
+    DocumentRootConfig config;
+    config.setRoot("./nonexistent_dir");  // 存在しないルート
+
+    UploadFileHandler handler(config);
+
+    RawHeaders headers;
+    std::vector<char> body(10, 'x');  // 適当なボディ
+
+    Request request(
+        kMethodPost,
+        "/missing_dir/file.txt",  // missing_dir が存在しない
+        headers,
+        body,
+        NULL,
+        NULL
+    );
+
+    Either<IAction*, Response> result = handler.serve(request);
+    ASSERT_TRUE(result.isRight());
+    EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusNotFound);
+}
+
 }  // namespace http

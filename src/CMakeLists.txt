@@ -29,6 +29,8 @@ add_library(webserv_lib STATIC
     server/socket/connectionSocket.cpp
     server/socket/serverSocket.cpp
     server/socket/socketAddr.cpp
+    server/connection/connection.cpp
+    server/connection/connectionManager.cpp
     http/request/read/body.cpp
     http/request/read/header_parsing_utils.cpp
     http/request/read/length_body.cpp

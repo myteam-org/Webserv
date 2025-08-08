@@ -65,11 +65,11 @@ std::string utils::joinPath(const std::string& leftPath, const std::string& righ
 
     if (leftPath[leftPath.size() - 1] == '/' && rightPath[0] == '/') {
         return leftPath + rightPath.substr(1);
-    } else if (leftPath[leftPath.size() - 1] != '/' && rightPath[0] != '/') {
-        return leftPath + "/" + rightPath; 
-    } else {
-        return leftPath + rightPath;
     }
+    if (leftPath[leftPath.size() - 1] != '/' && rightPath[0] != '/') {
+        return leftPath + "/" + rightPath; 
+    }
+    return leftPath + rightPath;
 }
 
 bool utils::containsNonDigit(const std::string &val) {

@@ -18,29 +18,29 @@ namespace http {
 UploadFileHandler::UploadFileHandler(const DocumentRootConfig& docRootConfig)
     : docRootConfig_(docRootConfig) {}
 
-Either<IAction*, Response> UploadFileHandler::serve(const Request& reqest) {
-    return Right(this->serveInternal(reqest));
+Either<IAction*, Response> UploadFileHandler::serve(const Request& request) {
+    return Right(this->serveInternal(request));
 }
 
 Response UploadFileHandler::serveInternal(const Request& request) const {
     const std::string fullPath = utils::joinPath(docRootConfig_.getRoot(),  request.getPath());
 
     // check the exsistence of the directory
-    std::string::size_type lastSlash = fullPath.rfind('/');
+    const std::string::size_type lastSlash = fullPath.rfind('/');
     if (lastSlash != std::string::npos) {
-        std::string dirPath = fullPath.substr(0, lastSlash);
+        const std::string dirPath = fullPath.substr(0, lastSlash);
         struct stat sta;
         if (stat(dirPath.c_str(), &sta) != 0 || !(sta.st_mode & S_IFDIR)) {
             return ResponseBuilder().status(kStatusNotFound).build();
         }
     }
     // write the body to a file
-    int fd = open(fullPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    const int fd = open(fullPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }
     const std::vector<char>& body = request.getBody();
-    ssize_t written = write(fd, &body[0], body.size());
+    const ssize_t written = write(fd, &body[0], body.size());
     close(fd);
 
     if (written < 0 || static_cast<size_t>(written) != body.size()) {

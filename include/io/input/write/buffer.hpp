@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "utils.hpp"
+#include <writer.hpp>
 
 class WriteBuffer {
 public:
@@ -16,5 +17,9 @@ public:
 
 private:
     std::vector<char> buf_;
+    std::size_t head_;
     io::IWriter &writer_;
+    void compact_();
+    WriteBuffer(const WriteBuffer&);
+    WriteBuffer& operator=(const WriteBuffer&);
 };

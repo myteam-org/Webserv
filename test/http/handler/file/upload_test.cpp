@@ -1,80 +1,75 @@
 #include <gtest/gtest.h>
 #include <fstream>
-#include <cstdio>  // std::remove
+#include <cstdio>      // std::remove
+#include <sys/stat.h>  // mkdir
+#include <unistd.h>    // access
 
 #include "http/handler/file/upload.hpp"
 #include "http/request/request.hpp"
 #include "config/context/documentRootConfig.hpp"
+#include "utils/string.hpp"
 
 namespace http {
 
 class UploadFileHandlerTest : public ::testing::Test {
 protected:
     std::string tempDir;
-    std::string filePath;
     std::string uploadPath;
+    std::string filePath;
 
-    void SetUp() {
-        tempDir = "./tmp_upload_test";
-        uploadPath = "/upload_test_file.txt";
-        filePath = tempDir + uploadPath;
+    void SetUp() override {
+        tempDir = "tmp_upload_test";
+        uploadPath = "/upload_test_file.txt";  // 先頭 '/' を含む通常の HTTP path
+        filePath = utils::joinPath(tempDir, "upload_test_file.txt");
 
-        // 一時ディレクトリを作成（存在しない場合）
-        mkdir(tempDir.c_str(), 0755);
+        mkdir(tempDir.c_str(), 0755);  // テスト用ディレクトリ作成
     }
 
-    void TearDown() {
+    void TearDown() override {
         std::remove(filePath.c_str());  // ファイル削除
         rmdir(tempDir.c_str());         // ディレクトリ削除
     }
 };
 
 TEST_F(UploadFileHandlerTest, UploadsFileSuccessfully) {
-    // ハンドラの準備
     DocumentRootConfig config;
-    config.setRoot(tempDir);  // temp upload dir
+    config.setRoot(tempDir);
 
     UploadFileHandler handler(config);
 
-    // ダミーリクエスト作成
     RawHeaders headers;
-    std::string testContent = "Hello, Upload!";
-    std::vector<char> body(testContent.begin(), testContent.end());
-
-    const ServerContext* server = NULL;
-    const LocationContext* location = NULL;
+    std::string content = "Hello, Upload!";
+    std::vector<char> body(content.begin(), content.end());
 
     Request request(
-        kMethodPost,           // POST メソッド
-        uploadPath,            // pathOnly 相当
+        kMethodPost,
+        uploadPath,  // 先頭 '/' 付き
         headers,
         body,
-        server,
-        location
+        NULL,
+        NULL
     );
 
     Either<IAction*, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());
     EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusCreated);
 
-    // 実際にファイルができたか確認
     std::ifstream ifs(filePath.c_str(), std::ios::binary);
     ASSERT_TRUE(ifs.is_open());
 
     std::stringstream ss;
     ss << ifs.rdbuf();
-    EXPECT_EQ(ss.str(), testContent);
+    EXPECT_EQ(ss.str(), content);
 }
 
 TEST_F(UploadFileHandlerTest, Returns403IfFileCannotBeOpened) {
-    std::string unwritableDir = "/root";  // 多くの環境で一般ユーザ書き込み不可
+    std::string unwritableDir = "/root";
     if (access(unwritableDir.c_str(), W_OK) == 0) {
-        GTEST_SKIP() << "Running as root or /root is writable, skipping test.";
+        GTEST_SKIP() << "Running as root or /root is writable, skipping.";
     }
 
     DocumentRootConfig config;
     config.setRoot(unwritableDir);
-
     UploadFileHandler handler(config);
 
     RawHeaders headers;
@@ -96,16 +91,15 @@ TEST_F(UploadFileHandlerTest, Returns403IfFileCannotBeOpened) {
 
 TEST_F(UploadFileHandlerTest, Returns404IfDirectoryDoesNotExist) {
     DocumentRootConfig config;
-    config.setRoot("./nonexistent_dir");  // 存在しないルート
-
+    config.setRoot("nonexistent_dir");
     UploadFileHandler handler(config);
 
     RawHeaders headers;
-    std::vector<char> body(10, 'x');  // 適当なボディ
+    std::vector<char> body(10, 'x');
 
     Request request(
         kMethodPost,
-        "/missing_dir/file.txt",  // missing_dir が存在しない
+        "/missing_dir/file.txt",
         headers,
         body,
         NULL,

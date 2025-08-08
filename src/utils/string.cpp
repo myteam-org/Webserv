@@ -1,6 +1,7 @@
 #include "string.hpp"
 
 #include <cctype>
+#include <vector>
 
 static const size_t HEX = 16;
 static const size_t TEN = 10;
@@ -55,7 +56,8 @@ types::Result<std::size_t, error::AppError> utils::parseHex(
     return types::ok(result);
 }
 
-std::string utils::joinPath(const std::string& leftPath, const std::string& rightPath) {
+std::string utils::joinPath(const std::string &leftPath,
+                            const std::string &rightPath) {
     if (leftPath.empty()) {
         return rightPath;
     }
@@ -67,7 +69,7 @@ std::string utils::joinPath(const std::string& leftPath, const std::string& righ
         return leftPath + rightPath.substr(1);
     }
     if (leftPath[leftPath.size() - 1] != '/' && rightPath[0] != '/') {
-        return leftPath + "/" + rightPath; 
+        return leftPath + "/" + rightPath;
     }
     return leftPath + rightPath;
 }
@@ -81,4 +83,32 @@ bool utils::containsNonDigit(const std::string &val) {
         }
     }
     return false;
+}
+
+std::string utils::normalizePath(const std::string &path) {
+    std::vector<std::string> parts;
+    std::istringstream iss(path);
+    std::string token;
+
+    while (std::getline(iss, token, '/')) {
+        if (token.empty() || token == ".") {
+            continue;
+        }
+        if (token == "..") {
+            if (!parts.empty()) {
+                parts.pop_back();  // one level up
+            }
+        } else {
+            parts.push_back(token);
+        }
+    }
+
+    std::string result = path[0] == '/' ? "/" : "";
+    for (size_t i = 0; i < parts.size(); ++i) {
+        result += parts[i];
+        if (i + 1 != parts.size()) {
+            result += "/";
+        }
+    }
+    return result;
 }

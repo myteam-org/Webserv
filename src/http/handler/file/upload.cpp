@@ -1,8 +1,8 @@
 #include "upload.hpp"
 
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 #include <cerrno>
@@ -23,12 +23,27 @@ Either<IAction*, Response> UploadFileHandler::serve(const Request& request) {
 }
 
 Response UploadFileHandler::serveInternal(const Request& request) const {
-    const std::string fullPath = utils::joinPath(docRootConfig_.getRoot(),  request.getPath());
+    const std::string& root = docRootConfig_.getRoot();
+    std::string userPath = request.getPath();
 
-    // check the exsistence of the directory
-    const std::string::size_type lastSlash = fullPath.rfind('/');
+    if (!userPath.empty() && userPath[0] == '/') {
+        userPath = userPath.substr(1);
+    }
+    if (!isValidUserPath(userPath)) {
+        return ResponseBuilder().status(kStatusForbidden).build();
+    }
+
+    const std::string fullPath = utils::joinPath(root, userPath);
+    const std::string normalized = utils::normalizePath(fullPath);
+
+    if (!isPathUnderRoot(normalized, root)) {
+        return ResponseBuilder().status(kStatusForbidden).build();
+    }
+
+    const std::string::size_type lastSlash = normalized.rfind('/');
+    
     if (lastSlash != std::string::npos) {
-        const std::string dirPath = fullPath.substr(0, lastSlash);
+        const std::string dirPath = normalized.substr(0, lastSlash);
         struct stat sta;
         if (stat(dirPath.c_str(), &sta) != 0) {
             return ResponseBuilder().status(kStatusNotFound).build();
@@ -37,18 +52,31 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
             return ResponseBuilder().status(kStatusForbidden).build();
         }
     }
-    // write the body to a file
-    const int fd = open(fullPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    return writeToFile(normalized, request.getBody());
+}
+
+bool UploadFileHandler::isValidUserPath(const std::string& path) {
+    return !path.empty() && path.find("..") == std::string::npos;
+}
+
+bool UploadFileHandler::isPathUnderRoot(const std::string& path,
+                                        const std::string& root) {
+    return path.compare(0, root.size(), root) == 0 &&
+           (path.size() == root.size() || path[root.size()] == '/');
+}
+
+Response UploadFileHandler::writeToFile(const std::string& path,
+                                        const std::vector<char>& body) {
+    const int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
     if (fd < 0) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }
-    const std::vector<char>& body = request.getBody();
-    const ssize_t written = write(fd, &body[0], body.size());
+    const ssize_t written = write(fd, body.data(), body.size());
     close(fd);
-
     if (written < 0 || static_cast<size_t>(written) != body.size()) {
         return ResponseBuilder().status(kStatusInternalServerError).build();
     }
+
     return ResponseBuilder().status(kStatusCreated).build();
 }
 

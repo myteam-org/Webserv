@@ -11,6 +11,7 @@
 #include <fstream>
 
 #include "http/response/builder.hpp"
+#include "io/base/fdGuard.hpp"
 #include "utils/string.hpp"
 
 namespace http {
@@ -67,12 +68,12 @@ bool UploadFileHandler::isPathUnderRoot(const std::string& path,
 
 Response UploadFileHandler::writeToFile(const std::string& path,
                                         const std::vector<char>& body) {
-    const int fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
-    if (fd < 0) {
+    const int raw_fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (raw_fd < 0) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }
-    const ssize_t written = write(fd, body.data(), body.size());
-    close(fd);
+    const io::base::FdGuard fd(raw_fd);
+    const ssize_t written = write(fd.get(), body.data(), body.size());
     if (written < 0 || static_cast<size_t>(written) != body.size()) {
         return ResponseBuilder().status(kStatusInternalServerError).build();
     }

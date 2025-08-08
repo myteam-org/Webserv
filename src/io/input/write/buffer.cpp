@@ -9,7 +9,9 @@ WriteBuffer::WriteBuffer(io::IWriter& writer)
 }
 
 void WriteBuffer::append(const std::string& data) {
-    if (data.empty()) return;
+    if (data.empty()) {
+        return;
+    }
     const std::size_t oldSize = buf_.size();
     buf_.resize(oldSize + data.size());
     std::memcpy(&buf_[0] + oldSize, data.data(), data.size());
@@ -24,14 +26,14 @@ types::Result<std::size_t, error::AppError> WriteBuffer::flush() {
 
         io::IWriter::WriteResult wr = writer_.write(p, n);
         if (!wr.isOk()) {
-            if (wr.unwrapErr().isWouldBlock()) {
-                return types::ok<std::size_t>(total);
-            }
-            return types::err<std::size_t>(wr.unwrapErr());
+            // if (wr.unwrapErr().isWouldBlock()) {
+            //     return types::ok<std::size_t>(total);  // WouldBlock は「ここまでの total」を成功として返す
+            // }
+            return types::err<error::AppError>(wr.unwrapErr());
         }
-        const std::size_t wrote = wr.value();
+        const std::size_t wrote = wr.unwrap();
         if (wrote == 0) {
-            return types::ok<std::size_t>(total);
+            return types::ok<std::size_t>(total);  // 0 は「今は書けない」扱い：ここまでの total を返す
         }
 
         head_ += wrote;

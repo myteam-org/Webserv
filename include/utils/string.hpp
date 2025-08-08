@@ -20,13 +20,15 @@ std::string toLower(const std::string& str);
 std::string trim(const std::string& str);
 types::Result<std::size_t, error::AppError> parseHex(const std::string& hex);  // 16進数を変換する
 bool containsNonDigit(const std::string& val);
-    template <class T>
-    std::string toString(T value) {
-        std::stringstream ss;
-        ss << value;
 
-        return ss.str();
-    }
+std::string joinPath(const std::string& leftPath, const std::string& rightPath);
+template <class T>
+std::string toString(T value) {
+    std::stringstream ss;
+    ss << value;
+
+    return ss.str();
+}
 
 
 

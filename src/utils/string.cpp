@@ -55,6 +55,23 @@ types::Result<std::size_t, error::AppError> utils::parseHex(
     return types::ok(result);
 }
 
+std::string utils::joinPath(const std::string& leftPath, const std::string& rightPath) {
+    if (leftPath.empty()) {
+        return rightPath;
+    }
+    if (rightPath.empty()) {
+        return leftPath;
+    }
+
+    if (leftPath[leftPath.size() - 1] == '/' && rightPath[0] == '/') {
+        return leftPath + rightPath.substr(1);
+    } else if (leftPath[leftPath.size() - 1] != '/' && rightPath[0] != '/') {
+        return leftPath + "/" + rightPath; 
+    } else {
+        return leftPath + rightPath;
+    }
+}
+
 bool utils::containsNonDigit(const std::string &val) {
     for (std::size_t i = 0; i < val.size(); ++i) {
         const char chr = val[i];

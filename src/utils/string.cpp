@@ -103,6 +103,9 @@ std::string utils::normalizePath(const std::string &path) {
         }
     }
 
+    if (path.empty()) {
+        return "";
+    }
     std::string result = path[0] == '/' ? "/" : "";
     for (size_t i = 0; i < parts.size(); ++i) {
         result += parts[i];

@@ -6,6 +6,8 @@
 #include "http/response/response.hpp"
 #include "result.hpp"
 
+static const unsigned char kAsciiSpace = 0x20;
+
 namespace http {
 
 class UploadFileHandler : public IHandler {
@@ -16,10 +18,14 @@ class UploadFileHandler : public IHandler {
    private:
     DocumentRootConfig docRootConfig_;
     Response serveInternal(const Request& request) const;
-    static bool isValidUserPath(const std::string& path);
-    static bool isPathUnderRoot(const std::string& path,
-                                const std::string& root);
+    bool decodeAndNomalizePath(const std::string& rawPath,
+                               std::string& normalized) const;
+    static bool urlDecodeStrict(const std::string& src, std::string& out);
+    types::Result<types::Unit, HttpStatusCode> checkParentDir(
+        const std::string& normalized) const;
     static Response writeToFile(const std::string& path,
                                 const std::vector<char>& body);
+    static bool isPathUnderRoot(const std::string& path,
+                                const std::string& root);
 };
 }  // namespace http

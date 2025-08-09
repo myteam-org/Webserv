@@ -11,7 +11,7 @@
 #include <fstream>
 
 #include "http/response/builder.hpp"
-#include "io/base/fdGuard.hpp"
+#include "io/base/FileDescriptor.hpp"
 #include "utils/string.hpp"
 
 namespace http {
@@ -42,7 +42,7 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
     }
 
     const std::string::size_type lastSlash = normalized.rfind('/');
-    
+
     if (lastSlash != std::string::npos) {
         const std::string dirPath = normalized.substr(0, lastSlash);
         struct stat sta;
@@ -72,8 +72,12 @@ Response UploadFileHandler::writeToFile(const std::string& path,
     if (raw_fd < 0) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }
-    const io::base::FdGuard fd(raw_fd);
-    const ssize_t written = write(fd.get(), body.data(), body.size());
+    const FileDescriptor fd(raw_fd);
+    const types::Option<int> fdOpt = fd.getFd();
+    if (fdOpt.isNone()) {
+        return ResponseBuilder().status(kStatusForbidden).build();
+    }
+    const ssize_t written = write(fdOpt.unwrap(), body.data(), body.size());
     if (written < 0 || static_cast<size_t>(written) != body.size()) {
         return ResponseBuilder().status(kStatusInternalServerError).build();
     }

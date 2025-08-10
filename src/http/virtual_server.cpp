@@ -10,17 +10,20 @@
 #include "http/handler/file/upload.hpp"
 #include "http/handler/file/delete.hpp"
 #include "http/handler/file/cgi.hpp"
+#include "http/status.hpp"
 
-static ErrorPageMap MergeErrorPages(const std::vector<std::map<int, std::string> >& vec) {
+namespace {
+ErrorPageMap MergeErrorPages(const std::vector<std::map<int, std::string> >& vec) {
     ErrorPageMap out;
 
     for (std::vector<std::map<int, std::string> >::const_iterator it = vec.begin(); it != vec.end(); ++it) {
-        for (std::map<int, std::string>::const_iterator jt = it->begin(); jt != it->end(); ::jt) {
-            out.insert(it->begin(), it->end()); 
+        for (std::map<int, std::string>::const_iterator jt = it->begin(); jt != it->end(); ++jt) {
+            out[static_cast<http::HttpStatusCode>(jt->first)] = jt->second; 
         }
     }
     return out;
 }
+} // namespace
 
 VirtualServer::VirtualServer(const ServerContext &serverConfig,
                              const std::string &bindAddress)
@@ -43,7 +46,6 @@ http::Router &VirtualServer::getRouter() { return *router_; }
 // ビルド時に “各 location を順に登録する” 関数
 void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
                                      const LocationContext &locationContext) {
-    (void)routerBuilder;  // 未使用パラメータ警告対策 FileHandler系実装時に削除
     const DocumentRootConfig& docRoot = locationContext.getDocumentRootConfig();
     const std::string& path = locationContext.getPath();
     const OnOff* allowed = locationContext.getAllowedMethod();
@@ -55,10 +57,10 @@ void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
         routerBuilder.route(http::kMethodPost, path, new http::UploadFileHandler(docRoot));
     }
     if (!isUploadLocation && cgiEnabled) {
-        if (allowed[GET] == ON) { // TODO
+        if (allowed[GET] == ON) {
             // routerBuilder.route(http::kMethodGet, path, new http::CgiHandler(docRoot));
         }
-        if (allowed[POST] == ON) { // TODO
+        if (allowed[POST] == ON) {
             // routerBuilder.route(http::kMethodPost, path, new http::CgiHandler(docRoot));
         }
         return ;
@@ -78,6 +80,7 @@ void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
 void VirtualServer::setupRouter() {
     http::RouterBuilder routerBuilder;
     const std::vector<LocationContext> &locations = serverConfig_.getLocation();
+
     for (LocationContextList::const_iterator it = locations.begin();
          it != locations.end(); ++it) {
         const LocationContext &locationContext = *it;
@@ -91,13 +94,13 @@ void VirtualServer::setupRouter() {
         }
     }
 
-        routerBuilder.middleware(new http::Logger());
-        const ErrorPageMap merged = MergeErrorPages(serverConfig_.getErrorPage());
-        routerBuilder.middleware(new
-        http::ErrorPage(merged));
+    routerBuilder.middleware(new http::Logger());
+    const ErrorPageMap merged = MergeErrorPages(serverConfig_.getErrorPage());
+    routerBuilder.middleware(new
+    http::ErrorPage(merged));
 
-        if (router_ != NULL) {
-            delete router_;
-        }
-        router_ = routerBuilder.build();
+    if (router_ != NULL) {
+        delete router_;
+    }
+    router_ = routerBuilder.build();
 }

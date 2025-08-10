@@ -13,7 +13,7 @@
 #include "http/status.hpp"
 
 namespace {
-ErrorPageMap MergeErrorPages(const std::vector<std::map<int, std::string> >& vec) {
+ErrorPageMap mergeErrorPages(const std::vector<std::map<int, std::string> >& vec) {
     ErrorPageMap out;
 
     for (std::vector<std::map<int, std::string> >::const_iterator it = vec.begin(); it != vec.end(); ++it) {
@@ -63,7 +63,7 @@ void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
         if (allowed[POST] == ON) {
             // routerBuilder.route(http::kMethodPost, path, new http::CgiHandler(docRoot));
         }
-        return ;
+        return;
     }
 
     if (allowed[GET] == ON) {
@@ -95,9 +95,8 @@ void VirtualServer::setupRouter() {
     }
 
     routerBuilder.middleware(new http::Logger());
-    const ErrorPageMap merged = MergeErrorPages(serverConfig_.getErrorPage());
-    routerBuilder.middleware(new
-    http::ErrorPage(merged));
+    const ErrorPageMap merged = mergeErrorPages(serverConfig_.getErrorPage());
+    routerBuilder.middleware(new http::ErrorPage(merged));
 
     if (router_ != NULL) {
         delete router_;

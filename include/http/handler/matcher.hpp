@@ -35,3 +35,5 @@ namespace http {
         }
     };
 } // namespace http
+
+// パスやメソッドのマッチング処理

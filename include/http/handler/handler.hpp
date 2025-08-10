@@ -11,3 +11,5 @@ namespace http {
         virtual Either<IAction *, Response> serve(const Request &request) = 0;
     };
 } //namespace http
+
+// ハンドラのインタフェース（IHandler）

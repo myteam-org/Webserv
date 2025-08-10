@@ -47,11 +47,12 @@ namespace http {
     std::string requestTarget_;
     std::string pathOnly_;
     std::string queryString_;
-    std::string httpVersion_;
     RawHeaders headers_;
     std::vector<char> body_;
     const ServerContext* server_;
     const LocationContext* location_;
     const DocumentRootConfig* documentRoot_;
+  public:
+    static const std::string kHttpVersion;
   };
 } // namespace http

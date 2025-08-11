@@ -12,18 +12,18 @@
 #include "http/handler/file/cgi.hpp"
 #include "http/status.hpp"
 
-namespace {
-ErrorPageMap mergeErrorPages(const std::vector<std::map<int, std::string> >& vec) {
-    ErrorPageMap out;
+// namespace {
+// ErrorPageMap mergeErrorPages(const std::vector<std::map<int, std::string> >& vec) {
+//     ErrorPageMap out;
 
-    for (std::vector<std::map<int, std::string> >::const_iterator it = vec.begin(); it != vec.end(); ++it) {
-        for (std::map<int, std::string>::const_iterator jt = it->begin(); jt != it->end(); ++jt) {
-            out[static_cast<http::HttpStatusCode>(jt->first)] = jt->second; 
-        }
-    }
-    return out;
-}
-} // namespace
+//     for (std::vector<std::map<int, std::string> >::const_iterator it = vec.begin(); it != vec.end(); ++it) {
+//         for (std::map<int, std::string>::const_iterator jt = it->begin(); jt != it->end(); ++jt) {
+//             out[static_cast<http::HttpStatusCode>(jt->first)] = jt->second; 
+//         }
+//     }
+//     return out;
+// }
+// } // namespace
 
 VirtualServer::VirtualServer(const ServerContext &serverConfig,
                              const std::string &bindAddress)
@@ -95,8 +95,8 @@ void VirtualServer::setupRouter() {
     }
 
     routerBuilder.middleware(new http::Logger());
-    const ErrorPageMap merged = mergeErrorPages(serverConfig_.getErrorPage());
-    routerBuilder.middleware(new http::ErrorPage(merged));
+    const ErrorPageMap errPages = serverConfig_.getErrorPage();
+    routerBuilder.middleware(new http::ErrorPage(errPages));
 
     if (router_ != NULL) {
         delete router_;

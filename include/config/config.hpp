@@ -14,7 +14,7 @@ class ConfigTokenizer;
 
 #define FILE_NAME "./config_file/default.conf"
 
-typedef std::map<http::HttpStatusCode, std::string> ErrorPageMap;
+typedef std::vector<std::map<http::HttpStatusCode, std::string> > ErrorPageMap;
 
 class Config {
    public:

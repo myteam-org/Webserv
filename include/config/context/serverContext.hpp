@@ -14,6 +14,7 @@ class LocationContext;
 #include "locationContext.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
+#include "status.hpp"
 
 class ServerContext {
    public:
@@ -26,7 +27,7 @@ class ServerContext {
     void setListen(u_int16_t port);
     void setHost(const std::string& host);
     void setserverName(const std::string& serverName);
-    void addMap(int number, const std::string& fileName);
+    void addMap(http::HttpStatusCode number, const std::string& fileName);
     void setClientMaxBodySize(size_t size);
     void addLocation(const LocationContext& location);
 
@@ -34,7 +35,7 @@ class ServerContext {
     u_int16_t getListen() const;
     const std::string& getHost() const;
     const std::string& getServerName() const;
-    const std::vector<std::map<int, std::string> >& getErrorPage() const;
+    const std::vector<std::map<http::HttpStatusCode, std::string> >& getErrorPage() const;
     size_t getClientMaxBodySize() const;
     std::vector<LocationContext>& getLocation();
     const std::vector<LocationContext>& getLocation() const;
@@ -44,7 +45,7 @@ class ServerContext {
     u_int16_t listen_;
     std::string host_;
     std::string serverName_;
-    std::vector<std::map<int, std::string> > errorPage_;
+    std::vector<std::map<http::HttpStatusCode, std::string> > errorPage_;
     size_t clientMaxBodySize_;
     std::vector<LocationContext> locations_;
 };

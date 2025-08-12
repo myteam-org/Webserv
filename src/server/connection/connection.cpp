@@ -3,49 +3,35 @@
 
 Connection::Connection(int fd, const ISocketAddr& peerAddr)
     : connSock_(fd, peerAddr),
-      readBuffer_(0),
-      writeBuffer_(0),
       connState_(0),
-      lastRecv_(std::time(0)) {
-}
+      lastRecv_(std::time(0)) {}
 
 Connection::~Connection() {
     if (connState_) {
         delete connState_;
         connState_ = 0;
     }
-    resetReadBuffer();
-    resetWriteBuffer();
+    // resetReadBuffer();
+    // resetWriteBuffer();
 }
 
 const ConnectionSocket& Connection::getConnSock() const {
     return connSock_;
 }
 
-ReadBuffer* Connection::getReadBuffer() const {
+ReadBuffer& Connection::getReadBuffer() {
+    return readBuffer_;
+}
+const ReadBuffer& Connection::getReadBuffer() const {
     return readBuffer_;
 }
 
-void Connection::adoptReadBuffer(ReadBuffer* readBuffer) {
-    if (readBuffer_ != readBuffer) {
-        if (readBuffer_) {
-            delete readBuffer_;
-        }
-        readBuffer_ = readBuffer;
-    }
-}
-
-WriteBuffer* Connection::getWriteBuffer() const {
+WriteBuffer& Connection::getWriteBuffer() {
     return writeBuffer_;
 }
 
-void Connection::adoptWriteBuffer(WriteBuffer* writeBuffer) {
-    if (writeBuffer_ != writeBuffer) {
-        if (writeBuffer_) {
-            delete writeBuffer_;
-        }
-        writeBuffer_ = writeBuffer;
-    }
+const WriteBuffer& Connection::getWriteBuffer() const {
+    return writeBuffer_;
 }
 
 IConnectionState* Connection::getConnState() const {
@@ -69,21 +55,38 @@ void Connection::setLastRecv(time_t lastRecvVal) {
     lastRecv_ = lastRecvVal;
 }
 
-bool Connection::isTimeout() {
+const bool Connection::isTimeout() const{
     time_t now = std::time(0);
     return (now - lastRecv_) > kTimeoutThresholdSec;
 }
 
-void Connection::resetReadBuffer() {
-    if (readBuffer_) {
-        delete readBuffer_;
-        readBuffer_ = 0;
-    }
-}
+// void Connection::adoptReadBuffer(ReadBuffer* readBuffer) {
+//     if (readBuffer_ != readBuffer) {
+//         if (readBuffer_) {
+//             delete readBuffer_;
+//         }
+//         readBuffer_ = readBuffer;
+//     }
+// }
 
-void Connection::resetWriteBuffer() {
-    if (writeBuffer_) {
-        delete writeBuffer_;
-        writeBuffer_ = 0;
-    }
-}
+// void Connection::adoptWriteBuffer(WriteBuffer* writeBuffer) {
+//     if (writeBuffer_ != writeBuffer) {
+//         if (writeBuffer_) {
+//             delete writeBuffer_;
+//         }
+//         writeBuffer_ = writeBuffer;
+//     }
+// }
+// void Connection::resetReadBuffer() {
+//     if (readBuffer_) {
+//         delete readBuffer_;
+//         readBuffer_ = 0;
+//     }
+// }
+
+// void Connection::resetWriteBuffer() {
+//     if (writeBuffer_) {
+//         delete writeBuffer_;
+//         writeBuffer_ = 0;
+//     }
+// }

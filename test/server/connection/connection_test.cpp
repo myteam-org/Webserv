@@ -4,6 +4,7 @@
 #include "Connection.hpp"
 #include "ConnectionSocket.hpp"
 #include "io/input/reader/reader.hpp"
+#include <gtest.h>
 
 
 namespace {
@@ -16,6 +17,13 @@ public:
 private:
     std::string ip_;
     uint16_t port_;
+};
+
+class DummyState : public IConnectionState {
+public:
+    types::Result<IConnectionState*, int> onEvent() {
+        return types::ok<IConnectionState*>(static_cast<IConnectionState*>(this));
+    }
 };
 
 class FakeReader : public io::IReader {
@@ -39,75 +47,52 @@ private:
     bool eof_;
 };
 
-class DummyState : public IConnectionState {
-public:
-    types::Result<IConnectionState*, int> onEvent() {
-        return types::ok<IConnectionState*>(static_cast<IConnectionState*>(this));
-    }
-};
-
-
 TEST(ConnectionTest, InitialState) {
     uint16_t port = 65535;
     MockSocketAddr mock = MockSocketAddr("192.168.0.5", port);
     int fd = 9;
     Connection conn(fd, mock);
-    EXPECT_EQ(conn.getReadBuffer(), nullptr);
-    EXPECT_EQ(conn.getWriteBuffer(), nullptr);
-    EXPECT_EQ(conn.getConnState(), nullptr);
-    EXPECT_EQ(conn.getConnSock().getRawFd(), fd);
-    time_t now = std::time(0);
-    EXPECT_LE(std::abs(conn.getLastRecv() - now), 1);
-}
+    ReadBuffer* rb_addr = &conn.getReadBuffer();
+    WriteBuffer* wb_addr = &conn.getWriteBuffer();
+    EXPECT_NE(rb_addr, static_cast<ReadBuffer*>(0));
+    EXPECT_NE(wb_addr, static_cast<WriteBuffer*>(0));
 
-TEST(ConnectionTest, AdoptReadBuffer_SetAndReset) {
+    // 状態は未設定
+    EXPECT_EQ(conn.getConnState(), static_cast<IConnectionState*>(0));
+
+    // ソケットFD
+    EXPECT_EQ(conn.getConnSock().getRawFd(), fd);
+
+    // lastRecv_ は現在時刻近傍
+    std::time_t now = std::time(0);
+    double diff = std::difftime(conn.getLastRecv(), now);
+    EXPECT_LE(std::fabs(diff), 1.0);
+}
+TEST(ConnectionTest, BufferReferencesStableAndConstOverloadsWork) {
     uint16_t port = 65535;
-    MockSocketAddr mock = MockSocketAddr("192.168.0.5", port);
+    MockSocketAddr mock("192.168.0.5", port);
     int fd = 10;
     Connection conn(fd, mock);
-    EXPECT_EQ(conn.getReadBuffer(), static_cast<ReadBuffer*>(0));
 
-    // ReadBuffer を構築（FakeReader でOK）
-    FakeReader reader1("hello");
-    ReadBuffer* rb1 = new ReadBuffer(reader1);
-    conn.adoptReadBuffer(rb1);
-    EXPECT_EQ(conn.getReadBuffer(), rb1);
+    // 非const／const の両アクセサが同じ実体を指すことを確認
+    ReadBuffer* rb1 = &conn.getReadBuffer();
+    const Connection& ccref = conn;
+    const ReadBuffer* rb2 = &ccref.getReadBuffer();
+    EXPECT_EQ(rb1, rb2);
 
-    // 別の ReadBuffer に差し替え（古い方は Connection 側で delete される契約）
-    FakeReader reader2("world");
-    ReadBuffer* rb2 = new ReadBuffer(reader2);
-    conn.adoptReadBuffer(rb2);
-    EXPECT_EQ(conn.getReadBuffer(), rb2);
+    WriteBuffer* wb1 = &conn.getWriteBuffer();
+    const WriteBuffer* wb2 = &ccref.getWriteBuffer();
+    EXPECT_EQ(wb1, wb2);
 
-    // reset でポインタがクリアされる
-    conn.resetReadBuffer();
-    EXPECT_EQ(conn.getReadBuffer(), static_cast<ReadBuffer*>(0));
-}
-
-TEST(ConnectionTest, AdoptWriteBuffer_SetAndReset) {
-    int fd = 11;
-    uint16_t port = 65535;
-    MockSocketAddr mock = MockSocketAddr("192.168.0.5", port);
-    Connection conn(fd, mock);
-    EXPECT_EQ(conn.getWriteBuffer(), static_cast<WriteBuffer*>(0));
-
-    // WriteBuffer がデフォルト構築できない場合は、実際のコンストラクタに合わせて変更
-    WriteBuffer* wb1 = new WriteBuffer();
-    conn.adoptWriteBuffer(wb1);
-    EXPECT_EQ(conn.getWriteBuffer(), wb1);
-
-    WriteBuffer* wb2 = new WriteBuffer();
-    conn.adoptWriteBuffer(wb2);
-    EXPECT_EQ(conn.getWriteBuffer(), wb2);
-
-    conn.resetWriteBuffer();
-    EXPECT_EQ(conn.getWriteBuffer(), static_cast<WriteBuffer*>(0));
+    // 連続呼び出しでも同じアドレス（直持ちで再配置されない）
+    EXPECT_EQ(rb1, &conn.getReadBuffer());
+    EXPECT_EQ(wb1, &conn.getWriteBuffer());
 }
 
 TEST(ConnectionTest, SetConnState_ReplacesAndDestructorCleansUp) {
-    int fd = 12;
     uint16_t port = 65535;
-    MockSocketAddr mock = MockSocketAddr("192.168.0.5", port);
+    MockSocketAddr mock("192.168.0.5", port);
+    int fd = 12;
     Connection conn(fd, mock);
     EXPECT_EQ(conn.getConnState(), static_cast<IConnectionState*>(0));
 
@@ -119,27 +104,24 @@ TEST(ConnectionTest, SetConnState_ReplacesAndDestructorCleansUp) {
     conn.setConnState(s2);
     EXPECT_EQ(conn.getConnState(), s2);
 
-    // ここで明示的に何かを確認するのは難しいが、
-    // ・setConnState で古いポインタを delete していること
-    // ・~Connection で最終状態を delete していること
-    // はクラッシュしないこと＆ASan/LSan を使えば検出可能
+    // ここでは delete の有無はASan/LSanで検出する前提。クラッシュしなければOK。
 }
 
 TEST(ConnectionTest, TimeoutLogic_WorksAroundThreshold) {
-    int fd = 13;
     uint16_t port = 65535;
-    MockSocketAddr mock = MockSocketAddr("192.168.0.5", port);
+    MockSocketAddr mock("192.168.0.5", port);
+    int fd = 13;
     Connection conn(fd, mock);
 
-    const time_t now = std::time(0);
+    const std::time_t now = std::time(0);
 
     // 閾値未満 → false
-    conn.setLastRecv(now - (60 - 1)); // kTimeoutThresholdSec が 60 前提
+    conn.setLastRecv(now - (60 - 1)); // kTimeoutThresholdSec = 60 を想定
     EXPECT_FALSE(conn.isTimeout());
 
     // 閾値超過 → true
     conn.setLastRecv(now - (60 + 1));
     EXPECT_TRUE(conn.isTimeout());
 }
-}
 
+} // namespace

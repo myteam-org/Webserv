@@ -35,7 +35,7 @@ class ServerContext {
     u_int16_t getListen() const;
     const std::string& getHost() const;
     const std::string& getServerName() const;
-    const std::vector<std::map<http::HttpStatusCode, std::string> >& getErrorPage() const;
+    const std::map<http::HttpStatusCode, std::string>& getErrorPage() const;
     size_t getClientMaxBodySize() const;
     std::vector<LocationContext>& getLocation();
     const std::vector<LocationContext>& getLocation() const;
@@ -45,7 +45,7 @@ class ServerContext {
     u_int16_t listen_;
     std::string host_;
     std::string serverName_;
-    std::vector<std::map<http::HttpStatusCode, std::string> > errorPage_;
+    std::map<http::HttpStatusCode, std::string> errorPage_;
     size_t clientMaxBodySize_;
     std::vector<LocationContext> locations_;
 };

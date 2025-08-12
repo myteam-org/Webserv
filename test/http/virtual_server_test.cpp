@@ -24,23 +24,20 @@ TEST(VirtualServerTest, Constructor) {
 
 // テスト専用・期待動作と同じロジック（後勝ち）
 static ErrorPageMap MergeErrorPages_ForTest(
-    const std::vector<std::map<int, std::string> >& vec) {
+    const std::map<http::HttpStatusCode, std::string>& vec) {
     ErrorPageMap out;
-    for (std::vector<std::map<int, std::string> >::const_iterator it =
+    for (std::map<http::HttpStatusCode, std::string>::const_iterator it =
              vec.begin();
          it != vec.end(); ++it) {
-        for (std::map<int, std::string>::const_iterator jt = it->begin();
-             jt != it->end(); ++jt) {
-            out[static_cast<http::HttpStatusCode>(jt->first)] = jt->second;
-        }
+        out[static_cast<http::HttpStatusCode>(it->first)] = it->second;
     }
     return out;
 }
 
 TEST(ErrorPageMergeTest, MergeDistinctKeys) {
-    std::vector<std::map<int, std::string> > v(1);
-    v[0][403] = "403.html";
-    v[0][500] = "500.html";
+    std::map<http::HttpStatusCode, std::string> v;
+    v[http::kStatusForbidden] = "403.html";
+    v[http::kStatusInternalServerError] = "500.html";
 
     ErrorPageMap m = MergeErrorPages_ForTest(v);
     ASSERT_EQ(m.size(), 2u);
@@ -49,9 +46,9 @@ TEST(ErrorPageMergeTest, MergeDistinctKeys) {
 }
 
 TEST(ErrorPageMergeTest, LastWinsOnDuplicateKey) {
-    std::vector<std::map<int, std::string> > v(2);
-    v[0][403] = "403-a.html";
-    v[1][403] = "403-b.html";  // 後勝ちで上書きされる想定
+    std::map<http::HttpStatusCode, std::string> v;
+    v[http::kStatusForbidden] = "403-a.html";
+    v[http::kStatusForbidden] = "403-b.html";  // 後勝ちで上書きされる想定
 
     ErrorPageMap m = MergeErrorPages_ForTest(v);
     ASSERT_EQ(m.size(), 1u);

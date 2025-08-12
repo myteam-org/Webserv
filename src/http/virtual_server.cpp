@@ -13,10 +13,10 @@
 #include "http/status.hpp"
 
 // namespace {
-// ErrorPageMap mergeErrorPages(const std::vector<std::map<int, std::string> >& vec) {
+// ErrorPageMap mergeErrorPages(const std::map<http::HttpStatusCode, std::string>>& vec) {
 //     ErrorPageMap out;
 
-//     for (std::vector<std::map<int, std::string> >::const_iterator it = vec.begin(); it != vec.end(); ++it) {
+//     for (std::map<http::HttpStatusCode, std::string>>::const_iterator it = vec.begin(); it != vec.end(); ++it) {
 //         for (std::map<int, std::string>::const_iterator jt = it->begin(); jt != it->end(); ++jt) {
 //             out[static_cast<http::HttpStatusCode>(jt->first)] = jt->second; 
 //         }

@@ -36,22 +36,7 @@ void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
     const DocumentRootConfig &docRoot = locationContext.getDocumentRootConfig();
     const std::string& path = locationContext.getPath();
     const OnOff *allowed = locationContext.getAllowedMethod();
-    const bool cgiEnabled = (docRoot.getCgiExtensions() == ON);
-
-    if (cgiEnabled) {
-        if (allowed[GET] == ON) {
-            // TODO
-            // routerBuilder.route(http::kMethodGet, path, new
-            // http::CgiHandler(docRoot));
-        }
-        if (allowed[POST] == ON) {
-            // TODO
-            // routerBuilder.route(http::kMethodPost, path, new
-            // http::CgiHandler(docRoot));
-        }
-        return;
-    }
-
+    
     if (allowed[GET] == ON) {
         routerBuilder.route(http::kMethodGet, path,
                             new http::StaticFileHandler(docRoot));
@@ -64,6 +49,7 @@ void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
         routerBuilder.route(http::kMethodDelete, path,
                             new http::DeleteFileHandler(docRoot));
     }
+    // routerBuilder.route(http::kMethodPost, path, new http::CgiHandler(docRoot));
 }
 
 void VirtualServer::setupRouter() {
@@ -84,8 +70,8 @@ void VirtualServer::setupRouter() {
     }
 
     routerBuilder.middleware(new http::Logger());
-    const ErrorPageMap errPages = serverConfig_.getErrorPage();
-    routerBuilder.middleware(new http::ErrorPage(errPages));
+    const ErrorPageMap errorPages = serverConfig_.getErrorPage();
+    routerBuilder.middleware(new http::ErrorPage(errorPages));
 
     if (router_ != NULL) {
         delete router_;

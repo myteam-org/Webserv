@@ -2,4 +2,4 @@
 
 enum AllowedMethod { GET, POST, DELETE };
 
-enum OnOff { ON, OFF };
+enum OnOff { OFF, ON };

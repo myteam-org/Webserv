@@ -47,6 +47,9 @@ void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
     }
 }
 
+// LocationContext redirect_文字列がある場合はRedirectHandlerをnewする
+// DocumentRootConfig cgi_ == ONの時は、CgiHandlerをnewする
+// どちらでもない時はregisterHandlers()を呼んで該当のHandlerをnewする
 void VirtualServer::setupRouter() {
     http::RouterBuilder routerBuilder;
     const LocationContextList locationContextList = serverConfig_.getLocation();

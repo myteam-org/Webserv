@@ -47,7 +47,7 @@ struct ConfigServerDuplicateErrorEraser {
 };
 
 Config::Config(const std::string& filename)
-    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_) {
+    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_, filename) {
     checkAndEraseServerNode();
     removeDuplicateListenServers(this->parser_.getServer());
 }

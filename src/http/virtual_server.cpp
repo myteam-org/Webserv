@@ -51,6 +51,8 @@ void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
 // DocumentRootConfig cgi_ == ONの時は、CgiHandlerをnewする
 // どちらでもない時はregisterHandlers()を呼んで該当のHandlerをnewする
 void VirtualServer::setupRouter() {
+    const http::HttpMethod httpMethods[] = {http::kMethodGet, http::kMethodPost, http::kMethodDelete};
+    
     http::RouterBuilder routerBuilder;
     const LocationContextList locationContextList = serverConfig_.getLocation();
     for (LocationContextList::const_iterator locationIterator =
@@ -60,14 +62,12 @@ void VirtualServer::setupRouter() {
         const std::string &path = locationContext.getPath();
         const DocumentRootConfig &docRoot = locationContext.getDocumentRootConfig();
         const OnOff *allowedMethod = locationContext.getAllowedMethod();
-        http::HttpMethod method;
-        for (method = http::kMethodGet; method <= http::kMethodDelete;
-             method = static_cast<http::HttpMethod>(method + 1)) {
+        for (size_t i = 0; i < sizeof(httpMethods)/sizeof(httpMethods[0]); ++i) {
             const std::string &redirect = locationContext.getRedirect();
-            if (!redirect.empty()) {
-                routerBuilder.route(method, path, new http::RedirectHandler(redirect));
-            // } else if (!docRoot.getCgiExtensions() == ON) {
-            //     routerBuilder.route(method, path, new http::CgiHandler(docRoot));
+            if (!redirect.empty() && allowedMethod[httpMethods[i]] == ON) {
+                routerBuilder.route(httpMethods[i], path, new http::RedirectHandler(redirect));
+            } else if (docRoot.getCgiExtensions() == ON && allowedMethod[httpMethods[i]] == ON) {
+                //     routerBuilder.route(allowedMethods[i], path, new http::CgiHandler(docRoot));
             } else {
                 registerHandlers(routerBuilder, locationContext);
             }

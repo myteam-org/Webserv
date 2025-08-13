@@ -4,16 +4,16 @@
 
 namespace http {
     enum HttpMethod {
+        kMethodUnknown,
         kMethodGet,
         kMethodPost,
-        kMethodDelete,
         kMethodPut,
+        kMethodDelete,
         kMethodHead,
         kMethodOptions,
         kMethodTrace,
         kMethodConnect,
         kMethodPatch,
-        kMethodUnknown,
     };
 
     HttpMethod httpMethodFromString(const std::string &method);

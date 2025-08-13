@@ -1,9 +1,19 @@
 #include "virtual_server.hpp"
-#include "router/router.hpp"
-#include "handler/router/builder.hpp"
-#include "middleware/chain.hpp"
 
-VirtualServer::VirtualServer(const ServerContext &serverConfig, const std::string &bindAddress)
+#include "handler/router/builder.hpp"
+#include "http/handler/file/cgi.hpp"
+#include "http/handler/file/delete.hpp"
+#include "http/handler/file/redirect.hpp"
+#include "http/handler/file/static.hpp"
+#include "http/handler/file/upload.hpp"
+#include "http/status.hpp"
+#include "middleware/chain.hpp"
+#include "router/middleware/error_page.hpp"
+#include "router/middleware/logger.hpp"
+#include "router/router.hpp"
+
+VirtualServer::VirtualServer(const ServerContext &serverConfig,
+                             const std::string &bindAddress)
     : serverConfig_(serverConfig), bindAddress_(bindAddress), router_(NULL) {
     this->setupRouter();
 }
@@ -18,54 +28,53 @@ const ServerContext &VirtualServer::getServerConfig() const {
     return serverConfig_;
 }
 
-http::Router &VirtualServer::getRouter() {
-    return *router_;
-}
+http::Router &VirtualServer::getRouter() { return *router_; }
 
-void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder, const LocationContext &locationContext) {
-    (void)routerBuilder; // 未使用パラメータ警告対策 FileHandler系実装時に削除
-    const std::vector<http::HttpMethod>& allowedHttpMethods = locationContext.getAllowedMethods();
-    for (std::vector<http::HttpMethod>::const_iterator methodIterator = allowedHttpMethods.begin();
-         methodIterator != allowedHttpMethods.end();
-         ++methodIterator) {
-        const DocumentRootConfig documentRootConfig = locationContext.getDocumentRootConfig(); // NOLINT
-        // TODO(FileHandler)
-        switch (*methodIterator) {
-            case http::kMethodGet: { // NOLINT(bugprone-branch-clone)
-                // http::IHandler *getHandler = new http::StaticFileHandler(documentRootConfig);
-                // routerBuilder.route(http::kMethodGet, locationContext.getPath(), getHandler);
-                break;
-            }
-            case http::kMethodDelete: {
-                // http::IHandler *deleteHandler = new http::DeleteFileHandler(documentRootConfig);
-                // routerBuilder.route(http::kMethodDelete, locationContext.getPath(), deleteHandler);
-                break;
-            }
-            default:
-                // 何もしない
-                break;
-        }
+void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
+                                     const LocationContext &locationContext) {
+    const DocumentRootConfig &docRoot = locationContext.getDocumentRootConfig();
+    const std::string &path = locationContext.getPath();
+    const OnOff *allowed = locationContext.getAllowedMethod();
+
+    if (allowed[GET] == ON) {
+        routerBuilder.route(http::kMethodGet, path, new http::StaticFileHandler(docRoot));
+    }
+    if (allowed[POST] == ON) {
+        routerBuilder.route(http::kMethodPost, path, new http::UploadFileHandler(docRoot));
+    }
+    if (allowed[DELETE] == ON) {
+        routerBuilder.route(http::kMethodDelete, path, new http::DeleteFileHandler(docRoot));
     }
 }
 
+// LocationContext redirect_文字列がある場合はRedirectHandlerをnewする
+// DocumentRootConfig cgi_ == ONの時は、CgiHandlerをnewする
+// どちらでもない時はregisterHandlers()を呼んで該当のHandlerをnewする
 void VirtualServer::setupRouter() {
+    const http::HttpMethod httpMethods[] = {http::kMethodGet, http::kMethodPost, http::kMethodDelete};
+    
     http::RouterBuilder routerBuilder;
     const LocationContextList locationContextList = serverConfig_.getLocation();
-    for (LocationContextList::const_iterator locationIterator = locationContextList.begin();
-         locationIterator != locationContextList.end();
-         ++locationIterator) {
+    for (LocationContextList::const_iterator locationIterator =
+             locationContextList.begin();
+             locationIterator != locationContextList.end(); ++locationIterator) {
         const LocationContext &locationContext = *locationIterator;
-        // if (locationContext.getRedirect().isSome()) {
-            // http::IHandler *redirectHandler = new http::RedirectHandler(locationContext.getRedirect().unwrap());
-            // routerBuilder.route(locationContext.getAllowedMethods(), locationContext.getPath(), redirectHandler);
-        // } else {
-            registerHandlers(routerBuilder, locationContext);
-        // }
+        const std::string &path = locationContext.getPath();
+        const DocumentRootConfig &docRoot = locationContext.getDocumentRootConfig();
+        const OnOff *allowedMethod = locationContext.getAllowedMethod();
+        for (size_t i = 0; i < sizeof(httpMethods)/sizeof(httpMethods[0]); ++i) {
+            const std::string &redirect = locationContext.getRedirect();
+            if (!redirect.empty() && allowedMethod[httpMethods[i]] == ON) {
+                routerBuilder.route(httpMethods[i], path, new http::RedirectHandler(redirect));
+            } else if (docRoot.getCgiExtensions() == ON && allowedMethod[httpMethods[i]] == ON) {
+                //     routerBuilder.route(allowedMethods[i], path, new http::CgiHandler(docRoot));
+            } else {
+                registerHandlers(routerBuilder, locationContext);
+            }
+        }
     }
-
-    // routerBuilder.middleware(new http::Logger());
-    // routerBuilder.middleware(new http::ErrorPage(serverConfig_.getErrorPage()));
-
+    routerBuilder.middleware(new http::Logger());
+    routerBuilder.middleware(new http::ErrorPage(serverConfig_.getErrorPage()));
     if (router_ != NULL) {
         delete router_;
     }

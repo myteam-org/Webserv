@@ -149,7 +149,8 @@ void ConfigParser::setErrPage_(ServerContext& server, size_t& index) {
     if (this->tokens_[index].getType() == VALUE &&
         Validator::number(errNumber, ERR_PAGE)) {
         const std::string pageName = incrementAndCheckSize_(index);
-        server.addMap(atoi(errNumber.c_str()), pageName);
+        const int num = atoi(errNumber.c_str());
+        server.addMap(static_cast<http::HttpStatusCode>(num), pageName);
     } else {
         throwErr(errNumber, ": ErrorPage value error: line",
                  this->tokens_[index].getLineNumber());

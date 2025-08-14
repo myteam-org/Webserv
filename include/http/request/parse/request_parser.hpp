@@ -1,15 +1,15 @@
 #pragma once
 
-#include "raw_headers.hpp"
+#include "config/context/locationContext.hpp"
+#include "config/context/serverContext.hpp"
 #include "context.hpp"
 #include "http/request/request.hpp"
+#include "raw_headers.hpp"
 #include "utils/types/error.hpp"
 #include "utils/types/result.hpp"
-#include "config/context/serverContext.hpp"
-#include "config/context/locationContext.hpp"
 
 namespace http {
-    class ReadContext;
+class ReadContext;
 }
 
 namespace http {
@@ -29,7 +29,7 @@ class RequestParser {
    private:
     ReadContext* ctx_;
     HttpMethod method_;
-    std::string uri_;
+    std::string requestTarget_;
     std::string pathOnly_;
     std::string queryString_;
     std::string version_;
@@ -41,6 +41,8 @@ class RequestParser {
     bool checkMissingHost() const;
     bool validateContentLength() const;
     bool validateTransferEncoding() const;
+    types::Result<types::Unit, error::AppError> decodeAndNormalizeTarget(
+        const std::string& requestTarget);
     types::Result<Request, error::AppError> buildRequest() const;
 };
 

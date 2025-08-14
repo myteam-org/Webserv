@@ -50,9 +50,9 @@ inline void compressSegmentCore(const std::string& inString,
                                 std::vector<std::string>& segs) {
     segs.clear();
     const std::string::size_type stringSize = inString.size();
-    static const int MARGIN = 8;
-    if (segs.capacity() < static_cast<std::size_t>(MARGIN)) {
-        segs.reserve(MARGIN);
+    static const int TEMPORARY_SEGMENT_CAPACITY = 8;
+    if (segs.capacity() < static_cast<std::size_t>(TEMPORARY_SEGMENT_CAPACITY)) {
+        segs.reserve(TEMPORARY_SEGMENT_CAPACITY);
     }
     std::string::size_type i = 0;
     while (i < stringSize) {

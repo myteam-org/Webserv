@@ -49,7 +49,7 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     if (version.substr(0, kHttpVersionPreFixLen) != "HTTP/1.1") {
         return ERR(error::kBadHttpVersion);
     }
-    const types::Result<types::Unit, error::AppError> norm = 
+    const types::Result<types::Unit, error::AppError> norm =
         decodeAndNormalizeTarget(requestTarget);
     if (norm.isErr()) {
         return norm;
@@ -122,7 +122,7 @@ bool RequestParser::validateTransferEncoding() const {
     return !val.empty() && utils::toLower(val) == "chunked";
 }
 
-// バイナリ対応のため vector<char> に詰め直す    
+// バイナリ対応のため vector<char> に詰め直す
 types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
     const std::string& raw = ctx_->getBody();
     body_.assign(raw.begin(), raw.end());
@@ -130,7 +130,8 @@ types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
 }
 
 types::Result<Request, error::AppError> RequestParser::buildRequest() const {
-    const std::string uri = pathOnly_; const types::Result<const LocationContext*, error::AppError> result =
+    const std::string uri = pathOnly_;
+    const types::Result<const LocationContext*, error::AppError> result =
         chooseLocation(uri);
 
     if (result.isErr()) {
@@ -139,8 +140,8 @@ types::Result<Request, error::AppError> RequestParser::buildRequest() const {
 
     const LocationContext* location = result.unwrap();
 
-    const Request req(method_, requestTarget_, pathOnly_, queryString_, headers_, body_, &ctx_->getServer(),
-                      result.unwrap());
+    const Request req(method_, requestTarget_, pathOnly_, queryString_,
+                      headers_, body_, &ctx_->getServer(), result.unwrap());
     return OK(req);
 }
 
@@ -169,13 +170,17 @@ RequestParser::chooseLocation(const std::string& uri) const {
     return types::err(error::kBadRequest);
 }
 
-    const std::string& RequestParser::getPathOnly() const { return pathOnly_; }
+const std::string& RequestParser::getPathOnly() const { return pathOnly_; }
 
-    const std::string& RequestParser::getQueryString() const { return queryString_; }
-    
-    const std::string& RequestParser::getRequestTarget() const { return requestTarget_; }
-    
-    http::HttpMethod RequestParser::getMethod()const { return method_; }
+const std::string& RequestParser::getQueryString() const {
+    return queryString_;
+}
+
+const std::string& RequestParser::getRequestTarget() const {
+    return requestTarget_;
+}
+
+http::HttpMethod RequestParser::getMethod() const { return method_; }
 
 }  // namespace parse
 }  // namespace http

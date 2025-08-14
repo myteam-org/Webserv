@@ -74,10 +74,20 @@ types::Result<types::Unit, HttpStatusCode> UploadFileHandler::checkParentDir(
     return OK(types::Unit());
 }
 
+// O_CLOEXEC は 「close-on-exec フラグをつけてファイルディスクリプタを開く」
+// という意味で、exec()系システムコールを実行したときにそのファイルディスクリプタが
+// 自動的に閉じられるようにする
 Response UploadFileHandler::writeToFile(const std::string& path,
                                         const std::vector<char>& body) {
-    const int raw_fd =
-        open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+    int raw_fd;
+#ifdef O_CLOEXEC
+    raw_fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+#else
+    raw_fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (raw_fd >= 0) {
+        fcntl(raw_fd, F_SETFD, FD_CLOEXEC);
+    }
+#endif
     if (raw_fd < 0) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }

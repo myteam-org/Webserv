@@ -12,6 +12,7 @@
 
 #include "http/response/builder.hpp"
 #include "io/base/FileDescriptor.hpp"
+#include "utils/path.hpp"
 #include "utils/string.hpp"
 
 namespace http {
@@ -24,72 +25,29 @@ Either<IAction*, Response> UploadFileHandler::serve(const Request& request) {
 }
 
 Response UploadFileHandler::serveInternal(const Request& request) const {
-    std::string normalized;
+    // Parser が decode + remove_dot_segments 済みのパスを返す前提
+    const std::string& rel = request.getPath();
 
-    if (!decodeAndNomalizePath(request.getPath(), normalized)) {
-        return ResponseBuilder().status(kStatusBadRequest).build();
+    const std::string& root = docRootConfig_.getRoot();
+    const std::string joined = utils::joinPath(root, rel);
+
+    // スラッシュ正規化（'\\' -> '/', '//' 圧縮）
+    const std::string full = utils::path::normalizeSlashes(joined);
+
+    // ルート配下チェック
+    if (!isPathUnderRoot(full, root)) {
+        return ResponseBuilder().status(kStatusForbidden).build();
     }
 
+    // 親ディレクトリの存在/権限
     const types::Result<types::Unit, HttpStatusCode> dirCheck =
-        checkParentDir(normalized);
-
+        checkParentDir(full);
     if (dirCheck.isErr()) {
         return ResponseBuilder().status(dirCheck.unwrapErr()).build();
     }
 
-    return writeToFile(normalized, request.getBody());
-}
-
-// パストラバーサル攻撃に対する検証
-bool UploadFileHandler::decodeAndNomalizePath(const std::string& rawPath,
-                                              std::string& normalized) const {
-    std::string decoded;
-
-    if (!UploadFileHandler::urlDecodeStrict(rawPath, decoded)) {
-        return false;
-    }
-    while (!decoded.empty() && decoded[0] == '/') {
-        decoded.erase(0, 1);
-    }
-    for (size_t i = 0; i < decoded.size(); ++i) {
-        if (decoded[i] == '\\') {
-            decoded[i] = '/';
-        }
-    }
-    normalized = utils::normalizePath(
-        utils::joinPath(docRootConfig_.getRoot(), decoded));
-    return true;
-}
-
-bool UploadFileHandler::urlDecodeStrict(const std::string& src,
-                                        std::string& out) {
-    out.clear();
-    for (std::size_t i = 0; i < src.size(); ++i) {
-        const char chr = src[i];
-        if (chr == '%') {
-            if (i + 2 >= src.size() ||
-                !std::isxdigit(static_cast<unsigned char>(src[i + 1])) ||
-                !std::isxdigit(static_cast<unsigned char>(src[i + 2]))) {
-                return false;
-            }
-            const int high = std::isdigit(src[i + 1])
-                                 ? src[i + 1] - '0'
-                                 : (std::toupper(src[i + 1]) - 'A' + 10);
-            const int low = std::isdigit(src[i + 2])
-                                ? src[i + 2] - '0'
-                                : (std::toupper(src[i + 2]) - 'A' + 10);
-            const char decoded = static_cast<char>((high << 4) | low);
-            if (static_cast<unsigned char>(decoded) < kAsciiSpace &&
-                decoded != '\t') {
-                return false;
-            }
-            out.push_back(decoded);
-            i += 2;
-        } else {
-            out.push_back(chr);
-        }
-    }
-    return true;
+    // 6) 書き込み
+    return writeToFile(full, request.getBody());
 }
 
 types::Result<types::Unit, HttpStatusCode> UploadFileHandler::checkParentDir(
@@ -118,7 +76,8 @@ types::Result<types::Unit, HttpStatusCode> UploadFileHandler::checkParentDir(
 
 Response UploadFileHandler::writeToFile(const std::string& path,
                                         const std::vector<char>& body) {
-    const int raw_fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    const int raw_fd =
+        open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
     if (raw_fd < 0) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }

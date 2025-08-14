@@ -16,12 +16,14 @@ TEST(RedirectHandlerTest, RedirectsToDestination) {
     const LocationContext* location = NULL;
     
     Request request(
-        kMethodGet,           // HttpMethod method
-        "/old-location",      // const std::string &requestTarget
-        headers,              // const RawHeaders &headers
-        body,                 // const std::vector<char> &body
-        server,               // const ServerContext *server
-        location              // const LocationContext *location
+        kMethodGet,            // HttpMethod
+        "/old-location",       // requestTarget（生）
+        "/old-location",       // pathOnly（正規化済み想定）
+        "",                    // queryString
+        headers,               // headers
+        body,                  // body
+        server,                // ServerContext*
+        location               // LocationContext*
     );
     
     Either<IAction *, Response> result = handler.serve(request);

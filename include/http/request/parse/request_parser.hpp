@@ -25,6 +25,11 @@ class RequestParser {
     types::Result<types::Unit, error::AppError> parseBody();
     types::Result<const LocationContext*, error::AppError> chooseLocation(
         const std::string& uri) const;
+    const std::string& getPathOnly() const;
+    const std::string& getQueryString() const;
+    const std::string& getRequestTarget() const;
+    http::HttpMethod getMethod()const;
+
 
    private:
     ReadContext* ctx_;

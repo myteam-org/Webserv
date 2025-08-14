@@ -69,7 +69,7 @@ RequestParser::decodeAndNormalizeTarget(const std::string& requestTarget) {
         queryString_ = requestTarget.substr(qMark + 1);
     }
     std::string decodePath;
-    if (!utils::url::decodeStrict(pathOnly_, decodePath)) {
+    if (!utils::url::decodeStrict(rawPath, decodePath)) {
         return ERR(error::kBadRequest);
     }
     pathOnly_ = utils::path::removeDotSegments(decodePath);
@@ -122,29 +122,23 @@ bool RequestParser::validateTransferEncoding() const {
     return !val.empty() && utils::toLower(val) == "chunked";
 }
 
+// バイナリ対応のため vector<char> に詰め直す    
 types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
     const std::string& raw = ctx_->getBody();
-    // バイナリ対応のため vector<char> に詰め直す    body_.assign(raw.begin(),
-    // raw.end());
+    body_.assign(raw.begin(), raw.end());
     return OK(types::Unit());
 }
 
 types::Result<Request, error::AppError> RequestParser::buildRequest() const {
-    const std::string uri = requestTarget_;
-    const types::Result<const LocationContext*, error::AppError> result =
+    const std::string uri = pathOnly_; const types::Result<const LocationContext*, error::AppError> result =
         chooseLocation(uri);
+
     if (result.isErr()) {
         return ERR(error::kBadLocationContext);
     }
+
     const LocationContext* location = result.unwrap();
 
-    // std::string queryString;
-    // std::string pathOnly = uri;
-    // const std::size_t queryMarkPos = uri.find('?');
-    // if (queryMarkPos != std::string::npos) {
-    //     pathOnly = uri.substr(0, queryMarkPos);
-    //     queryString = uri.substr(queryMarkPos + 1);
-    // }
     const Request req(method_, requestTarget_, pathOnly_, queryString_, headers_, body_, &ctx_->getServer(),
                       result.unwrap());
     return OK(req);
@@ -174,6 +168,14 @@ RequestParser::chooseLocation(const std::string& uri) const {
     }
     return types::err(error::kBadRequest);
 }
+
+    const std::string& RequestParser::getPathOnly() const { return pathOnly_; }
+
+    const std::string& RequestParser::getQueryString() const { return queryString_; }
+    
+    const std::string& RequestParser::getRequestTarget() const { return requestTarget_; }
+    
+    http::HttpMethod RequestParser::getMethod()const { return method_; }
 
 }  // namespace parse
 }  // namespace http

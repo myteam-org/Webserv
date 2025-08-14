@@ -14,7 +14,7 @@ inline void compressSegmentCore(const std::string& inString,
 //  - keepAbsolute: 入力が絶対パス（先頭 '/'）なら出力でも保持
 //  - keepTrailingSlash: 入力が末尾 '/' なら可能なら保持
 inline std::string compressSegments(const std::string& inString,
-                                    bool keepAbsolude, bool keepTrailingSlash) {
+                                    bool keepAbsolute, bool keepTrailingSlash) {
     const bool isAbs = !inString.empty() && inString[0] == '/';
     const bool hadTrailing =
         !inString.empty() && inString[inString.size() - 1] == '/';
@@ -24,7 +24,7 @@ inline std::string compressSegments(const std::string& inString,
     compressSegmentCore(inString, segs);
     // 再構築
     std::string out;
-    if (keepAbsolude && isAbs) {
+    if (keepAbsolute && isAbs) {
         out.push_back('/');
     }
     for (std::size_t i = 0; i < segs.size(); ++i) {
@@ -33,14 +33,14 @@ inline std::string compressSegments(const std::string& inString,
             out.push_back('/');
         }
     }
-    bool needKeepTrailing = keepTrailingSlash && hadTrailing;
-    bool hasPathContent = (keepAbsolude && isAbs) || !segs.empty();
+    const bool needKeepTrailing = keepTrailingSlash && hadTrailing;
+    const bool hasPathContent = (keepAbsolute && isAbs) || !segs.empty();
     if (needKeepTrailing && hasPathContent) {
         if (!out.empty() && out[out.size() - 1] != '/') {
             out.push_back('/');
         }
     }
-    if (out.empty() && keepAbsolude && isAbs) {
+    if (out.empty() && keepAbsolute && isAbs) {
         out = "/";
     }
     return out;
@@ -88,7 +88,7 @@ inline void compressSegmentCore(const std::string& inString,
 // 事前条件: "%2e" 等は decode_strict 済みで '.' にデコードされていること
 inline std::string removeDotSegments(const std::string& decodedPath) {
     return compressSegments(decodedPath, /*keepAbsolute=*/true,
-                            /*keepTralingSlasy=*/true);
+                            /*keepTrailingSlash=*/true);
 }
 
 // 使い方2
@@ -107,7 +107,7 @@ inline std::string normalizeSlashes(const std::string& pathLike) {
         tmp.push_back(chr);
     }
     return compressSegments(tmp, /*keepAbsolute=*/true,
-                            /*keepTralingSlasy=*/true);
+                            /*keepTrailingSlash=*/true);
 }
 
 }  // namespace path

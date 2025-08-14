@@ -33,7 +33,26 @@ protected:
     Request createRequest(const std::string& target) {
         RawHeaders headers;
         std::vector<char> body;
-        return Request(kMethodGet, target, headers, body, server_, location_);
+
+        // request-target を path と query に分割
+        std::string pathOnly = target;
+        std::string queryString;
+        const std::size_t qm = target.find('?');
+        if (qm != std::string::npos) {
+            pathOnly = target.substr(0, qm);
+            queryString = target.substr(qm + 1);
+        }
+        // テスト入力は既に正規化済み想定（"/", "/dir1", "/file.txt" など）
+        return Request(
+            kMethodGet,    // method
+            target,        // requestTarget (raw)
+            pathOnly,      // pathOnly (normalized想定)
+            queryString,   // queryString
+            headers,       // headers
+            body,          // body
+            server_,       // server
+            location_      // location
+        );
     }
     
     DocumentRootConfig docRootConfig_;

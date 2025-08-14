@@ -28,9 +28,9 @@ inline bool decodeStrict(const std::string& src, std::string& out) {
             if (!std::isxdigit(h) || !std::isxdigit(l)) {
                 return false;
             }
-            int high = std::isdigit(h) ? (h - '0') : (std::toupper(h) - 'A' + 10);
-            int low = std::isdigit(l) ? (l - '0') : (std::toupper(l) - 'A' + 10); // (2)
-            unsigned char decoded = static_cast<unsigned char>((high << 4) | low); // (3)
+            const int high = std::isdigit(h) ? (h - '0') : (std::toupper(h) - 'A' + 10);
+            const int low = std::isdigit(l) ? (l - '0') : (std::toupper(l) - 'A' + 10); // (2)
+            const unsigned char decoded = static_cast<unsigned char>((high << 4) | low); // (3)
             if (decoded < kAsciiSpace && decoded != '\t') {
                 return false; // (4)
             }

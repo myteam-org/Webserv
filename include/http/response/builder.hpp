@@ -1,6 +1,7 @@
 #pragma once
 
 #include "response.hpp"
+#include "response_headers.hpp"
 #include "http/status.hpp"
 #include "utils/types/option.hpp"
 #include <sstream>
@@ -25,7 +26,7 @@ namespace http {
     private:
         HttpStatusCode status_;
         std::string httpVersion_;
-        // Headers headers_;
+        Headers headers_;
         types::Option<std::string> body_;
 
     };

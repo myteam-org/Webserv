@@ -9,7 +9,7 @@
 namespace {
 
 // 値の最低限バリデーション（CR/LF禁止）
-static bool isSafeHeaderValue(const std::string &str) {
+bool isSafeHeaderValue(const std::string &str) {
     for (std::size_t i = 0; i < str.size(); ++i) {
         const char chr = str[i];
         if (chr == '\r' || chr == '\n') {
@@ -24,7 +24,6 @@ namespace http {
 ResponseBuilder::ResponseBuilder()
     : status_(kStatusOk),
       httpVersion_("HTTP/1.1"),
-      headers_(),
       body_(types::none<std::string>()) {}
 
 ResponseBuilder::~ResponseBuilder() {}

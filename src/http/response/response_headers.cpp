@@ -3,7 +3,7 @@
 
 namespace http {
 
-    Headers::Headers() : member_() {}
+    Headers::Headers() {}
     Headers::Headers(const ResponseHeaderFields& init) : member_(init) {}
     Headers::~Headers() {}
 
@@ -21,7 +21,7 @@ namespace http {
     const std::string& Headers::getField(const std::string& name) const {
         static const std::string kEmpty;
         const std::string key = utils::toLower(name);
-        ResponseHeaderFields::const_iterator it = member_.find(key);
+        const ResponseHeaderFields::const_iterator it = member_.find(key);
         if (it == member_.end()) {
             return kEmpty;
         }

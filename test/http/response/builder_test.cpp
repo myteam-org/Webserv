@@ -102,7 +102,8 @@ TEST_F(ResponseBuilderTest, TransferEncodingExcludesContentLength) {
 }
 
 TEST_F(ResponseBuilderTest, NoBodyStatus205) {
-    Response response = ResponseBuilder().text("x").status(kStatusResetContent).build();    const http::ResponseHeaderFields& h = response.getHeaders();
+    Response response = ResponseBuilder().text("x").status(kStatusResetContent).build();
+    const http::ResponseHeaderFields& h = response.getHeaders();
     ASSERT_TRUE(h.find("content-length") != h.end());
     EXPECT_EQ(h.find("content-length")->second, "0");
 }

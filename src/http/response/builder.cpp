@@ -66,7 +66,10 @@ ResponseBuilder &ResponseBuilder::status(const HttpStatusCode status) {
 
 ResponseBuilder &ResponseBuilder::header(const std::string &name,
                                          const std::string &value) {  // NOLINT
-    if (name.empty() || !isSafeHeaderValue(value)) {
+    if (name.empty()) {
+        return *this;
+    }
+    if (!isSafeHeaderValue(value)) {
         return *this;
     }
     headers_.setField(name, value);

@@ -33,7 +33,12 @@ namespace http {
     }
 
     bool Headers::removeField(const std::string& name) {
-        return member_.erase(utils::toLower(name)) != 0;
+        const std::string key = utils::toLower(name);
+        if (member_.find(key) == member_.end()) {
+            return false;
+        }
+        member_.erase(key);
+        return true;
     }
 
 } // namespace http

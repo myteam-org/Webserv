@@ -29,6 +29,26 @@ protected:
         std::remove(filePath.c_str());  // ファイル削除
         rmdir(tempDir.c_str());         // ディレクトリ削除
     }
+
+    static Request makeRequestPost(const std::string& requestTarget,
+                                const std::vector<char>& body) {
+        RawHeaders headers;
+        const ServerContext*   server   = NULL;
+        const LocationContext* location = NULL;
+
+        // テストでは既に安全な文字列を使っているので、
+        // pathOnly は requestTarget と同じで OK、queryString は空で OK。
+        return Request(
+            kMethodPost,
+            requestTarget,            // requestTarget (raw)
+            requestTarget,            // pathOnly (正規化済み相当として渡す)
+            "",                       // queryString
+            headers,
+            body,
+            server,
+            location
+        );
+    }
 };
 
 TEST_F(UploadFileHandlerTest, UploadsFileSuccessfully) {
@@ -41,14 +61,7 @@ TEST_F(UploadFileHandlerTest, UploadsFileSuccessfully) {
     std::string content = "Hello, Upload!";
     std::vector<char> body(content.begin(), content.end());
 
-    Request request(
-        kMethodPost,
-        uploadPath,  // 先頭 '/' 付き
-        headers,
-        body,
-        NULL,
-        NULL
-    );
+    Request request = makeRequestPost(uploadPath, body);
 
     Either<IAction*, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());
@@ -75,14 +88,7 @@ TEST_F(UploadFileHandlerTest, Returns403IfFileCannotBeOpened) {
     RawHeaders headers;
     std::vector<char> body(10, 'x');
 
-    Request request(
-        kMethodPost,
-        "/test.txt",
-        headers,
-        body,
-        NULL,
-        NULL
-    );
+    Request request = makeRequestPost("/test.txt", body);
 
     Either<IAction*, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());
@@ -97,14 +103,7 @@ TEST_F(UploadFileHandlerTest, Returns404IfDirectoryDoesNotExist) {
     RawHeaders headers;
     std::vector<char> body(10, 'x');
 
-    Request request(
-        kMethodPost,
-        "/missing_dir/file.txt",
-        headers,
-        body,
-        NULL,
-        NULL
-    );
+    Request request = makeRequestPost("/missing_dir/file.txt", body);
 
     Either<IAction*, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());

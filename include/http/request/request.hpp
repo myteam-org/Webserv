@@ -19,6 +19,8 @@ namespace http {
     explicit Request(
       HttpMethod method,
       const std::string &requestTarget,
+      const std::string &pathOnly,
+      const std::string &queryString,
       const RawHeaders &headers,
       const std::vector<char> &body,
       const ServerContext *server,

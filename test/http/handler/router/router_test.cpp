@@ -31,14 +31,22 @@ static void splitTarget(const std::string& target, std::string& pathOnly,
 static http::Request makeRequest(http::HttpMethod m, const std::string& target,
                                  ServerContext& server,
                                  LocationContext& location) {
-    std::string path = target, query;
-    if (std::size_t p = target.find('?'); p != std::string::npos) {
-        path = target.substr(0, p);
-        query = target.substr(p + 1);
-    }
+    std::string pathOnly, queryString;
+    splitTarget(target, pathOnly, queryString);
+
     RawHeaders headers;
     std::vector<char> body;
-    return http::Request(m, target, headers, body, &server, &location);
+
+    return http::Request(
+        m,
+        /*requestTarget*/ target,
+        /*pathOnly*/      pathOnly,
+        /*queryString*/   queryString,
+        /*headers*/       headers,
+        /*body*/          body,
+        /*server*/        &server,
+        /*location*/      &location
+    );
 }
 
 namespace {

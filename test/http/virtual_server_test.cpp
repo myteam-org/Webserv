@@ -72,9 +72,32 @@ static LocationContext MakeLoc(const std::string& path, bool allow_get,
 static http::Request MakeReq(http::HttpMethod m, const std::string& target,
                              const ServerContext* sc,
                              const LocationContext* lc) {
-    RawHeaders headers;      // 型は request.hpp の定義に依存（空でOK）
-    std::vector<char> body;  // 空でOK
-    return http::Request(m, target, headers, body, sc, lc);
+    RawHeaders headers;
+    std::vector<char> body;
+
+    // request-target を path と query に分割
+    std::string pathOnly = target;
+    std::string queryString;
+    const std::size_t qm = target.find('?');
+    if (qm != std::string::npos) {
+        pathOnly = target.substr(0, qm);
+        queryString = target.substr(qm + 1);
+    }
+
+    // Router/Handler は正規化済み pathOnly を見る想定なら、
+    // テストでは簡易にそのまま渡してOK（"/upload" 等しか使っていないため）。
+    // 必要ならここで removeDotSegments/decodeStrict を呼ぶ。
+
+    return http::Request(
+        m,
+        /*requestTarget*/ target,
+        /*pathOnly*/      pathOnly,
+        /*queryString*/   queryString,
+        headers,
+        body,
+        sc,
+        lc
+    );
 }
 
 // コンストラクタが ServerContext を保持しているか（既存の基本テスト）

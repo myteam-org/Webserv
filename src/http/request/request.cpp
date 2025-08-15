@@ -5,29 +5,32 @@
 
 namespace http {
 Request::Request(HttpMethod method, const std::string &requestTarget,
+                 const std::string &pathOnly, const std::string &queryString,
                  const RawHeaders &headers, const std::vector<char> &body,
                  const ServerContext *server, const LocationContext *location)
     : method_(method),
       requestTarget_(requestTarget),
+      pathOnly_(pathOnly),
+      queryString_(queryString),
       headers_(headers),
       body_(body),
       server_(server),
       location_(location) {
     httpVersion_ = "HTTP/1.1";
     documentRoot_ = &location_->getDocumentRootConfig();
-    splitTarget();
+    // splitTarget();
 }
 
-void Request::splitTarget() {
-    const std::string::size_type question = requestTarget_.find('?');
-    if (question == std::string::npos) {
-        pathOnly_ = requestTarget_;
-        queryString_.clear();
-    } else {
-        pathOnly_ = requestTarget_.substr(0, question);
-        queryString_ = requestTarget_.substr(question + 1);
-    }
-}
+// void Request::splitTarget() {
+//     const std::string::size_type question = requestTarget_.find('?');
+//     if (question == std::string::npos) {
+//         pathOnly_ = requestTarget_;
+//         queryString_.clear();
+//     } else {
+//         pathOnly_ = requestTarget_.substr(0, question);
+//         queryString_ = requestTarget_.substr(question + 1);
+//     }
+// }
 
 bool Request::operator==(const Request &other) const {
     return method_ == other.method_ && requestTarget_ == other.requestTarget_ &&

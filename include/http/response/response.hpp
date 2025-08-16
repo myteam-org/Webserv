@@ -1,7 +1,9 @@
 #pragma once
 
+
 #include "status.hpp"
 #include "option.hpp"
+#include "response_header_types.hpp"
 #include <iostream>
 
 namespace http {
@@ -9,23 +11,28 @@ namespace http {
     public:
         explicit Response(
             HttpStatusCode status,
-            // const Headers &headers = Headers(),
             const types::Option<std::string> &body = types::none<std::string>(),
             const std::string &httpVersion = defaultHttpVersion
         );
+        // ヘッダー付きコンストラクタ
+        Response(HttpStatusCode status,
+                const ResponseHeaderFields& headers,
+                const types::Option<std::string>& body,
+                const std::string& httpVersion);
+
         bool operator==(const Response &other) const;
 
         HttpStatusCode getStatusCode() const;
+        const ResponseHeaderFields &getHeaders() const;
         const std::string &getHttpVersion() const;
-        // const Headers &getHeaders() const;
         const types::Option<std::string> &getBody() const;
-
-        static std::string toString();
+        std::string toString();
+        
     private:
         static const std::string defaultHttpVersion;
         HttpStatusCode status_;
         std::string httpVersion_;
-        // Headers headers_;
+        ResponseHeaderFields headers_;
         types::Option<std::string> body_;
     };
 } //namespace http

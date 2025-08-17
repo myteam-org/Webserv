@@ -43,6 +43,7 @@ add_library(webserv_lib STATIC
     http/method.cpp
     http/response/response.cpp
     http/response/builder.cpp
+    http/response/response_headers.cpp
     http/handler/router/builder.cpp
     http/handler/router/internal.cpp
     http/handler/router/registry.cpp

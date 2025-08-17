@@ -50,9 +50,9 @@ namespace http {
     RawHeaders headers_;
     std::vector<char> body_;
     const ServerContext* server_;
+    std::string httpVersion_;
     const LocationContext* location_;
     const DocumentRootConfig* documentRoot_;
   public:
-    static const std::string kHttpVersion;
   };
 } // namespace http

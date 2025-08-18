@@ -36,7 +36,7 @@ const std::string &Request::getQueryString() const { return queryString_; }
 
 const std::string &Request::getHttpVersion() const { return httpVersion_; }
 
-types::Option<std::string> Request::getHeader(const std::string &key) {
+types::Option<std::string> Request::getHeader(const std::string &key) const {
     const std::string lowKey = utils::toLower(key);
     const RawHeaders::const_iterator it = headers_.find(lowKey);
     if (it != headers_.end()) {

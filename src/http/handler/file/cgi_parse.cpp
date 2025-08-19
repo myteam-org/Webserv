@@ -12,6 +12,7 @@ namespace http {
 namespace {
 
 const int kNphLength = 8;
+const int kOk = 200;
 
 bool splitHeadersBody(const std::string& cgiOut, std::string* headers,
                       std::string* body);
@@ -42,10 +43,10 @@ Response CgiHandler::parseCgiAndBuildResponse(const std::string& cgiOut) const {
     parseHeaderLines(headers, &headerLines);
 
     bool hasLoc = false;
-    http::HttpStatusCode status = decideStatus(headerLines, nphCode, &hasLoc);
+    const http::HttpStatusCode status = decideStatus(headerLines, nphCode, &hasLoc);
 
-    bool willBody =
-        !(status == kStatusNoContent || status == kStatusNotModified);
+    const bool willBody =
+        (status != kStatusNoContent && status != kStatusNotModified);
     if (!willBody) {
         body.clear();
     }
@@ -59,13 +60,13 @@ bool splitHeadersBody(const std::string& cgiOut, std::string* headers,
     if (!headers || !body) {
         return false;
     }
-    std::string::size_type posCRLFCRLF = cgiOut.find("\r\n\r\n");
+    const std::string::size_type posCRLFCRLF = cgiOut.find("\r\n\r\n");
     if (posCRLFCRLF != std::string::npos) {
         *headers = cgiOut.substr(0, posCRLFCRLF);
         *body = cgiOut.substr(posCRLFCRLF + 4);
         return true;
     }
-    std::string::size_type posLFLF = cgiOut.find("\n\n");
+    const std::string::size_type posLFLF = cgiOut.find("\n\n");
     if (posLFLF != std::string::npos) {
         *headers = cgiOut.substr(0, posLFLF);
         *body = cgiOut.substr(posLFLF + 2);
@@ -99,7 +100,7 @@ bool parseNphStatus(const std::string& headers, int* codeOut) {
     int code = 200;
     if (!(lss >> httpver >> code)) {
         // 数字が読めないなら 200 として進める
-        *codeOut = 200;
+        *codeOut = kOk;
         return true;
     }
     *codeOut = code;
@@ -119,7 +120,7 @@ void parseHeaderLines(const std::string& headers, HeaderMap* out) {
             line[line.size() - 1] == '\r') {  // \nは取れているので
             line.erase(line.size() - 1);
         }
-        std::string::size_type chr = line.find(':');
+        const std::string::size_type chr = line.find(':');
         if (chr == std::string::npos) {
             continue;
         }
@@ -143,8 +144,8 @@ http::HttpStatusCode decideStatus(const HeaderMap& headerLines, int nphCode,
     if (hasLocation) {
         *hasLocation = headerLines.find("location") != headerLines.end();
     }
-    int code = 200;
-    HeaderMap::const_iterator it = headerLines.find("status");
+    int code = kOk;
+    const HeaderMap::const_iterator it = headerLines.find("status");
     if (it != headerLines.end() && !it->second.empty()) {
         std::istringstream iss(it->second.front());
         int tmp = 0;
@@ -154,7 +155,7 @@ http::HttpStatusCode decideStatus(const HeaderMap& headerLines, int nphCode,
     } else if (nphCode > 0) {
         code = nphCode;
     } else if (hasLocation && *hasLocation) {
-        code = http::HttpStatusCode::kStatusFound;
+        code = static_cast<int>(kStatusFound);
     }
     return static_cast<http::HttpStatusCode>(code);
 }

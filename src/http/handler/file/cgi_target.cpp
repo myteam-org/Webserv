@@ -43,11 +43,7 @@ bool CgiHandler::isCgiTarget(const Request& req, std::string* scriptPath,
     if (!checkIsUnderRoot(root, norm)) {
         return false;
     }
-    if (!splitScriptAndPathInfo(root, norm, scriptPath, pathInfo)) {
-        return false;
-    }
-
-    return true;
+    return splitScriptAndPathInfo(root, norm, scriptPath, pathInfo);
 }
 
 namespace {
@@ -60,20 +56,14 @@ bool initCheck(const Request& req, std::string* scriptPath,
     scriptPath->clear();
     pathInfo->clear();
     const http::HttpMethod method = req.getMethod();
-    if (method != kMethodGet && method != kMethodPost) {
-        return false;
-    }
-    return true;
+    return method != kMethodGet && method != kMethodPost;
 }
 
 bool checkIsUnderRoot(const std::string& root, const std::string& norm) {
     if (root.empty()) {
         return false;
     }
-    if (!utils::path::isPathUnderRoot(norm, root)) {
-        return false;
-    }
-    return true;
+    return utils::path::isPathUnderRoot(root, norm);
 }
 
 bool splitScriptAndPathInfo(const std::string& root, const std::string& norm,

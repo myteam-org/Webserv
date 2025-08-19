@@ -35,7 +35,7 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
     const std::string full = utils::path::normalizeSlashes(joined);
 
     // ルート配下チェック
-    if (!utils::path::isPathUnderRoot(full, root)) {
+    if (!utils::path::isPathUnderRoot(root, full)) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }
 
@@ -53,7 +53,7 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
 types::Result<types::Unit, HttpStatusCode> UploadFileHandler::checkParentDir(
     const std::string& normalized) const {
     const std::string& root = docRootConfig_.getRoot();
-    if (!utils::path::isPathUnderRoot(normalized, root)) {
+    if (!utils::path::isPathUnderRoot(root, normalized)) {
         return ERR(kStatusForbidden);
     }
 

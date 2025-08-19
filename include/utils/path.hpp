@@ -110,8 +110,8 @@ inline std::string normalizeSlashes(const std::string& pathLike) {
                             /*keepTrailingSlash=*/true);
 }
 
-bool isPathUnderRoot(const std::string& path,
-                                        const std::string& root) {
+inline bool isPathUnderRoot(const std::string& root,
+                                        const std::string& path) {
     if (root.empty()) {
         return false;
     }

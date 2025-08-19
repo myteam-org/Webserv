@@ -8,7 +8,7 @@
 namespace http {
 
 namespace {
-static inline void addEnv(std::vector<std::string>* env,
+inline void addEnv(std::vector<std::string>* env,
                           const char* key,
                           const std::string& value) {
     env->push_back(std::string(key) + "=" + value);

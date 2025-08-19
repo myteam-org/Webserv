@@ -17,8 +17,8 @@ namespace {
 
 const int EXIT_EXEC_FAILED = 127;
 const int STATUS128 = 128;
-const std::size_t kBufSize = 4 * 1024;
-const std::size_t kReserve = 8 * 1024;
+const std::size_t kBufSize = 4096;
+const std::size_t kReserve = 8192;
 
 // utils for executeCgi()
 bool openPipes(int inPipe[2], int outPipe[2]);
@@ -34,8 +34,8 @@ void buildVecPtr(const std::vector<std::string>& value,
     std::vector<char*>* out);
 
 // parent process
-bool parentProcess(pid_t pid, int writeFd, int readFd,
-                   const std::vector<char>& stdinBody, std::string* stdoutBuf,
+bool parentProcess(pid_t pid, int wfd, int rfd,
+                   const std::vector<char>& stdinBody, std::string* out,
                    int* exitCode);
 // utils for parent process
 bool doWrite(pid_t pid, int wfd, int rfd, const char* ptr, ssize_t remain);
@@ -57,7 +57,7 @@ bool CgiHandler::executeCgi(const std::vector<std::string>& argv,
     if (!openPipes(inPipe, outPipe)) {
         return false;
     }
-    pid_t pid = fork();
+    const pid_t pid = fork();
     if (pid < 0) {
         closePipe(inPipe);
         closePipe(outPipe);
@@ -68,7 +68,7 @@ bool CgiHandler::executeCgi(const std::vector<std::string>& argv,
     }
     close(inPipe[0]);
     close(outPipe[1]);
-    bool ok = parentProcess(pid, inPipe[1], outPipe[0], stdinBody, stdoutBuf,
+    const bool ok = parentProcess(pid, inPipe[1], outPipe[0], stdinBody, stdoutBuf,
                             exitCode);
     int status = 0;
     if (!ok) {
@@ -99,7 +99,7 @@ bool openPipes(int inPipe[2], int outPipe[2]) {
 }
 
 bool setCloexec(int fd) {
-    int flags = fcntl(fd, F_GETFD);
+    const int flags = fcntl(fd, F_GETFD);
     if (flags < 0) {
         return false;
     }
@@ -162,14 +162,17 @@ bool parentProcess(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
 
     const char* ptr = body.empty() ? 0 : &body[0];
 
-    struct sigaction sa_old{};
-    struct sigaction sa_new{};
+    struct sigaction sa_old;
+    struct sigaction sa_new;
+    memset(&sa_old, 0, sizeof(sa_old));
+    memset(&sa_new, 0, sizeof(sa_new));
+
     sa_new.sa_handler = SIG_IGN;
     sigemptyset(&sa_new.sa_mask);
     sa_new.sa_flags = 0;
     sigaction(SIGPIPE, &sa_new, &sa_old);
 
-    ssize_t remain = static_cast<ssize_t>(body.size());
+    const ssize_t remain = static_cast<ssize_t>(body.size());
     if (!doWrite(pid, wfd, rfd, ptr, remain)) return false;
     if (!doRead(pid, rfd, out)) return false;
     int status = 0;
@@ -191,7 +194,7 @@ bool parentProcess(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
 // utils for parent process
 bool doWrite(pid_t pid, int wfd, int rfd, const char* ptr, ssize_t remain) {
     while (remain > 0) {
-        ssize_t byte = write(wfd, ptr, static_cast<size_t>(remain));
+        const ssize_t byte = write(wfd, ptr, static_cast<size_t>(remain));
         if (byte < 0) {
             if (errno == EINTR) {
                 continue;
@@ -212,7 +215,7 @@ bool doRead(pid_t pid, int rfd, std::string* out) {
     out->reserve(kReserve);
     while (true) {
         char buf[kBufSize];
-        ssize_t byte = read(rfd, buf, sizeof(buf));
+        const ssize_t byte = read(rfd, buf, sizeof(buf));
         if (byte < 0) {
             if (errno == EINTR) {
                 continue;

@@ -21,7 +21,7 @@ std::string utils::toLower(const std::string &str) {
 
 std::string utils::trim(const std::string &str) {
     if (!str[0]) {
-        return;
+        return std::string();
     }
     std::string::size_type start = 0;
     while (start < str.size() &&

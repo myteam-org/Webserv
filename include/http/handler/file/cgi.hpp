@@ -1,6 +1,7 @@
 #pragma once
 
 #include "handler/handler.hpp"
+#include "config/context/documentRootConfig.hpp"
 
 namespace http {
 

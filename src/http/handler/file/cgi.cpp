@@ -1,4 +1,5 @@
 #include "cgi.hpp"
+
 #include "config/context/documentRootConfig.hpp"
 #include "config/context/serverContext.hpp"
 #include "http/request/request.hpp"
@@ -20,12 +21,15 @@ Response CgiHandler::serveInternal(const Request& req) const {
         return ResponseBuilder().status(kStatusNotFound).build();
     }
 
+    std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
+    std::string realScriptPath = utils::normalizePath(joined);
+
     std::vector<std::string> env;
     buildCgiEnv(req, scriptPath, &pathInfo, &env);
-    
+
     std::vector<std::string> argv;
-    argv.push_back(scriptPath);
-    
+    argv.push_back(realScriptPath);
+
     const std::vector<char>& stdinBody = req.getBody();
 
     std::string cgiOut;

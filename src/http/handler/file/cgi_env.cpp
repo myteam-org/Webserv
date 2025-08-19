@@ -19,7 +19,7 @@ bool CgiHandler::buildCgiEnv(const http::Request& req,
                              const std::string& scriptName,
                              const std::string* pathInfo,
                              std::vector<std::string>* env) const {
-    if (env == 0) {
+    if (env == NULL) {
         return false;
     }
     env->clear();
@@ -28,11 +28,11 @@ bool CgiHandler::buildCgiEnv(const http::Request& req,
     addEnv(env, "REQUEST_METHOD", http::httpMethodToString(req.getMethod()));
     addEnv(env, "SERVER_PROTOCOL", req.getHttpVersion());
     addEnv(env, "SCRIPT_NAME", scriptName);
-    if (server != 0) {
+    if (server != NULL) {
         addEnv(env, "SERVER_NAME", server->getHost());
         addEnv(env, "SERVER_PORT", utils::toString(server->getListen()));
     }
-    if (pathInfo != 0 && !pathInfo->empty()) {
+    if (pathInfo != NULL && !pathInfo->empty()) {
         addEnv(env, "PATH_INFO", *pathInfo);
         addEnv(env, "PATH_TRANSLATED", utils::joinPath(docRootConfig_.getRoot(), *pathInfo));
     }

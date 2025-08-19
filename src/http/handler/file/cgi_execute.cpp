@@ -49,7 +49,7 @@ bool CgiHandler::executeCgi(const std::vector<std::string>& argv,
                             const std::vector<std::string>& env,
                             const std::vector<char>& stdinBody,
                             std::string* stdoutBuf, int* exitCode) const {
-    if (argv.empty() || stdoutBuf == 0 || exitCode == 0) {
+    if (argv.empty() || stdoutBuf == NULL || exitCode == NULL) {
         return false;
     }
     int inPipe[2] = {-1, -1};
@@ -158,7 +158,7 @@ void buildVecPtr(const std::vector<std::string>& value,
 // parent process
 bool parentProcess(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
                    std::string* out, int* exitCode) {
-    if (out == 0 || exitCode == 0) return false;
+    if (out == NULL || exitCode == NULL) return false;
 
     const char* ptr = body.empty() ? 0 : &body[0];
 

@@ -14,7 +14,7 @@ namespace {
 
 const int kCgiPollStepMs = 50;                 // pollの1回あたり待ち
 const int kCgiTotalTimeout = 30000;            // 総待ち時間(ms) 30s
-const std::size_t kMaxout = 16 * 1024 * 1024;  // 16MB ガード
+const std::size_t kMaxOut = 16 * 1024 * 1024;  // 16MB ガード
 const std::size_t kBufSize = 4 * 1024;
 
 // utils
@@ -48,10 +48,104 @@ bool runParentLoop(pid_t pid, int writeFd, int readFd,
 bool CgiHandler::executeCgi(const std::vector<std::string>& argv,
                             const std::vector<std::string>& env,
                             const std::vector<char>& stdinBody,
-                            std::string* stdoutBuf, int* exitCode) const {}
+                            std::string* stdoutBuf, int* exitCode) const {
+    if (argv.empty() || stdoutBuf == 0 || exitCode == 0) {
+        return false;
+    }
+    int inPipe[2] = {-1, -1};
+    int outPipe[2] = {-1, -1};
+    if (!openPipes(inPipe, outPipe)) {
+        return false;
+    }
+    pid_t pid = fork();
+    if (pid < 0) {
+        closePipe(inPipe);
+        closePipe(outPipe);
+        return false;
+    }
+    if (pid == 0) {
+        execChildAndExit(argv, env, inPipe, outPipe);
+    }
+    close(inPipe[0]);
+    close(outPipe[1]);
+    bool ok = runParentLoop(pid, inPipe[1], outPipe[0], stdinBody, stdoutBuf, exitCode);
+    int status = 0;
+    (void)waitpid(pid, &status, WNOHANG);
+    return ok;
+}
 
 namespace {
 
+// child process 
+void execChildAndExit(const std::vector<std::string>& argv,
+                      const std::vector<std::string>& env, int inPipe[2],
+                      int outPipe[2]) {
+    (void)dup2(inPipe[0], STDIN_FILENO);
+    (void)dup2(outPipe[1], STDOUT_FILENO);
+    closePipe(inPipe);
+    closePipe(outPipe);
+
+    std::vector<char*> argvp;
+    buildVecPtr(argv, &argvp);
+    std::vector<char*> envp;
+    buildVecPtr(env, &envp);
+
+    execve(argv[0].c_str(), &argvp[0], &envp[0]);
+    _exit(127);
+}
+
+// parent process
+bool runParentLoop(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
+                   std::string* out, int* exitCode) {
+    if (out == 0 || exitCode == 0) {
+        return false;
+    }
+    if (!setNonBlocking(wfd) || !setNonBlocking(rfd)) {
+        return false;
+    }
+    std::size_t pos = 0;
+    bool done = false;
+    int elapsed = 0;
+
+    if (body.empty() && wfd >= 0) {
+        close(wfd);
+        wfd = -1;
+    }
+    while (true) {
+        short wEvents = 0;
+        short rEvents = 0;
+        if (pollWait(wfd, rfd, kCgiPollStepMs, &wEvents, &rEvents) < 0 &&
+            errno != EINTR) {
+            return false;
+        }
+        if ((wEvents & POLLOUT) && pos < body.size()) {
+            if (!writeAvailable(wfd, body, &pos)) {
+                return false;
+            }
+            if (pos >= body.size()) {
+                close(wfd);
+                wfd = -1;
+            }
+        }
+        if (rEvents & (POLLIN | POLLHUP)) {
+            if (!readAvailable(rfd, out, kMaxOut)) {
+                return false;
+            }
+        }
+        if (!readIfDone(pid, exitCode, &done)) {
+            return false;
+        }
+        if (done) {
+            return true;
+        }
+        elapsed += kCgiPollStepMs;
+        if (elapsed >= kCgiTotalTimeout) {
+            return false;
+        }
+    }
+}
+
+// utils
 bool openPipes(int inPipe[2], int outPipe[2]) {
     if (pipe(inPipe) != 0) {
         return false;
@@ -71,9 +165,11 @@ bool openPipes(int inPipe[2], int outPipe[2]) {
 void closePipe(int pipe[2]) {
     if (pipe[0] >= 0) {
         close(pipe[0]);
+        pipe[0] = -1;
     }
     if (pipe[1] >= 0) {
         close(pipe[1]);
+        pipe[1] = -1;
     }
 }
 
@@ -92,11 +188,11 @@ bool setNonBlocking(int fd) {
 // std::vector<std::string> を execve 用の char* const argv[] 形式に変換する
 void buildVecPtr(const std::vector<std::string>& value,
                  std::vector<char*>* out) {
-    out->clear();
-    out->reserve(value.size() + 1);
     if (!out) {
         return;
     }
+    out->clear();
+    out->reserve(value.size() + 1);
     for (std::size_t i = 0; i < value.size(); ++i) {
         out->push_back(const_cast<char*>(value[i].c_str()));
     }
@@ -106,7 +202,7 @@ void buildVecPtr(const std::vector<std::string>& value,
 ssize_t writeSome(int fd, const char* buf, std::size_t len) {
     for (;;) {
         ssize_t byte = write(fd, buf, len);
-        if (byte >= byte) {
+        if (byte >= 0) {
             return byte;
         }
         if (errno == EINTR) {
@@ -122,7 +218,7 @@ ssize_t writeSome(int fd, const char* buf, std::size_t len) {
 ssize_t readSome(int fd, char* buf, std::size_t len) {
     for (;;) {
         ssize_t byte = read(fd, buf, len);
-        if (byte >= byte) {
+        if (byte >= 0) {
             return byte;
         }
         if (errno == EINTR) {
@@ -148,32 +244,37 @@ ssize_t readSome(int fd, char* buf, std::size_t len) {
 // 　　< 0: エラー（errno 参照。EINTR なら上位で再試行）
 int pollWait(int wfd, int rfd, int timeoutMs, short* wrEvents,
              short* rrEvents) {
-    struct pollfd fds[2];        // 監視対象（最大2本）
-    memset(fds, 0, sizeof(fds)); // 安全のためゼロ初期化
-    int nfds = 0;                // 実際に使うスロット数
+    struct pollfd fds[2];         // 監視対象（最大2本）
+    memset(fds, 0, sizeof(fds));  // 安全のためゼロ初期化
+    int nfds = 0;                 // 実際に使うスロット数
 
-    if (wfd >= 0) {              // 書き込み監視（POLLOUT）の登録
+    if (wfd >= 0) {  // 書き込み監視（POLLOUT）の登録
         fds[nfds].fd = wfd;
         fds[nfds].events = POLLOUT;
         ++nfds;
     }
-    if (rfd >= 0) {              // 読み取り監視（POLLIN）の登録
+    if (rfd >= 0) {  // 読み取り監視（POLLIN）の登録
         fds[nfds].fd = rfd;
         fds[nfds].events = POLLIN;
         ++nfds;
     }
-    const int pollReturn = poll(fds, nfds, timeoutMs); // nfds本 に対して poll 実行
-    if (wrEvents) {                                    // wfd に対応する revents を返す
-        if (nfds >= 1 && fds[0].fd == wfd) {           // wfd を配列の先頭に入れている前提なので fds[0] を参照
+    const int pollReturn =
+        poll(fds, nfds, timeoutMs);  // nfds本 に対して poll 実行
+    if (wrEvents) {                  // wfd に対応する revents を返す
+        if (nfds >= 1 &&
+            fds[0].fd ==
+                wfd) {  // wfd を配列の先頭に入れている前提なので fds[0] を参照
             *wrEvents = fds[0].revents;
-        } else {                                       // wfd が無効もしくは未登録の場合は 0（イベントなし）で返す
+        } else {  // wfd が無効もしくは未登録の場合は 0（イベントなし）で返す
             *wrEvents = 0;
         }
     }
-    if (rrEvents) {                                    // rfd に対応する revents を返す
-        *rrEvents = 0;                                 // デフォルトはイベントなし
+    if (rrEvents) {     // rfd に対応する revents を返す
+        *rrEvents = 0;  // デフォルトはイベントなし
         if (nfds >= 1) {
-            const int idx = (nfds == 1) ? 0 : 1;       // rfd は「単独登録なら fds[0], wfd もあれば fds[1]」に入っている
+            const int idx =
+                (nfds == 1) ? 0 : 1;  // rfd は「単独登録なら fds[0], wfd
+                                      // もあれば fds[1]」に入っている
             if (fds[idx].fd == rfd) {
                 *rrEvents = fds[idx].revents;
             }

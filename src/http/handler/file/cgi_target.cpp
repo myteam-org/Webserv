@@ -9,6 +9,8 @@
 namespace http {
 
 namespace {
+
+// utils    
 bool initCheck(const Request& req, std::string* scriptPath,
                std::string* pathInfo);
 bool checkIsUnderRoot(const std::string& root, const std::string& norm);
@@ -19,8 +21,10 @@ bool findScriptPrefix(const std::string& abs, std::string* scriptFsPath,
 bool isRegularFile(const std::string& file);
 bool isExecutableFile(const std::string& file);
 std::string fsToVirtual(const std::string& root, const std::string& fileSystem);
+
 }  // namespace
 
+// 本体
 bool CgiHandler::isCgiTarget(const Request& req, std::string* scriptPath,
                              std::string* pathInfo) const {
     if (!initCheck(req, scriptPath, pathInfo)) {
@@ -80,7 +84,6 @@ bool splitScriptAndPathInfo(const std::string& root, const std::string& norm,
 
     std::string scriptFsPath;
     std::string pathInfoSuffix;
-
     if (!findScriptPrefix(norm, &scriptFsPath, &pathInfoSuffix)) {
         return false;
     }

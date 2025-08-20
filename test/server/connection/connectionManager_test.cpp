@@ -18,8 +18,8 @@
 class DummyAddr : public ISocketAddr {
 public:
     virtual ~DummyAddr() {}
-    virtual std::string getAddress() const { return addr_;};
-    virtual uint16_t getPort() const { return port_;};
+    virtual std::string getAddress() const { return addr_;}
+    virtual uint16_t getPort() const { return port_;}
 private:
     std::string addr_;
     uint16_t port_;
@@ -79,7 +79,7 @@ TEST(ConnectionManagerTest, Register_Duplicate_ReturnsErr_And_DoesNotReplaceExis
     ASSERT_TRUE(RESULT_IS_OK(g));
     EXPECT_EQ(RESULT_VAL(g), c1);
 
-   types::Result<int, int> u = mgr.unregisterConnection(fd);
+    types::Result<int, int> u = mgr.unregisterConnection(fd);
     ASSERT_TRUE(RESULT_IS_OK(u));
     EXPECT_EQ(RESULT_VAL(u), fd);
 }
@@ -108,7 +108,8 @@ TEST(ConnectionManagerTest, Unregister_Then_Get_NotFound) {
 
     types::Result<int, int> u = mgr.unregisterConnection(fd);
     ASSERT_TRUE(RESULT_IS_OK(u));
-    EXPECT_EQ(RESULT_VAL(u), fd);     types::Result<Connection*, std::string> g = mgr.getConnectionByFd(fd);
+    EXPECT_EQ(RESULT_VAL(u), fd);
+    types::Result<Connection*, std::string> g = mgr.getConnectionByFd(fd);
     EXPECT_TRUE(RESULT_IS_ERR(g));
 }
 

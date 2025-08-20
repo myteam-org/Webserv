@@ -56,7 +56,7 @@ void Connection::setLastRecv(time_t lastRecvVal) {
     lastRecv_ = lastRecvVal;
 }
 
-bool Connection::isTimeout() const{
+bool Connection::isTimeout() const {
     time_t now = std::time(0);
     return (now - lastRecv_) > kTimeoutThresholdSec;
 }

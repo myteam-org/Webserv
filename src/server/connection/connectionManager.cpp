@@ -5,7 +5,7 @@ ConnectionManager::ConnectionManager() {
 
 types::Result<Connection*, std::string> ConnectionManager::getConnectionByFd(int fd) const {
     std::map<int, Connection*>::const_iterator it = connectionMap_.find(fd);
-     if (it == connectionMap_.end()) {
+    if (it == connectionMap_.end()) {
         return types::err<std::string>("connection not found");
     }
     return types::ok<Connection*>(it->second);

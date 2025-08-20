@@ -11,8 +11,8 @@ namespace {
 class MockSocketAddr : public ISocketAddr {
 public:
     MockSocketAddr(const std::string& ip, uint16_t port) : ip_(ip), port_(port) {}
-    std::string getAddress() const { return ip_ ;}
-    uint16_t getPort() const { return port_ ; }
+    std::string getAddress() const { return ip_; }
+    uint16_t getPort() const { return port_; }
 private:
     std::string ip_;
     uint16_t port_;

@@ -31,7 +31,7 @@ io::IReader::ReadResult ConnectionSocket::read(char* buf, std::size_t n) {
     if (r > 0) {
         return types::ok<std::size_t>(static_cast<size_t>(r));
     }
-   if (r == 0) {
+    if (r == 0) {
         eof_ = true;
         return types::ok<std::size_t>(0);
     }

@@ -11,7 +11,7 @@ private:
     ConnectionSocket connSock_;
     ReadBuffer readBuffer_;
     WriteBuffer writeBuffer_;
-    IConnectionState *connState_;
+    IConnectionState* connState_;
     time_t lastRecv_;
     Connection(const Connection&);
     Connection& operator=(const Connection&);

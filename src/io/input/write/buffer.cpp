@@ -45,7 +45,10 @@ types::Result<std::size_t, error::AppError> WriteBuffer::flush() {
             head_ = 0;
             break;
         }
-        // buf_ の送信済みデータが多い場合で、未送信データが残る場合、buf 配列を一定条件に従って切り詰める。
+        // buf_ の送信済みデータ(head_ で判別可)が多い場合で、未送信データが残る場合、buf 配列を一定条件に従って切り詰める。
+        // head_ は次回送信するべきインデックスを表す。具体的な切り詰め条件は下記。
+        // 送信済みの byte 数が定数 (kCompactMinHeadBytes) を超えている。
+        // 送信すべき buffer の全体サイズより、送信済みのサイズ * kCompactWasteRatioが大きい。
         if (head_ > kCompactMinHeadBytes && head_ * kCompactWasteRatio > buf_.size()) {
             compact_();
         }

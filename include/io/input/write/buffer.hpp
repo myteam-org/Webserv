@@ -1,7 +1,8 @@
+#pragma once
 #include <iostream>
 #include <vector>
 #include "utils.hpp"
-#include <writer.hpp>
+#include "io/input/writer/writer.hpp"
 
 class WriteBuffer {
 public:
@@ -22,4 +23,6 @@ private:
     void compact_();
     WriteBuffer(const WriteBuffer&);
     WriteBuffer& operator=(const WriteBuffer&);
+    static const int kCompactMinHeadBytes = 8192;
+    static const int kCompactWasteRatio = 2;
 };

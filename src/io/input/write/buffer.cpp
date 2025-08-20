@@ -1,4 +1,4 @@
-#include "write/buffer.hpp"
+#include "io/input/write/buffer.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -45,8 +45,8 @@ types::Result<std::size_t, error::AppError> WriteBuffer::flush() {
             head_ = 0;
             break;
         }
-        // 空きが大きいときは前詰め
-        if (head_ > 8192 && head_ * 2 > buf_.size()) {
+        // buf_ の送信済みデータが多い場合で、未送信データが残る場合、buf 配列を一定条件に従って切り詰める。
+        if (head_ > kCompactMinHeadBytes && head_ * kCompactWasteRatio > buf_.size()) {
             compact_();
         }
     }

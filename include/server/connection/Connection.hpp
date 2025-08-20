@@ -1,7 +1,9 @@
+#pragma once
 #include "ConnectionSocket.hpp"
 #include "io/input/read/buffer.hpp"
 #include "io/input/write/buffer.hpp"
-#include "IConnectionState.hpp"
+#include "server/connection/state/IConnectionState.hpp"
+#include <ctime>
 
 
 class Connection {
@@ -27,5 +29,5 @@ public:
     void setConnState(IConnectionState* connState);
     time_t getLastRecv() const;
     void setLastRecv(time_t lastRecv);
-    const bool isTimeout() const;
+    bool isTimeout() const;
 };

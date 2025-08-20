@@ -1,11 +1,10 @@
 
 #include <gtest/gtest.h>
 
-#include "Connection.hpp"
-#include "ConnectionSocket.hpp"
+#include "server/connection/Connection.hpp"
+#include "server/socket/ConnectionSocket.hpp"
 #include "io/input/reader/reader.hpp"
-#include <gtest.h>
-
+#include <cmath>
 
 namespace {
 
@@ -47,6 +46,7 @@ private:
     bool eof_;
 };
 
+
 TEST(ConnectionTest, InitialState) {
     uint16_t port = 65535;
     MockSocketAddr mock = MockSocketAddr("192.168.0.5", port);
@@ -56,18 +56,21 @@ TEST(ConnectionTest, InitialState) {
     WriteBuffer* wb_addr = &conn.getWriteBuffer();
     EXPECT_NE(rb_addr, static_cast<ReadBuffer*>(0));
     EXPECT_NE(wb_addr, static_cast<WriteBuffer*>(0));
+    EXPECT_EQ(conn.getReadBuffer().size(), static_cast<size_t>(0));
 
     // 状態は未設定
     EXPECT_EQ(conn.getConnState(), static_cast<IConnectionState*>(0));
 
     // ソケットFD
     EXPECT_EQ(conn.getConnSock().getRawFd(), fd);
-
+    EXPECT_EQ(conn.getConnSock().getPeerPort(), port);
+    EXPECT_EQ(conn.getConnSock().getPeerAddress(), "192.168.0.5");
     // lastRecv_ は現在時刻近傍
     std::time_t now = std::time(0);
     double diff = std::difftime(conn.getLastRecv(), now);
     EXPECT_LE(std::fabs(diff), 1.0);
 }
+
 TEST(ConnectionTest, BufferReferencesStableAndConstOverloadsWork) {
     uint16_t port = 65535;
     MockSocketAddr mock("192.168.0.5", port);
@@ -125,3 +128,8 @@ TEST(ConnectionTest, TimeoutLogic_WorksAroundThreshold) {
 }
 
 } // namespace
+
+int main(int argc, char** argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}

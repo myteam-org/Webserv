@@ -23,6 +23,7 @@ add_library(webserv_lib STATIC
     utils/string.cpp
     io/input/read/buffer.cpp
     io/input/reader/fd.cpp
+    io/input/write/buffer.cpp
     io/base/fileDescriptor.cpp
     server/epollEvent.cpp
     server/epollEventNotifier.cpp

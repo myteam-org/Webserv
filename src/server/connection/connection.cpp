@@ -1,9 +1,12 @@
-#include "Connection.hpp"
+#include "server/connection/Connection.hpp"
 #include <ctime>
+#include "io/input/reader/fd.hpp"
 
 Connection::Connection(int fd, const ISocketAddr& peerAddr)
     : connSock_(fd, peerAddr),
       connState_(0),
+      readBuffer_(connSock_),
+      writeBuffer_(connSock_),
       lastRecv_(std::time(0)) {}
 
 Connection::~Connection() {
@@ -11,8 +14,6 @@ Connection::~Connection() {
         delete connState_;
         connState_ = 0;
     }
-    // resetReadBuffer();
-    // resetWriteBuffer();
 }
 
 const ConnectionSocket& Connection::getConnSock() const {
@@ -55,7 +56,7 @@ void Connection::setLastRecv(time_t lastRecvVal) {
     lastRecv_ = lastRecvVal;
 }
 
-const bool Connection::isTimeout() const{
+bool Connection::isTimeout() const{
     time_t now = std::time(0);
     return (now - lastRecv_) > kTimeoutThresholdSec;
 }

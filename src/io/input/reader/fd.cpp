@@ -10,9 +10,9 @@ FdReader::FdReader(int fd)
     : fd_(fd), eof_(false) {}
 
 FdReader::~FdReader() {
-    if (fd_ >= 0) {
-        ::close(fd_);
-    }
+    // if (fd_ >= 0) {
+    //     ::close(fd_);
+    // }
 }
 
 FdReader::ReadResult FdReader::read(char *buf, std::size_t nbyte) {

@@ -23,12 +23,15 @@ add_library(webserv_lib STATIC
     utils/string.cpp
     io/input/read/buffer.cpp
     io/input/reader/fd.cpp
+    io/input/write/buffer.cpp
     io/base/fileDescriptor.cpp
     server/epollEvent.cpp
     server/epollEventNotifier.cpp
     server/socket/connectionSocket.cpp
     server/socket/serverSocket.cpp
     server/socket/socketAddr.cpp
+    server/connection/connection.cpp
+    server/connection/connectionManager.cpp
     http/request/read/body.cpp
     http/request/read/header_parsing_utils.cpp
     http/request/read/length_body.cpp

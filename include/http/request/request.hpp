@@ -35,23 +35,23 @@ namespace http {
     const std::string& getPath() const;
     const std::string& getQueryString() const;
     const std::string &getHttpVersion() const;
-    types::Option<std::string> getHeader(const std::string &key);
+    types::Option<std::string> getHeader(const std::string &key) const;
     const std::vector<char> &getBody() const;
     const ServerContext* getServer() const;
     const LocationContext* getLocation() const;
     const DocumentRootConfig* getDocumentRoot() const;
     
   private:
-    void splitTarget();
     HttpMethod method_;
     std::string requestTarget_;
     std::string pathOnly_;
     std::string queryString_;
-    std::string httpVersion_;
     RawHeaders headers_;
     std::vector<char> body_;
     const ServerContext* server_;
+    std::string httpVersion_;
     const LocationContext* location_;
     const DocumentRootConfig* documentRoot_;
+  public:
   };
 } // namespace http

@@ -57,6 +57,11 @@ add_library(webserv_lib STATIC
     http/handler/file/static.cpp
     http/handler/file/upload.cpp
     http/handler/file/redirect.cpp
+    http/handler/file/cgi.cpp
+    http/handler/file/cgi_target.cpp
+    http/handler/file/cgi_env.cpp
+    http/handler/file/cgi_execute.cpp
+    http/handler/file/cgi_parse.cpp
     http/mime.cpp
 )
 

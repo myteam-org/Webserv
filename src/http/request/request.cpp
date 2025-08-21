@@ -18,19 +18,7 @@ Request::Request(HttpMethod method, const std::string &requestTarget,
       location_(location) {
     httpVersion_ = "HTTP/1.1";
     documentRoot_ = &location_->getDocumentRootConfig();
-    // splitTarget();
 }
-
-// void Request::splitTarget() {
-//     const std::string::size_type question = requestTarget_.find('?');
-//     if (question == std::string::npos) {
-//         pathOnly_ = requestTarget_;
-//         queryString_.clear();
-//     } else {
-//         pathOnly_ = requestTarget_.substr(0, question);
-//         queryString_ = requestTarget_.substr(question + 1);
-//     }
-// }
 
 bool Request::operator==(const Request &other) const {
     return method_ == other.method_ && requestTarget_ == other.requestTarget_ &&
@@ -48,7 +36,7 @@ const std::string &Request::getQueryString() const { return queryString_; }
 
 const std::string &Request::getHttpVersion() const { return httpVersion_; }
 
-types::Option<std::string> Request::getHeader(const std::string &key) {
+types::Option<std::string> Request::getHeader(const std::string &key) const {
     const std::string lowKey = utils::toLower(key);
     const RawHeaders::const_iterator it = headers_.find(lowKey);
     if (it != headers_.end()) {

@@ -36,3 +36,5 @@ namespace http {
         void ensureMatcherUpdated() const;
     };
 } //namespace http
+
+// 登録されたルートの一覧保持

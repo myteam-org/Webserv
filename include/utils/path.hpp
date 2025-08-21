@@ -110,5 +110,14 @@ inline std::string normalizeSlashes(const std::string& pathLike) {
                             /*keepTrailingSlash=*/true);
 }
 
+inline bool isPathUnderRoot(const std::string& root,
+                                        const std::string& path) {
+    if (root.empty()) {
+        return false;
+    }
+    return path.compare(0, root.size(), root) == 0 &&
+           (path.size() == root.size() || path[root.size()] == '/');
+}
+
 }  // namespace path
 }  // namespace utils

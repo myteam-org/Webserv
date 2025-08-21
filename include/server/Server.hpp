@@ -1,19 +1,21 @@
-#include <serverContext.hpp>
-#include "config"
+#include "config/context/serverContext.hpp"
+#include "server/connection/ConnectionManager.hpp"
+#include "server/EpollEventNotifier.hpp"
+#include "http/virtual_server.hpp"
+#include "server/socket/ServerSocket.hpp"
+
+typedef std::pair<std::string, uint16_t> ListenerKey;
+
 class Server {
-   public:
-    Server(const Config &serverConfig);
-    ~VirtualServer();
+    public:
+        Server(const std::vector<ServerContext>&);
+        ~Server();
+        types::Result<void,int> init();
 
-    const ServerContext &getServerConfig() const;
-    http::Router &getRouter();
-
-   private:
-    static void registerHandlers(http::RouterBuilder &routerBuilder,
-                                 const LocationContext &locationContext);
-    void setupRouter();
-
-    const ServerContext serverConfig_;
-    const std::string bindAddress_;
-    http::Router *router_;
+    private:
+        std::vector<ServerContext> serverCtxs_;
+        EpollEventNotifier epollNotifier_;
+        ConnectionManager connManager_;
+        std::map<std::string, VirtualServer*> virtualServers_;
+        std::map<ListenerKey, ServerSocket*> listeners_; 
 };

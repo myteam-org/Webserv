@@ -13,14 +13,14 @@ public:
         int domain = AF_INET,
         int type = SOCK_STREAM,
         int protocol = kDefaultProtocol
-       );
+    );
     ~ServerSocket();
     virtual int getRawFd() const;
     void setFd(int fd);
     uint16_t getBindPort() const;
     std::string getBindAddress() const;
     void setBindPort(uint16_t port);
-    void setBindAddress(std::string &address);	
+    void setBindAddress(std::string &address);
     static types::Result<int, int> socket(
         int domain = AF_INET, 
         int type = SOCK_STREAM, 
@@ -31,6 +31,8 @@ public:
     ConnectionResult accept() const;
 
 private:
+    ServerSocket(const ServerSocket&);
+    ServerSocket& operator=(const ServerSocket&);
     FileDescriptor fd_;
     std::string bindAddress_;
     uint16_t bindPort_;
@@ -40,5 +42,5 @@ private:
         const std::string& hostName, 
         uint16_t port, 
         sockaddr_in *addrIn
-        );
+    );
 };

@@ -9,11 +9,13 @@ TEST(RedirectHandlerTest, RedirectOldLocation) {
     RedirectHandler handler("/new-location");
     Request request(
         kMethodGet,
-        "/old-location",
-        RawHeaders(),          // 空のヘッダー
-        std::vector<char>(),   // 空のボディ
-        NULL,                  // ServerContext* (C++98ではNULLを使用)
-        NULL                   // LocationContext* (C++98ではNULLを使用)
+        /*requestTarget*/ "/old-location",
+        /*pathOnly*/      "/old-location",
+        /*queryString*/   "",
+        /*headers*/       RawHeaders(),
+        /*body*/          std::vector<char>(),
+        /*server*/        NULL,     // C++98 なら NULL
+        /*location*/      NULL
     );
     Either<IAction *, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());

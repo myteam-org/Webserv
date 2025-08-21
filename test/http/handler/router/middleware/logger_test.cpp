@@ -19,14 +19,27 @@
 static http::Request makeRequest(http::HttpMethod m, const std::string& target,
                                  ServerContext& server,
                                  LocationContext& location) {
-    std::string path = target, query;
-    if (std::size_t p = target.find('?'); p != std::string::npos) {
-        path = target.substr(0, p);
-        query = target.substr(p + 1);
+    std::string pathOnly = target;
+    std::string queryString;
+    std::size_t pos = target.find('?');
+    if (pos != std::string::npos) {
+        pathOnly = target.substr(0, pos);
+        queryString = target.substr(pos + 1);
     }
+
     RawHeaders headers;
     std::vector<char> body;
-    return http::Request(m, target, headers, body, &server, &location);
+
+    return http::Request(
+        m,
+        /*requestTarget*/ target,
+        /*pathOnly*/      pathOnly,
+        /*queryString*/   queryString,
+        /*headers*/       headers,
+        /*body*/          body,
+        /*server*/        &server,
+        /*location*/      &location
+    );
 }
 namespace http {
 

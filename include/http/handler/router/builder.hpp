@@ -27,3 +27,5 @@ namespace http {
     };
 
 } // namespace http
+
+// ルートやミドルウェアを登録するためのビルダー

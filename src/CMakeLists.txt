@@ -46,6 +46,7 @@ add_library(webserv_lib STATIC
     http/method.cpp
     http/response/response.cpp
     http/response/builder.cpp
+    http/response/response_headers.cpp
     http/handler/router/builder.cpp
     http/handler/router/internal.cpp
     http/handler/router/registry.cpp
@@ -59,6 +60,11 @@ add_library(webserv_lib STATIC
     http/handler/file/static.cpp
     http/handler/file/upload.cpp
     http/handler/file/redirect.cpp
+    http/handler/file/cgi.cpp
+    http/handler/file/cgi_target.cpp
+    http/handler/file/cgi_env.cpp
+    http/handler/file/cgi_execute.cpp
+    http/handler/file/cgi_parse.cpp
     http/mime.cpp
 )
 

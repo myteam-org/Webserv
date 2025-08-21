@@ -6,9 +6,11 @@
 #include "context.hpp"
 #include "locationContext.hpp"
 #include "request.hpp"
+#include "utils/path.hpp"
 #include "utils/string.hpp"
 #include "utils/types/either.hpp"
 #include "utils/types/result.hpp"
+#include "utils/url.hpp"
 
 namespace http {
 namespace parse {
@@ -26,9 +28,9 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     }
     std::istringstream iss(line);
     std::string method;
-    std::string uri;
+    std::string requestTarget;
     std::string version;
-    if (!(iss >> method >> uri >> version)) {
+    if (!(iss >> method >> requestTarget >> version)) {
         return ERR(error::kBadRequest);
     }
     if (method == "GET") {
@@ -40,15 +42,41 @@ types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
     } else {
         return ERR(error::kBadMethod);
     }
-    if (uri.length() > kMaxRecommendedRequestLineLength) {
+    if (requestTarget.length() > kMaxRecommendedRequestLineLength) {
         return ERR(error::kUriTooLong);
     }
     const std::size_t kHttpVersionPreFixLen = 8;
     if (version.substr(0, kHttpVersionPreFixLen) != "HTTP/1.1") {
         return ERR(error::kBadHttpVersion);
     }
-    uri_ = uri;
+    const types::Result<types::Unit, error::AppError> norm =
+        decodeAndNormalizeTarget(requestTarget);
+    if (norm.isErr()) {
+        return norm;
+    }
     version_ = version;
+    return OK(types::Unit());
+}
+
+types::Result<types::Unit, error::AppError>
+RequestParser::decodeAndNormalizeTarget(const std::string& requestTarget) {
+    pathOnly_.clear();
+    queryString_.clear();
+    std::string rawPath = requestTarget;
+    const std::size_t qMark = requestTarget.find('?');
+    if (qMark != std::string::npos) {
+        rawPath = requestTarget.substr(0, qMark);
+        queryString_ = requestTarget.substr(qMark + 1);
+    }
+    std::string decodePath;
+    if (!utils::url::decodeStrict(rawPath, decodePath)) {
+        return ERR(error::kBadRequest);
+    }
+    pathOnly_ = utils::path::removeDotSegments(decodePath);
+    if (pathOnly_.empty()) {
+        pathOnly_ = "/";
+    }
+    requestTarget_ = requestTarget;
     return OK(types::Unit());
 }
 
@@ -94,31 +122,26 @@ bool RequestParser::validateTransferEncoding() const {
     return !val.empty() && utils::toLower(val) == "chunked";
 }
 
+// バイナリ対応のため vector<char> に詰め直す
 types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
     const std::string& raw = ctx_->getBody();
-    // バイナリ対応のため vector<char> に詰め直す    body_.assign(raw.begin(),
-    // raw.end());
+    body_.assign(raw.begin(), raw.end());
     return OK(types::Unit());
 }
 
 types::Result<Request, error::AppError> RequestParser::buildRequest() const {
-    const std::string uri = uri_;
+    const std::string uri = pathOnly_;
     const types::Result<const LocationContext*, error::AppError> result =
         chooseLocation(uri);
+
     if (result.isErr()) {
         return ERR(error::kBadLocationContext);
     }
+
     const LocationContext* location = result.unwrap();
 
-    std::string queryString;
-    std::string pathOnly = uri;
-    const std::size_t queryMarkPos = uri.find('?');
-    if (queryMarkPos != std::string::npos) {
-        pathOnly = uri.substr(0, queryMarkPos);
-        queryString = uri.substr(queryMarkPos + 1);
-    }
-    const Request req(method_, uri_, headers_, body_, &ctx_->getServer(),
-                      result.unwrap());
+    const Request req(method_, requestTarget_, pathOnly_, queryString_,
+                      headers_, body_, &ctx_->getServer(), result.unwrap());
     return OK(req);
 }
 
@@ -146,6 +169,18 @@ RequestParser::chooseLocation(const std::string& uri) const {
     }
     return types::err(error::kBadRequest);
 }
+
+const std::string& RequestParser::getPathOnly() const { return pathOnly_; }
+
+const std::string& RequestParser::getQueryString() const {
+    return queryString_;
+}
+
+const std::string& RequestParser::getRequestTarget() const {
+    return requestTarget_;
+}
+
+http::HttpMethod RequestParser::getMethod() const { return method_; }
 
 }  // namespace parse
 }  // namespace http

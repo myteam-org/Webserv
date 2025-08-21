@@ -25,7 +25,5 @@ class UploadFileHandler : public IHandler {
         const std::string& normalized) const;
     static Response writeToFile(const std::string& path,
                                 const std::vector<char>& body);
-    static bool isPathUnderRoot(const std::string& path,
-                                const std::string& root);
 };
 }  // namespace http

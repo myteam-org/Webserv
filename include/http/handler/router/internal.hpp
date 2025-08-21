@@ -14,3 +14,5 @@ namespace http {
         Matcher<std::string> createMatcher() const;
     };
 } // namespace http
+
+// 実際に Method + Path を照合してハンドラを決める処理

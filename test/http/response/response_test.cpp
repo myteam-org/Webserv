@@ -39,7 +39,9 @@ TEST(ResponseTest, EqualityOperator) {
 
 TEST(ResponseTest, ToString) {
     Response res(kStatusOk);
-    EXPECT_EQ(res.toString(), ""); // Current implementation returns empty string
+    const std::string s = res.toString();
+    EXPECT_TRUE(s.find("HTTP/1.1 200 OK\r\n") == 0);
+    // EXPECT_EQ(res.toString(), ""); // Current implementation returns empty string
 }
 
 int main(int argc, char **argv) {

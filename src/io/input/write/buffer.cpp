@@ -5,7 +5,7 @@
 
 WriteBuffer::WriteBuffer(io::IWriter& writer)
     : buf_(), head_(0), writer_(writer) {
-    buf_.reserve(4096);
+    buf_.reserve(kDefaultBufferSize);
 }
 
 void WriteBuffer::append(const std::string& data) {

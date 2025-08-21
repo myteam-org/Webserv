@@ -25,4 +25,5 @@ private:
     WriteBuffer& operator=(const WriteBuffer&);
     static const int kCompactMinHeadBytes = 8192;
     static const int kCompactWasteRatio = 2;
+    static const std::size_t kDefaultBufferSize = 4096;
 };

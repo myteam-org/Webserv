@@ -41,9 +41,7 @@ IConnectionState* Connection::getConnState() const {
 
 void Connection::setConnState(IConnectionState* connState) {
     if (connState_ != connState) {
-        if (connState_) {
-            delete connState_;
-        }
+        delete connState_;
         connState_ = connState;
     }
 }

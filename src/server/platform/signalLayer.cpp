@@ -6,8 +6,6 @@
 #include <string>
 #include <errno.h>
 
-#include "utils/string.hpp"
-
 namespace platform {
 
 volatile sig_atomic_t SignalLayer::sWriteFd_ = -1;
@@ -137,13 +135,13 @@ bool SignalLayer::takePending(SignalAction* act) {
             }
             return true;
         case 0x02: case 0x06:
-            sFlags_ = ~0x02;
+            sFlags_ &= ~0x02;
             if (act) { 
                 *act = kSigReload;
             }
             return true;
         case 0x04:
-            sFlags_ = ~0x04;
+            sFlags_ &= ~0x04;
             if (act) {
                 *act = kSigChild;
             }
@@ -187,6 +185,7 @@ void SignalLayer::onSignal(int signo) {
     if (fd >= 0) {
         (void)write(fd, &code, 1);
     }
+    errno = saved;
 }
 
 } // namespace platform

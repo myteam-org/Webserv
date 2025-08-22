@@ -18,7 +18,7 @@ SignalLayer::SignalLayer() : rfd_(-1), wfd_(-1) {}
 SignalLayer::~SignalLayer() { shutdown(); }
 
 namespace {
-static bool set_cloexec_nonblock_(int fd, std::string* err) {
+static bool set_cloexec_nonblock(int fd, std::string* err) {
     int fcl = fcntl(fd, F_GETFD, 0);
     
     if (fcl < 0) {
@@ -40,23 +40,10 @@ static bool set_cloexec_nonblock_(int fd, std::string* err) {
     }
     return true;
 }
-
-static bool setHandler_(int signo, void (*handler)(int), int flags, std::string* err) {
-    struct sigaction sa;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_handler = handler;
-    sa.sa_flags = flags;
-    if (sigaction(signo, &sa, NULL) < 0) {
-        if (err) *err = "sigaction(" + utils::toString(signo) + ") failed";
-        return false;
-    }
-    return true;
-}
 } // namespace
 
 bool SignalLayer::init(std::string* err) {
     shutdown();
-
     int pfd[2];
     if(pipe(pfd) != 0) {
         if (err) *err = "pipe failed";
@@ -64,33 +51,44 @@ bool SignalLayer::init(std::string* err) {
     }
     rfd_ = pfd[0];
     wfd_ = pfd[1];
-
-    if (!set_cloexec_nonblock_(rfd_, err)) return shutdown(), false;
-    if (!set_cloexec_nonblock_(wfd_, err)) return shutdown(), false;
-
-    if (!setHandler_(SIGPIPE, SIG_IGN, 0, err)) {
-        return shutdown(), false;
+    if (!set_cloexec_nonblock(rfd_, err)) {
+        return failInitKeepErr(err);
     }
-    struct sigaction sa;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_handler = &SignalLayer::onSignal;
-    sa.sa_flags = SA_RESTART;    
-    if (sigaction(SIGINT, &sa, NULL) < 0) {
-        if (err) return *err = "sigaction(SIGINT) failed", shutdown(), false;
-    }
-    if (sigaction(SIGTERM, &sa, NULL) < 0) {
-        if (err) return *err = "sigaction(SIGTERM) failed", shutdown(), false;
-    }
-    if (sigaction(SIGHUP, &sa, NULL) < 0) {
-        if (err) return *err = "sigaction(SIGHUP) failed", shutdown(), false;
-    }
-    if (sigaction(SIGCHLD, &sa, NULL) < 0) {
-        if (err) return *err = "sigaction(SIGCHLD) failed", shutdown(), false;
+    if (!set_cloexec_nonblock(wfd_, err)) {
+        return failInitKeepErr(err);
     }
     sWriteFd_ = static_cast<sig_atomic_t>(wfd_);
     sFlags_ = 0;
+    if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) { // ignore SIGPIPE
+        return failInit(err, "signal(SIGPIPE) failed");
+    } 
+    if (signal(SIGINT, &SignalLayer::onSignal) == SIG_ERR) {
+        return failInit(err, "signal(SIGINT) failed");
+    }
+    if (signal(SIGTERM, &SignalLayer::onSignal) == SIG_ERR) {
+        return failInit(err, "signal(SIGTERM) failed");
+    }
+    if (signal(SIGHUP, &SignalLayer::onSignal) == SIG_ERR) {
+        return failInit(err, "signal(SIGHUP) failed");
+    }
+    if (signal(SIGCHLD, &SignalLayer::onSignal) == SIG_ERR) {
+        return failInit(err, "signal(SIGCHLD) failed");
+    }
     return true;
 }
+
+bool SignalLayer::failInitKeepErr(std::string* /*err*/) {
+    shutdown();
+    return false;
+}
+
+bool SignalLayer::failInit(std::string* err, const char* msg) {
+    if (err) {
+        *err = msg;
+    }
+    shutdown();
+    return false;
+}   
 
 // 読み取り側fd(epoll/kqueue に登録するのはこれ)
 int SignalLayer::fd() const { return rfd_; }
@@ -126,32 +124,33 @@ bool SignalLayer::drainOnce(SignalAction* act) const {
 
 bool SignalLayer::takePending(SignalAction* act) {
     const sig_atomic_t flag = sFlags_;
+    const int mask = static_cast<int>(flag & 0x07);
 
-    if (flag == 0) {
+    if (mask == 0) {
         return false;
     }
-    if ((flag & 0x01) != 0) {
-        sFlags_ &= ~0x01;
-        if (act) {
-            *act = kSigGracefulStop;
-        }
-        return true;
+    switch(mask) {
+        case 0x01: case 0x03: case 0x05: case 0x07:
+            sFlags_ &= ~0x01;
+            if (act) {
+                *act = kSigGracefulStop;
+            }
+            return true;
+        case 0x02: case 0x06:
+            sFlags_ = ~0x02;
+            if (act) { 
+                *act = kSigReload;
+            }
+            return true;
+        case 0x04:
+            sFlags_ = ~0x04;
+            if (act) {
+                *act = kSigChild;
+            }
+            return true;
+        default:
+            return false;
     }
-    if ((flag & 0x02) != 0) {
-        sFlags_ &= ~0x02;
-        if (act) {
-            *act = kSigReload;
-        }
-        return true;
-    }
-    if ((flag & 0x04) != 0) {
-        sFlags_ &= ~0x04;
-        if (act) {
-            *act = kSigChild;
-        }
-        return true;
-    }
-    return false;
 }
 
 void SignalLayer::shutdown() {
@@ -180,12 +179,14 @@ void SignalLayer::onSignal(int signo) {
     } else if (signo == SIGCHLD) {
         code = 3;
         sFlags_ |= 0x04;
+    } else {
+        errno = saved;
+        return;
     }
     int fd = static_cast<int>(sWriteFd_);
     if (fd >= 0) {
         (void)write(fd, &code, 1);
     }
-    errno = saved;
 }
 
 } // namespace platform

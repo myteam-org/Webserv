@@ -35,6 +35,8 @@ class SignalLayer {
     SignalLayer(const SignalLayer&);
     SignalLayer& operator=(const SignalLayer);
 
+    bool failInitKeepErr(std::string* /*err*/);
+    bool failInit(std::string* err, const char* msg);
     static void onSignal(int signo); // signal()用ハンドラ
     
     static volatile sig_atomic_t sWriteFd_; // self-pipe 書き込み側

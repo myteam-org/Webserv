@@ -22,11 +22,11 @@ class CgiHandler : public IHandler {
                      const std::string& scriptName,
                      const std::string* pathInfo,
                      std::vector<std::string>* env) const;
-    bool executeCgi(const std::vector<std::string>& argv,
+    static bool executeCgi(const std::vector<std::string>& argv,
                     const std::vector<std::string>& env,
                     const std::vector<char>& stdinBody,
                     std::string* stdoutBuf,
-                    int* exitCode) const;
+                    int* exitCode);
     Response parseCgiAndBuildResponse(const std::string& cgiOut) const;
 };
 

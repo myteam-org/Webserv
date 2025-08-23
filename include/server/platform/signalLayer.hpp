@@ -1,6 +1,9 @@
 #pragma once
 
 #include <signal.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string>
 
 namespace platform {
 
@@ -33,7 +36,7 @@ class SignalLayer {
 
    private:
     SignalLayer(const SignalLayer&);
-    SignalLayer& operator=(const SignalLayer);
+    SignalLayer& operator=(const SignalLayer&);
 
     bool failInitKeepErr(std::string* /*err*/);
     bool failInit(std::string* err, const char* msg);

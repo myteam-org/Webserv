@@ -48,7 +48,7 @@ bool doRead(pid_t pid, int rfd, std::string* out);
 bool CgiHandler::executeCgi(const std::vector<std::string>& argv,
                             const std::vector<std::string>& env,
                             const std::vector<char>& stdinBody,
-                            std::string* stdoutBuf, int* exitCode) const {
+                            std::string* stdoutBuf, int* exitCode) {
     if (argv.empty() || stdoutBuf == NULL || exitCode == NULL) {
         return false;
     }

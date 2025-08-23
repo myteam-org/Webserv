@@ -1,9 +1,5 @@
 #include "signalLayer.hpp"
 
-#include <signal.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string>
 #include <errno.h>
 
 namespace platform {
@@ -40,6 +36,11 @@ static bool set_cloexec_nonblock(int fd, std::string* err) {
 }
 } // namespace
 
+// 48~ パイプ生成 → 読端/書端の保持
+// 55~ 非ブロッキング化 & CLOEXEC（自己パイプ運用の定石）
+// 61  ハンドラが書き込む先を静的に共有
+// 64~ プロセス全体で SIGPIPE を無視（SIG_IGN）に設定
+// 68~79 シグナルハンドラの登録
 bool SignalLayer::init(std::string* err) {
     shutdown();
     int pfd[2];
@@ -88,7 +89,7 @@ bool SignalLayer::failInit(std::string* err, const char* msg) {
     return false;
 }   
 
-// 読み取り側fd(epoll/kqueue に登録するのはこれ)
+// epoll 監視用に読端を公開（= 呼び出し側が EPOLLIN 登録する意図）
 int SignalLayer::fd() const { return rfd_; }
 
 // １イベント分だけ読み出して分類。読めなければfalse
@@ -120,6 +121,7 @@ bool SignalLayer::drainOnce(SignalAction* act) const {
     return true;
 }
 
+// パイプ溢れ・嵐の保険。
 bool SignalLayer::takePending(SignalAction* act) {
     const sig_atomic_t flag = sFlags_;
     const int mask = static_cast<int>(flag & 0x07);
@@ -164,6 +166,9 @@ void SignalLayer::shutdown() {
     }
 }
 
+// ハンドラ内で“1バイト write”（＝self-pipe の書端へ通知）
+// ハンドラで使っているのは write() のみ（async-signal-safe 関数 = 非同期安全）
+// errno は保存→復元のみで分岐に使っていない
 void SignalLayer::onSignal(int signo) {
     int saved = errno;
     unsigned char code = 0;
@@ -189,3 +194,13 @@ void SignalLayer::onSignal(int signo) {
 }
 
 } // namespace platform
+
+// 全体俯瞰
+// self-pipe 方式：pipe() で作った書端(wfd_)をシグナルハンドラでwrite(1byte)、
+//                読端(rfd_)を epoll で監視。
+//非同期安全：      ハンドラは write() だけ（errno は保存→復元のみ、分岐に使わない）。
+//drainOnce()：   EPOLLIN 到着時に1バイト読み出し→SignalAction に分類。
+//                read()<=0 は「今回は読めない」として即 return（errno 不参照）。
+//takePending()： パイプ溢れ・嵐の保険。sig_atomic_t のビットを見て 
+//               0x01(stop)→0x02(reload)→0x04(child) の優先で1件だけ消費。
+//shutdown()：FD を閉じ、静的フラグをリセット。

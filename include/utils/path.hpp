@@ -65,13 +65,11 @@ inline void compressSegmentCore(const std::string& inString,
         }
         if (j > i) {  // セグメントが空でなければ
             const std::string seg = inString.substr(i, j - i);
-            if (seg == ".") {
-                // ignore
+            if (seg == ".") { // ignore
             } else if (seg == "..") {
                 if (!segs.empty()) {
                     segs.pop_back();
-                } else {
-                    // ignore
+                } else { // ignore
                 }
             } else {
                 segs.push_back(seg);

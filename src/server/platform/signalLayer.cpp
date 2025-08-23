@@ -98,7 +98,7 @@ bool SignalLayer::drainOnce(SignalAction* act) const {
         return false;
     }
     unsigned char code = 0;
-    ssize_t byte = read(rfd_, &code, 1);
+    const ssize_t byte = read(rfd_, &code, 1);
     if (byte <= 0) {
         return false;
     }
@@ -170,7 +170,7 @@ void SignalLayer::shutdown() {
 // ハンドラで使っているのは write() のみ（async-signal-safe 関数 = 非同期安全）
 // errno は保存→復元のみで分岐に使っていない
 void SignalLayer::onSignal(int signo) {
-    int saved = errno;
+    const int saved = errno;
     unsigned char code = 0;
 
     if (signo == SIGINT || signo == SIGTERM) {
@@ -186,7 +186,7 @@ void SignalLayer::onSignal(int signo) {
         errno = saved;
         return;
     }
-    int fd = static_cast<int>(sWriteFd_);
+    const int fd = static_cast<int>(sWriteFd_);
     if (fd >= 0) {
         (void)write(fd, &code, 1);
     }

@@ -161,12 +161,10 @@ bool parentProcess(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
     if (out == NULL || exitCode == NULL) return false;
 
     const char* ptr = body.empty() ? 0 : &body[0];
-
     struct sigaction sa_old;
     struct sigaction sa_new;
     memset(&sa_old, 0, sizeof(sa_old));
     memset(&sa_new, 0, sizeof(sa_new));
-
     sa_new.sa_handler = SIG_IGN;
     sigemptyset(&sa_new.sa_mask);
     sa_new.sa_flags = 0;

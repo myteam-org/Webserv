@@ -36,11 +36,11 @@ static bool set_cloexec_nonblock(int fd, std::string* err) {
 }
 } // namespace
 
-// 48~ パイプ生成 → 読端/書端の保持
-// 55~ 非ブロッキング化 & CLOEXEC（自己パイプ運用の定石）
-// 61  ハンドラが書き込む先を静的に共有
-// 64~ プロセス全体で SIGPIPE を無視（SIG_IGN）に設定
-// 68~79 シグナルハンドラの登録
+// 46~52 パイプ生成 → 読端/書端の保持
+// 53~58 非ブロッキング化 & CLOEXEC（自己パイプ運用の定石）
+// 59    ハンドラが書き込む先を静的に共有
+// 61~63 プロセス全体で SIGPIPE を無視（SIG_IGN）に設定
+// 64~75 シグナルハンドラの登録
 bool SignalLayer::init(std::string* err) {
     shutdown();
     int pfd[2];
@@ -121,7 +121,8 @@ bool SignalLayer::drainOnce(SignalAction* act) const {
     return true;
 }
 
-// パイプ溢れ・嵐の保険。
+// パイプ溢れ・嵐の保険。sig_atomic_t のビットを見て 
+// 0x01(stop)→0x02(reload)→0x04(child) の優先で1件だけ消費。
 bool SignalLayer::takePending(SignalAction* act) {
     const sig_atomic_t flag = sFlags_;
     const int mask = static_cast<int>(flag & 0x07);

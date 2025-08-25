@@ -1,7 +1,7 @@
 #include "documentRootConfig.hpp"
 
 DocumentRootConfig::DocumentRootConfig()
-    : index_("index.html"), autoIndex_(OFF), cgiExtensions_(OFF) {
+    : index_("index.html"), autoIndex_(OFF), cgiExtensions_(OFF), enableUpload_(OFF) {
 }
 
 DocumentRootConfig::~DocumentRootConfig() {
@@ -23,6 +23,10 @@ void DocumentRootConfig::setCgiExtensions(OnOff cgiExtensions) {
     cgiExtensions_ = cgiExtensions;
 }
 
+void DocumentRootConfig::setEnabelUpload(OnOff enableUpload) {
+    enableUpload_ = enableUpload;
+}
+
 const std::string& DocumentRootConfig::getRoot() const {
     return root_;
 }
@@ -37,6 +41,10 @@ OnOff DocumentRootConfig::getAutoIndex() const {
 
 OnOff DocumentRootConfig::getCgiExtensions() const {
     return cgiExtensions_;
+}
+
+OnOff DocumentRootConfig::getEnableUpload() const {
+    return enableUpload_;
 }
 
 bool DocumentRootConfig::isAutoindexEnabled() const {

@@ -51,6 +51,8 @@ void Config::printLocation(const ServerContext& server) {
                   << std::endl;
         std::cout << "     |- is_cgi: " << documentRootConfig.getCgiExtensions()
                   << std::endl;
+        std::cout << "     |- enabel_upload: " << documentRootConfig.getEnableUpload()
+                  << std::endl;
         if (!location[k].getRedirect().empty()) {
             std::cout << "     |- redirect: " << location[k].getRedirect()
                       << std::endl;

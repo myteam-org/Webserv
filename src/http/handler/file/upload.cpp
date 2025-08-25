@@ -25,6 +25,11 @@ Either<IAction*, Response> UploadFileHandler::serve(const Request& request) {
 }
 
 Response UploadFileHandler::serveInternal(const Request& request) const {
+    // このロケーションでアップロードが許可されていなければ拒否
+    if (!docRootConfig_.getEnableUpload()) {
+        return ResponseBuilder().status(kStatusForbidden).build();
+    }
+
     // Parser が decode + remove_dot_segments 済みのパスを返す前提
     const std::string& rel = request.getPath();
 

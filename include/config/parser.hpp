@@ -22,7 +22,7 @@ class ConfigParser {
 
    private:
     static const int FUNC_SERVER_SIZE = 6;
-    static const int FUNC_LOCATION_SIZE = 6;
+    static const int FUNC_LOCATION_SIZE = 7;
     typedef void (ConfigParser::*funcServerPtr)(ServerContext& server,
                                                 size_t& index);
     static funcServerPtr funcServer_[FUNC_SERVER_SIZE];
@@ -51,5 +51,6 @@ class ConfigParser {
     void setAutoIndex_(LocationContext& location, size_t& index);
     void setIsCgi_(LocationContext& location, size_t& index);
     void setRedirect_(LocationContext& location, size_t& index);
+    void setEnableUpload_(LocationContext& location, size_t& index);
     std::string incrementAndCheckSize_(size_t& index);
 };

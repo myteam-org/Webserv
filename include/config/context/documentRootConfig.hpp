@@ -14,7 +14,7 @@ class DocumentRootConfig {
     void setIndex(const std::string& index);
     void setAutoIndex(OnOff autoIndex);
     void setCgiExtensions(OnOff cgiExtensions);
-    void setEnabelUpload(OnOff enableUpload);
+    void setEnableUpload(OnOff enableUpload);
 
     const std::string& getRoot() const;
     const std::string& getIndex() const;

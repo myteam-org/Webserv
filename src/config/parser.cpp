@@ -302,9 +302,9 @@ void ConfigParser::setEnableUpload_(LocationContext& location, size_t& index) {
 
     if (this->tokens_[index].getType() == VALUE) {
         if (select == "ON") {
-            documentRootConfig.setEnabelUpload(ON);
+            documentRootConfig.setEnableUpload(ON);
         } else if (select == "OFF") {
-            documentRootConfig.setEnabelUpload(OFF);
+            documentRootConfig.setEnableUpload(OFF);
         } else {
             throwErr(select, ": Unknown select error: line ",
                      this->tokens_[index].getLineNumber());

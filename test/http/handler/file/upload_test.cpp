@@ -54,7 +54,7 @@ protected:
 TEST_F(UploadFileHandlerTest, UploadsFileSuccessfully) {
     DocumentRootConfig config;
     config.setRoot(tempDir);
-    config.setEnabelUpload(ON);
+    config.setEnableUpload(ON);
 
     UploadFileHandler handler(config);
 
@@ -99,7 +99,7 @@ TEST_F(UploadFileHandlerTest, Returns403IfFileCannotBeOpened) {
 TEST_F(UploadFileHandlerTest, Returns404IfDirectoryDoesNotExist) {
     DocumentRootConfig config;
     config.setRoot("nonexistent_dir");
-    config.setEnabelUpload(ON);
+    config.setEnableUpload(ON);
     UploadFileHandler handler(config);
 
     RawHeaders headers;

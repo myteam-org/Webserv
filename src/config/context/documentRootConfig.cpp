@@ -23,7 +23,7 @@ void DocumentRootConfig::setCgiExtensions(OnOff cgiExtensions) {
     cgiExtensions_ = cgiExtensions;
 }
 
-void DocumentRootConfig::setEnabelUpload(OnOff enableUpload) {
+void DocumentRootConfig::setEnableUpload(OnOff enableUpload) {
     enableUpload_ = enableUpload;
 }
 

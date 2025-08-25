@@ -114,9 +114,6 @@ void ConfigParser::setHost_(ServerContext& server, size_t& index) {
 
     if (this->tokens_[index].getType() == VALUE) {
         server.setHost(hostName);
-    } else {
-        throwErr(hostName, ": Host value error: line",
-                 this->tokens_[index].getLineNumber());
     }
 }
 

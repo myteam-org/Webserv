@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/epoll.h>
 
 #include <string>
 #include <vector>
@@ -15,10 +16,132 @@ namespace http {
 
 namespace {
 
+const int kStepMs = 50; // 1回の poll 待ち
+const int kTotalMs = 30000; // 総タイムアウト 30s
 const int EXIT_EXEC_FAILED = 127;
 const int STATUS128 = 128;
 const std::size_t kBufSize = 4096;
 const std::size_t kReserve = 8192;
+
+struct CgiIoCtx {
+    int epfd;
+    pid_t pid;
+    int wfd;
+    int rfd;
+    const char* wPtr;
+    ssize_t wRemain;
+    bool wClosed;
+    bool rClosed;
+    int elapsed;
+    int exitCode;
+    std::string* out;
+};
+
+void safeClose(int* fd) {
+    if (fd && *fd >= 0) {
+        close(*fd);
+        *fd = -1;
+    }
+}
+
+int makeNonblock(int fd) {
+    int fdFlags = fcntl(fd, F_GETFL, 0);
+    if (fdFlags < 0) {
+        return -1;
+    }
+    return fcntl(fd, F_SETFL, fdFlags | O_NONBLOCK);
+}
+
+bool epAdd(int epfd, int fd, u_int32_t evs) {
+    epoll_event event;
+    event.events = evs;
+    event.data.fd = fd;
+    return epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event) == 0;
+}
+
+void iniCtx(CgiIoCtx* ctx, pid_t pid, int wfd, int rfd,
+            const std::vector<char>& body, std::string* out) {
+    ctx->epfd = epoll_create1(0);
+    ctx->pid = pid;
+    ctx->wfd = wfd;
+    ctx->rfd = rfd;
+    ctx->wPtr = body.empty() ? NULL : &body[0];
+    ctx->wRemain = static_cast<ssize_t>(body.size());
+    ctx->wClosed = (ctx->wRemain == 0);
+    ctx->rClosed = false;
+    ctx->elapsed = 0;
+    ctx->exitCode = 0;
+    ctx->out = out;
+    out->clear();
+    out->reserve(kReserve);
+    if (ctx->rfd >= 0) { // nonblockingをセット
+        makeNonblock(ctx->rfd);
+    }
+    if (ctx->wfd >= 0) { // nonblockingをセット
+        makeNonblock(ctx->wfd);
+    }
+    if (!ctx->wClosed && ctx->wfd >= 0) { // epollに監視を登録「書けるようになったら通知して」
+        epAdd(ctx->epfd, ctx->wfd, EPOLLOUT);
+    }
+    if (!ctx->rClosed && ctx->rfd >= 0) { // epollに監視を登録「読めるようになったら通知して」
+        epAdd(ctx->epfd, ctx->rfd, EPOLLIN);
+    }
+    if (ctx->wClosed) {
+        safeClose(&wfd);
+    }
+}
+
+void handleRead(CgiIoCtx* ctx) {
+    char buf[kBufSize];
+    for(;;) {
+        ssize_t byte = ::read(ctx->rfd, buf, sizeof(buf));
+        if (byte > 0) {
+            ctx->out->append(buf, static_cast<std::size_t>(byte));
+            continue;
+        }
+        if (byte == 0) {
+            safeClose(&ctx->rfd);
+            ctx->rClosed = true;
+            break;
+        }
+    }
+}
+
+void handleWrite(CgiIoCtx* ctx) {
+    while (ctx->wRemain > 0) {
+        ssize_t byte = ::write(ctx->wfd, ctx->wPtr, static_cast<std::size_t>(ctx->wRemain));
+        if (byte > 0) {
+            ctx->wPtr += byte;
+            ctx->wRemain -= byte;
+            continue;
+        }
+        break;
+    }
+    if (ctx->wRemain <= 0) {
+        safeClose(&ctx->wfd);
+        ctx->wClosed = true;
+    }
+}
+
+void checkChild(CgiIoCtx* ctx) {
+    int status = 0;
+    pid_t got = waitpid(ctx->pid, &status, WNOHANG);
+    if (got != ctx->pid) {
+        return;
+    }
+    if (WIFEXITED(status)) {
+        ctx->exitCode = WEXITSTATUS(status);
+        return;
+    }
+    if (WIFSIGNALED(status)) {
+        ctx->exitCode = STATUS128 + WTERMSIG(status);
+        return;
+    }
+    ctx->exitCode = -1;
+}
+
+
+
 
 // utils for executeCgi()
 bool openPipes(int inPipe[2], int outPipe[2]);
@@ -159,25 +282,16 @@ void buildVecPtr(const std::vector<std::string>& value,
 bool parentProcess(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
                    std::string* out, int* exitCode) {
     if (out == NULL || exitCode == NULL) return false;
-
-    const char* ptr = body.empty() ? 0 : &body[0];
-
-    struct sigaction sa_old;
-    struct sigaction sa_new;
-    memset(&sa_old, 0, sizeof(sa_old));
-    memset(&sa_new, 0, sizeof(sa_new));
-
-    sa_new.sa_handler = SIG_IGN;
-    sigemptyset(&sa_new.sa_mask);
-    sa_new.sa_flags = 0;
-    sigaction(SIGPIPE, &sa_new, &sa_old);
-
+    out->clear();
+    int elapsed = 0;
+    const char* ptr = body.empty() ? NULL : &body[0];
     const ssize_t remain = static_cast<ssize_t>(body.size());
+
     if (!doWrite(pid, wfd, rfd, ptr, remain)) return false;
     if (!doRead(pid, rfd, out)) return false;
     int status = 0;
     if (waitpid(pid, &status, 0) < 0) {
-        sigaction(SIGPIPE, &sa_old, NULL);
+        // sigaction(SIGPIPE, &sa_old, NULL);
         return false;
     }
     if (WIFEXITED(status)) {
@@ -187,7 +301,7 @@ bool parentProcess(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
     } else {
         *exitCode = -1;
     }
-    sigaction(SIGPIPE, &sa_old, NULL);
+    // sigaction(SIGPIPE, &sa_old, NULL);
     return true;
 }
 

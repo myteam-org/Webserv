@@ -247,7 +247,7 @@ bool setNonblock(int fd) {
     if (fd < 0) {
         return false;
     }
-    int flags = fcntl(fd, F_GETFL, 0);
+    const int flags = fcntl(fd, F_GETFL, 0);
     if (flags < 0) {
         return false;
     }
@@ -316,7 +316,7 @@ bool ioLoop(CgiIoCtx* ctx) {
 bool stepOnce(CgiIoCtx* ctx) {
     // rfd と wfd の“準備完了イベント”を受け取るためのバッファ
     epoll_event evs[2];
-    int readyEvents = epoll_wait(ctx->epfd, evs, 2, kStepMs);
+    const int readyEvents = epoll_wait(ctx->epfd, evs, 2, kStepMs);
 
     if (readyEvents < 0) {
         return true;
@@ -334,9 +334,9 @@ bool stepOnce(CgiIoCtx* ctx) {
     ctx->elapsed = 0; // イベントが来たらリセット
     for (int i = 0; i < readyEvents; ++i) {
         // イベントが起きたFD
-        int fd = evs[i].data.fd;
+        const int fd = evs[i].data.fd;
         // 何の種類のイベントが起きたかのビットマスク
-        unsigned int events = evs[i].events; 
+        const unsigned int events = evs[i].events; 
         proceedEvent(ctx, fd, events);
     }
     checkChild(ctx);
@@ -365,7 +365,7 @@ void proceedEvent(CgiIoCtx* ctx, int fd, unsigned int events) {
 // 読む
 void handleRead(CgiIoCtx* ctx) {
     char buf[kBufSize];
-    ssize_t byte = ::read(ctx->rfd, buf, sizeof(buf));
+    const ssize_t byte = ::read(ctx->rfd, buf, sizeof(buf));
     if (byte > 0) {
         ctx->out->append(buf, static_cast<std::size_t>(byte));
         return;
@@ -386,7 +386,7 @@ void handleWrite(CgiIoCtx* ctx) {
         }
         return;
     }
-    ssize_t byte = ::write(ctx->wfd, ctx->wPtr, static_cast<std::size_t>(ctx->wRemain));
+    const ssize_t byte = ::write(ctx->wfd, ctx->wPtr, static_cast<std::size_t>(ctx->wRemain));
     if (byte > 0) {
         ctx->wPtr += byte;
         ctx->wRemain -= byte;
@@ -413,7 +413,7 @@ void closeAndSet(CgiIoCtx* ctx, int fd) {
 // helper for stepOnce
 void checkChild(CgiIoCtx* ctx) {
     int status = 0;
-    pid_t got = waitpid(ctx->pid, &status, WNOHANG);
+    const pid_t got = waitpid(ctx->pid, &status, WNOHANG);
     if (got != ctx->pid) {
         return;
     }

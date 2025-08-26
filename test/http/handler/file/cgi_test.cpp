@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <fstream>
 
 // このヘッダだけ private→public 化（parseCgiAndBuildResponse を直接叩くため）
 #define private public
@@ -10,7 +11,14 @@
 #undef private
 
 #include "config/context/documentRootConfig.hpp"
+#include "config/context/locationContext.hpp"
+#include "config/context/serverContext.hpp"
 #include "http/status.hpp"
+
+#include "config.hpp"
+#include "serverContext.hpp"
+#include "token.hpp"
+#include "tokenizer.hpp"
 
 // 無名名前空間に入れて再定義を防止
 namespace {
@@ -192,4 +200,61 @@ TEST(CgiHandlerTest, TransferEncodingIsStripped) {
     EXPECT_EQ(GetHeader(resp, "transfer-encoding"), "");
     EXPECT_EQ(GetHeader(resp, "content-length"), "3");
     EXPECT_EQ(GetBody(resp), "abc");
+}
+
+#include <fstream>
+
+TEST(CgiHandlerEpollTest, SimpleGet_NoHeaders) {
+    signal(SIGPIPE, SIG_IGN);
+
+    const std::string dir = "/home/yosshii/Desktop/Webserv/tmp"; // 既に hello.cgi(0755) がある前提
+
+    std::ostringstream confText;
+    confText
+      << "server {\n"
+      << "  listen 8080;\n"
+      << "  host localhost;\n"            // ← ここを修正
+      << "  location / {\n"
+      << "    allow_method GET;\n"
+      << "    root " << dir << ";\n"
+      << "    index index.html;\n"
+      << "  }\n"
+      << "}\n";
+
+    // 1) 設定をファイルに保存
+    std::string filename = "/tmp/ws_conf_test.conf";
+    {
+        std::ofstream ofs(filename.c_str());
+        ASSERT_TRUE(ofs.is_open()) << "cannot open " << filename;
+        ofs << confText.str();
+    }
+
+    // 2) 読み込み → Context取得
+    Config config(filename);
+    const std::vector<ServerContext>& servers = config.getParser().getServer();
+    ASSERT_FALSE(servers.empty()) << "no server blocks parsed";
+    const std::vector<LocationContext>& locs = servers[0].getLocation();
+    ASSERT_FALSE(locs.empty()) << "no location blocks parsed";
+    const DocumentRootConfig& doc = locs[0].getDocumentRootConfig();
+    ASSERT_EQ(doc.getRoot(), dir);
+
+    http::CgiHandler h(doc);
+
+    // 3) リクエスト作成（setterは使わない）
+    RawHeaders hdr; std::vector<char> body;
+    http::Request req(http::kMethodGet,
+                      "/hello.cgi", "/hello.cgi", "",
+                      hdr, body,
+                      /*server*/ NULL,
+                      /*location*/ &locs[0]);
+
+    // 4) 実行 & 検証
+    http::Response resp = h.serveInternal(req);
+    EXPECT_EQ(resp.getStatusCode(), http::kStatusOk);
+    EXPECT_EQ(GetHeader(resp, "content-type"), "text/plain");
+    EXPECT_EQ(GetHeader(resp, "content-length"), "5");
+    EXPECT_EQ(GetBody(resp), "hello");
+
+    // 5) 後片付け
+    std::remove(filename.c_str());
 }

@@ -4,6 +4,11 @@
 #include <vector>
 #include <map>
 #include <fstream>
+#include <filesystem>
+#include <csignal>
+#include <functional>
+#include <cstdlib>
+#include <unistd.h>
 
 // このヘッダだけ private→public 化（parseCgiAndBuildResponse を直接叩くため）
 #define private public
@@ -19,6 +24,9 @@
 #include "serverContext.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
+
+using namespace std;
+namespace fs = std::filesystem;
 
 // 無名名前空間に入れて再定義を防止
 namespace {
@@ -202,59 +210,74 @@ TEST(CgiHandlerTest, TransferEncodingIsStripped) {
     EXPECT_EQ(GetBody(resp), "abc");
 }
 
-#include <fstream>
+struct TmpRoot {
+  fs::path path;
+  bool owned = false;
+  ~TmpRoot(){ if (owned) { std::error_code ec; fs::remove_all(path, ec); } }
+};
+
+static TmpRoot getTmpRoot() {
+  TmpRoot tr;
+  if (fs::exists("tmp") && fs::is_directory("tmp")) {
+    tr.path  = fs::absolute("tmp");      // 既存の repo 配下 tmp を使用
+    tr.owned = false;                    // 消さない
+  } else {
+    fs::path p = fs::temp_directory_path() /
+                 ("ws_cgi_test_" + std::to_string(getpid()));
+    fs::create_directories(p);
+    tr.path  = p;                        // /tmp 以下に作成
+    tr.owned = true;                     // テスト終了時に掃除
+  }
+  return tr;
+}
 
 TEST(CgiHandlerEpollTest, SimpleGet_NoHeaders) {
-    signal(SIGPIPE, SIG_IGN);
+  signal(SIGPIPE, SIG_IGN);
 
-    const std::string dir = "/home/yosshii/Desktop/Webserv/tmp"; // 既に hello.cgi(0755) がある前提
+  TmpRoot guard = getTmpRoot();
+  const std::string dir = guard.path.string();
 
-    std::ostringstream confText;
-    confText
-      << "server {\n"
-      << "  listen 8080;\n"
-      << "  host localhost;\n"            // ← ここを修正
-      << "  location / {\n"
-      << "    allow_method GET;\n"
-      << "    root " << dir << ";\n"
-      << "    index index.html;\n"
-      << "  }\n"
-      << "}\n";
+  // hello.cgi を作る（改行なし）
+  fs::path script = guard.path / "hello.cgi";
+  { std::ofstream sh(script); ASSERT_TRUE(sh.is_open());
+    sh << "#!/usr/bin/env sh\n" << "printf 'hello'"; }
+  fs::permissions(script,
+    fs::perms::owner_exec|fs::perms::owner_read|fs::perms::owner_write|
+    fs::perms::group_exec|fs::perms::group_read|
+    fs::perms::others_exec, fs::perm_options::add);
 
-    // 1) 設定をファイルに保存
-    std::string filename = "/tmp/ws_conf_test.conf";
-    {
-        std::ofstream ofs(filename.c_str());
-        ASSERT_TRUE(ofs.is_open()) << "cannot open " << filename;
-        ofs << confText.str();
-    }
+  // conf を /tmp 側に保存（どこでも良い）
+  fs::path confFile = fs::temp_directory_path() / "ws_conf_test.conf";
+  { std::ofstream ofs(confFile); ASSERT_TRUE(ofs.is_open());
+    ofs << "server {\n"
+        << "  listen 8080;\n"
+        << "  host localhost;\n"
+        << "  location / {\n"
+        << "    allow_method GET;\n"
+        << "    root " << dir << ";\n"
+        << "    index index.html;\n"
+        << "  }\n"
+        << "}\n"; }
 
-    // 2) 読み込み → Context取得
-    Config config(filename);
-    const std::vector<ServerContext>& servers = config.getParser().getServer();
-    ASSERT_FALSE(servers.empty()) << "no server blocks parsed";
-    const std::vector<LocationContext>& locs = servers[0].getLocation();
-    ASSERT_FALSE(locs.empty()) << "no location blocks parsed";
-    const DocumentRootConfig& doc = locs[0].getDocumentRootConfig();
-    ASSERT_EQ(doc.getRoot(), dir);
+  Config config(confFile.string());
+  const std::vector<ServerContext>& servers = config.getParser().getServer();
+  ASSERT_FALSE(servers.empty());
+  const std::vector<LocationContext>& locs = servers[0].getLocation();
+  ASSERT_FALSE(locs.empty());
+  const DocumentRootConfig& doc = locs[0].getDocumentRootConfig();
+  ASSERT_EQ(doc.getRoot(), dir);
 
-    http::CgiHandler h(doc);
+  http::CgiHandler h(doc);
 
-    // 3) リクエスト作成（setterは使わない）
-    RawHeaders hdr; std::vector<char> body;
-    http::Request req(http::kMethodGet,
-                      "/hello.cgi", "/hello.cgi", "",
-                      hdr, body,
-                      /*server*/ NULL,
-                      /*location*/ &locs[0]);
+  RawHeaders hdr; std::vector<char> body;
+  http::Request req(http::kMethodGet, "/hello.cgi", "/hello.cgi", "",
+                    hdr, body, /*server*/ NULL, /*location*/ &locs[0]);
 
-    // 4) 実行 & 検証
-    http::Response resp = h.serveInternal(req);
-    EXPECT_EQ(resp.getStatusCode(), http::kStatusOk);
-    EXPECT_EQ(GetHeader(resp, "content-type"), "text/plain");
-    EXPECT_EQ(GetHeader(resp, "content-length"), "5");
-    EXPECT_EQ(GetBody(resp), "hello");
+  http::Response resp = h.serveInternal(req);
+  EXPECT_EQ(resp.getStatusCode(), http::kStatusOk);
+  EXPECT_EQ(GetHeader(resp, "content-type"), "text/plain");
+  EXPECT_EQ(GetHeader(resp, "content-length"), "5");
+  EXPECT_EQ(GetBody(resp), "hello");
 
-    // 5) 後片付け
-    std::remove(filename.c_str());
+  std::remove(confFile.string().c_str()); // conf の掃除（repoの tmp は残す）
 }

@@ -41,7 +41,6 @@ bool openPipes(int inPipe[2], int outPipe[2]);
 void closePipe(int pipe[2]);
 void safeClose(int* fd);
 bool setCloexec(int fd);
-// int makeNonblock(int fd);
 
 // child process
 void execChildAndExit(const std::vector<std::string>& argv,
@@ -207,7 +206,6 @@ bool parentProcess(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
         (void)waitpid(pid, &status, 0);
         return false;
     }
-    // 
     bool ok = ioLoop(&ctx);
     *exitCode = ctx.exitCode;
     safeClose(&ctx.epfd);

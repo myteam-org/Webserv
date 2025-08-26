@@ -21,8 +21,8 @@ Response CgiHandler::serveInternal(const Request& req) const {
         return ResponseBuilder().status(kStatusNotFound).build();
     }
 
-    std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
-    std::string realScriptPath = utils::normalizePath(joined);
+    const std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
+    const std::string realScriptPath = utils::normalizePath(joined);
 
     std::vector<std::string> env;
     buildCgiEnv(req, scriptPath, &pathInfo, &env);

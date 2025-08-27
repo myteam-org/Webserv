@@ -133,7 +133,7 @@ bool setNonblock(int fd) {
         return false;
     }
     const int flags = fcntl(fd, F_GETFL, 0);
-    if (flags == -1) {
+    if (flags < 0) {
         return false;
     }
     return fcntl(fd, F_SETFL, flags | O_NONBLOCK) == 0;

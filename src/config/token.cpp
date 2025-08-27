@@ -59,7 +59,7 @@ void Token::setType_(const std::string& text) {
         this->type_ = it->second;
     } else if (this->position_ == BEGINNING) {
         throw(std::runtime_error(
-            text + ": Syntax error6 : line " +
+            text + ": Syntax error : line " +
             ConfigTokenizer::numberToStr(this->lineNumber_)));
     } else {
         this->type_ = VALUE;

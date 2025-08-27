@@ -16,6 +16,7 @@ enum TokenType {
     AUTOINDEX,
     IS_CGI,
     REDIRECT,
+    ENABLE_UPLOAD,
     SERVER,
     VALUE,
     BRACE

@@ -1,7 +1,7 @@
 #include "serverContext.hpp"
 
 ServerContext::ServerContext(const std::string& text)
-    : value_(text), listen_(0), clientMaxBodySize_(MAX_BODY_SIZE) {
+    : value_(text), listen_(0), clientMaxBodySize_(MAX_BODY_SIZE), host_("127.0.0.1") {
     // std::map<http::HttpStatusCode, std::string> errPage;
     // errPage.insert(std::make_pair(http::kStatusNotFound, "404.html"));
     // this->errorPage_.push_back(errPage);

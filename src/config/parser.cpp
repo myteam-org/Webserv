@@ -22,7 +22,8 @@ void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(
     LocationContext&, size_t&) = {
     &ConfigParser::setRoot_,  &ConfigParser::setMethod_,
     &ConfigParser::setIndex_, &ConfigParser::setAutoIndex_,
-    &ConfigParser::setIsCgi_, &ConfigParser::setRedirect_};
+    &ConfigParser::setIsCgi_, &ConfigParser::setRedirect_,
+    &ConfigParser::setEnableUpload_};
 
 ConfigParser::ConfigParser(ConfigTokenizer& tokenizer, const std::string& confFile)
     : tokens_(tokenizer.getTokens()), depth_(0), confFile_(confFile) {
@@ -47,7 +48,7 @@ void ConfigParser::makeVectorServer_() {
                          tokens_[i].getLineNumber());
             }
             addServer_(i);
-        } else if ((type >= LISTEN && type <= REDIRECT) && this->depth_ == 0) {
+        } else if ((type >= LISTEN && type <= ENABLE_UPLOAD) && this->depth_ == 0) {
             throwErr(this->tokens_[i].getText(), ": Syntax error: line",
                      tokens_[i].getLineNumber());
         } else {
@@ -113,9 +114,6 @@ void ConfigParser::setHost_(ServerContext& server, size_t& index) {
 
     if (this->tokens_[index].getType() == VALUE) {
         server.setHost(hostName);
-    } else {
-        throwErr(hostName, ": Host value error: line",
-                 this->tokens_[index].getLineNumber());
     }
 }
 
@@ -178,7 +176,7 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
                 server.getLocation().push_back(location);
                 break;
             }
-        } else if (type >= ROOT && type <= REDIRECT) {
+        } else if (type >= ROOT && type <= ENABLE_UPLOAD) {
             (this->*funcLocation_[type - FUNC_SERVER_SIZE])(location, index);
         } else {
             continue;
@@ -295,6 +293,22 @@ void ConfigParser::setRedirect_(LocationContext& location, size_t& index) {
         throwErr(this->tokens_[index].getText(),
                  ": Redirect value error: line ",
                  this->tokens_[index].getLineNumber());
+    }
+}
+
+void ConfigParser::setEnableUpload_(LocationContext& location, size_t& index) {
+    const std::string select = incrementAndCheckSize_(index);
+    DocumentRootConfig& documentRootConfig = location.getDocumentRootConfig();
+
+    if (this->tokens_[index].getType() == VALUE) {
+        if (select == "ON") {
+            documentRootConfig.setEnableUpload(ON);
+        } else if (select == "OFF") {
+            documentRootConfig.setEnableUpload(OFF);
+        } else {
+            throwErr(select, ": Unknown select error: line ",
+                     this->tokens_[index].getLineNumber());
+        }
     }
 }
 

@@ -4,7 +4,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-// #include <sys/epoll.h>
+
+#include <sys/epoll.h>
 
 #include <string>
 #include <vector>
@@ -17,6 +18,8 @@ namespace http {
 
 namespace {
 
+const int kStepMs = 50; // 1回の poll 待ち
+const int kTotalMs = 30000; // 総タイムアウト 30s
 const int EXIT_EXEC_FAILED = 127;
 
 // Low-level FD / pipe utils

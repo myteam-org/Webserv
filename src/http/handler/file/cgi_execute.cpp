@@ -4,52 +4,45 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <signal.h>
+
+#include <sys/epoll.h>
 
 #include <string>
 #include <vector>
 
 #include "cgi.hpp"
+#include "action.hpp"
+#include "cgiTask.hpp"
 
 namespace http {
 
 namespace {
 
+const int kStepMs = 50; // 1回の poll 待ち
+const int kTotalMs = 30000; // 総タイムアウト 30s
 const int EXIT_EXEC_FAILED = 127;
-const int STATUS128 = 128;
-const std::size_t kBufSize = 4096;
-const std::size_t kReserve = 8192;
 
-// utils for executeCgi()
+// Low-level FD / pipe utils
 bool openPipes(int inPipe[2], int outPipe[2]);
-bool setCloexec(int fd);
 void closePipe(int pipe[2]);
+void safeClose(int* fd);
+bool setCloexec(int fd);
+bool setNonblock(int fd);
 
 // child process
 void execChildAndExit(const std::vector<std::string>& argv,
-                      const std::vector<std::string>& env, int inPipe[2],
-                      int outPipe[2]);
-// utils fo execChildAndExit()
+                      const std::vector<std::string>& env, 
+                      int inPipe[2], int outPipe[2]);
 void buildVecPtr(const std::vector<std::string>& value,
-    std::vector<char*>* out);
-
-// parent process
-bool parentProcess(pid_t pid, int wfd, int rfd,
-                   const std::vector<char>& stdinBody, std::string* out,
-                   int* exitCode);
-// utils for parent process
-bool doWrite(pid_t pid, int wfd, int rfd, const char* ptr, ssize_t remain);
-bool doRead(pid_t pid, int rfd, std::string* out);
-
+                 std::vector<char*>* out);
 
 }  // namespace
 
 // 本体
-bool CgiHandler::executeCgi(const std::vector<std::string>& argv,
-                            const std::vector<std::string>& env,
-                            const std::vector<char>& stdinBody,
-                            std::string* stdoutBuf, int* exitCode) const {
-    if (argv.empty() || stdoutBuf == NULL || exitCode == NULL) {
+bool CgiHandler::spawnCgiProcess(const std::vector<std::string>& argv,
+                                 const std::vector<std::string>& env,
+                                 CgiSpawn* out) const {
+    if (!out) {
         return false;
     }
     int inPipe[2] = {-1, -1};
@@ -68,14 +61,24 @@ bool CgiHandler::executeCgi(const std::vector<std::string>& argv,
     }
     close(inPipe[0]);
     close(outPipe[1]);
-    const bool ok = parentProcess(pid, inPipe[1], outPipe[0], stdinBody, stdoutBuf,
-                            exitCode);
-    int status = 0;
-    if (!ok) {
-        kill(pid, SIGKILL);
-        (void)waitpid(pid, &status, 0);
+    (void)setNonblock(inPipe[1]);
+    (void)setNonblock(outPipe[0]);
+
+    out->pid = pid;
+    out->wfd = inPipe[1];
+    out->rfd = outPipe[0];
+    return true;
+}
+
+IAction* CgiHandler::createCgiTask(const std::vector<std::string>& argv,
+                                   const std::vector<std::string>& env,
+                                   const std::vector<char>& stdinBody) const {
+    CgiSpawn spawn;
+
+    if (!spawnCgiProcess(argv, env, &spawn)) {
+        return NULL;
     }
-    return ok;
+    return new CgiTask(spawn.pid, spawn.rfd, spawn.wfd, stdinBody, this);
 }
 
 namespace {
@@ -98,15 +101,6 @@ bool openPipes(int inPipe[2], int outPipe[2]) {
     return true;
 }
 
-bool setCloexec(int fd) {
-    const int flags = fcntl(fd, F_GETFD);
-    if (flags < 0) {
-        return false;
-    }
-    // exec したときにこのFDを自動で閉じる
-    return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) == 0;
-}
-
 void closePipe(int pipe[2]) {
     if (pipe[0] >= 0) {
         close(pipe[0]);
@@ -116,6 +110,33 @@ void closePipe(int pipe[2]) {
         close(pipe[1]);
         pipe[1] = -1;
     }
+}
+
+void safeClose(int* fd) {
+    if (fd && *fd >= 0) {
+        close(*fd);
+        *fd = -1;
+    }
+}
+
+bool setCloexec(int fd) {
+    const int flags = fcntl(fd, F_GETFD);
+    if (flags < 0) {
+        return false;
+    }
+    // exec したときにこのFDを自動で閉じる
+    return fcntl(fd, F_SETFD, flags | FD_CLOEXEC) == 0;
+}
+
+bool setNonblock(int fd) {
+    if (fd < 0) {
+        return false;
+    }
+    const int flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0) {
+        return false;
+    }
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK) == 0;
 }
 
 // child process
@@ -155,84 +176,5 @@ void buildVecPtr(const std::vector<std::string>& value,
     out->push_back(0);
 }
 
-// parent process
-bool parentProcess(pid_t pid, int wfd, int rfd, const std::vector<char>& body,
-                   std::string* out, int* exitCode) {
-    if (out == NULL || exitCode == NULL) return false;
-
-    const char* ptr = body.empty() ? 0 : &body[0];
-
-    struct sigaction sa_old;
-    struct sigaction sa_new;
-    memset(&sa_old, 0, sizeof(sa_old));
-    memset(&sa_new, 0, sizeof(sa_new));
-
-    sa_new.sa_handler = SIG_IGN;
-    sigemptyset(&sa_new.sa_mask);
-    sa_new.sa_flags = 0;
-    sigaction(SIGPIPE, &sa_new, &sa_old);
-
-    const ssize_t remain = static_cast<ssize_t>(body.size());
-    if (!doWrite(pid, wfd, rfd, ptr, remain)) return false;
-    if (!doRead(pid, rfd, out)) return false;
-    int status = 0;
-    if (waitpid(pid, &status, 0) < 0) {
-        sigaction(SIGPIPE, &sa_old, NULL);
-        return false;
-    }
-    if (WIFEXITED(status)) {
-        *exitCode = WEXITSTATUS(status);
-    } else if (WIFSIGNALED(status)) {
-        *exitCode = STATUS128 + WTERMSIG(status);
-    } else {
-        *exitCode = -1;
-    }
-    sigaction(SIGPIPE, &sa_old, NULL);
-    return true;
-}
-
-// utils for parent process
-bool doWrite(pid_t pid, int wfd, int rfd, const char* ptr, ssize_t remain) {
-    while (remain > 0) {
-        const ssize_t byte = write(wfd, ptr, static_cast<size_t>(remain));
-        if (byte < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            close(wfd);
-            close(rfd);
-            (void)waitpid(pid, 0, 0);
-            return false;
-        }
-        remain -= byte;
-        ptr += byte;
-    }
-    close(wfd);
-    return true;
-}
-
-bool doRead(pid_t pid, int rfd, std::string* out) {
-    out->reserve(kReserve);
-    while (true) {
-        char buf[kBufSize];
-        const ssize_t byte = read(rfd, buf, sizeof(buf));
-        if (byte < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-            close(rfd);
-            (void)waitpid(pid, 0, 0);
-            return false;
-        }
-        if (byte == 0) {
-            break;
-        }
-        out->append(buf, static_cast<size_t>(byte));
-    }
-    close(rfd);
-    return true;
-}
-
-}  // namespace
-
-}  // namespace http
+} // namespace
+} // namespace http

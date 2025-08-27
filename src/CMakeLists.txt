@@ -32,6 +32,7 @@ add_library(webserv_lib STATIC
     server/socket/socketAddr.cpp
     server/connection/connection.cpp
     server/connection/connectionManager.cpp
+    http/actions/cgiTask.cpp
     http/request/read/body.cpp
     http/request/read/header_parsing_utils.cpp
     http/request/read/length_body.cpp
@@ -85,6 +86,7 @@ target_include_directories(webserv_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include/http/handler
     ${PROJECT_SOURCE_DIR}/include/http/handler/router
     ${PROJECT_SOURCE_DIR}/include/http/request
+    ${PROJECT_SOURCE_DIR}/include/http/actions
     ${PROJECT_SOURCE_DIR}/include/action
     ${PROJECT_SOURCE_DIR}/include/http/response
     ${PROJECT_SOURCE_DIR}/include/http/handler/router/middleware

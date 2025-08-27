@@ -5,40 +5,34 @@
 #include "http/request/request.hpp"
 #include "http/response/builder.hpp"
 #include "utils/string.hpp"
+#include "utils/path.hpp"
 
 namespace http {
 CgiHandler::CgiHandler(const DocumentRootConfig& docRootConfig)
     : docRootConfig_(docRootConfig) {}
 
 Either<IAction*, Response> CgiHandler::serve(const Request& req) {
-    return Right(this->serveInternal(req));
-}
-
-Response CgiHandler::serveInternal(const Request& req) const {
     std::string scriptPath;
     std::string pathInfo;
+
     if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
-        return ResponseBuilder().status(kStatusNotFound).build();
+        return Right(ResponseBuilder().status(kStatusNotFound).build());
     }
-
-    const std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
-    const std::string realScriptPath = utils::normalizePath(joined);
-
+    // 正規化
+    const std::string root = docRootConfig_.getRoot();
+    const std::string joined = utils::joinPath(root, scriptPath);
+    const std::string realScriptPath = utils::path::normalizeSlashes(joined);
     std::vector<std::string> env;
     buildCgiEnv(req, scriptPath, &pathInfo, &env);
 
-    std::vector<std::string> argv;
-    argv.push_back(realScriptPath);
-
+    const std::vector<std::string> argv(1, realScriptPath);
     const std::vector<char>& stdinBody = req.getBody();
 
-    std::string cgiOut;
-    int exitCode = 0;
-    if (!executeCgi(argv, env, stdinBody, &cgiOut, &exitCode)) {
-        return ResponseBuilder().status(kStatusBadGateway).build();
+    IAction* task = createCgiTask(argv, env, stdinBody);
+    if (!task) {
+        return Right(ResponseBuilder().status(kStatusBadGateway).build());
     }
-
-    return parseCgiAndBuildResponse(cgiOut);
+    return Left(task);
 }
 
 }  // namespace http

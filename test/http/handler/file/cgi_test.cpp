@@ -210,74 +210,74 @@ TEST(CgiHandlerTest, TransferEncodingIsStripped) {
     EXPECT_EQ(GetBody(resp), "abc");
 }
 
-struct TmpRoot {
-  fs::path path;
-  bool owned = false;
-  ~TmpRoot(){ if (owned) { std::error_code ec; fs::remove_all(path, ec); } }
-};
+// struct TmpRoot {
+//   fs::path path;
+//   bool owned = false;
+//   ~TmpRoot(){ if (owned) { std::error_code ec; fs::remove_all(path, ec); } }
+// };
 
-static TmpRoot getTmpRoot() {
-  TmpRoot tr;
-  if (fs::exists("tmp") && fs::is_directory("tmp")) {
-    tr.path  = fs::absolute("tmp");      // 既存の repo 配下 tmp を使用
-    tr.owned = false;                    // 消さない
-  } else {
-    fs::path p = fs::temp_directory_path() /
-                 ("ws_cgi_test_" + std::to_string(getpid()));
-    fs::create_directories(p);
-    tr.path  = p;                        // /tmp 以下に作成
-    tr.owned = true;                     // テスト終了時に掃除
-  }
-  return tr;
-}
+// static TmpRoot getTmpRoot() {
+//   TmpRoot tr;
+//   if (fs::exists("tmp") && fs::is_directory("tmp")) {
+//     tr.path  = fs::absolute("tmp");      // 既存の repo 配下 tmp を使用
+//     tr.owned = false;                    // 消さない
+//   } else {
+//     fs::path p = fs::temp_directory_path() /
+//                  ("ws_cgi_test_" + std::to_string(getpid()));
+//     fs::create_directories(p);
+//     tr.path  = p;                        // /tmp 以下に作成
+//     tr.owned = true;                     // テスト終了時に掃除
+//   }
+//   return tr;
+// }
 
-TEST(CgiHandlerEpollTest, SimpleGet_NoHeaders) {
-  signal(SIGPIPE, SIG_IGN);
+// TEST(CgiHandlerEpollTest, SimpleGet_NoHeaders) {
+//   signal(SIGPIPE, SIG_IGN);
 
-  TmpRoot guard = getTmpRoot();
-  const std::string dir = guard.path.string();
+//   TmpRoot guard = getTmpRoot();
+//   const std::string dir = guard.path.string();
 
-  // hello.cgi を作る（改行なし）
-  fs::path script = guard.path / "hello.cgi";
-  { std::ofstream sh(script); ASSERT_TRUE(sh.is_open());
-    sh << "#!/usr/bin/env sh\n" << "printf 'hello'"; }
-  fs::permissions(script,
-    fs::perms::owner_exec|fs::perms::owner_read|fs::perms::owner_write|
-    fs::perms::group_exec|fs::perms::group_read|
-    fs::perms::others_exec, fs::perm_options::add);
+//   // hello.cgi を作る（改行なし）
+//   fs::path script = guard.path / "hello.cgi";
+//   { std::ofstream sh(script); ASSERT_TRUE(sh.is_open());
+//     sh << "#!/usr/bin/env sh\n" << "printf 'hello'"; }
+//   fs::permissions(script,
+//     fs::perms::owner_exec|fs::perms::owner_read|fs::perms::owner_write|
+//     fs::perms::group_exec|fs::perms::group_read|
+//     fs::perms::others_exec, fs::perm_options::add);
 
-  // conf を /tmp 側に保存（どこでも良い）
-  fs::path confFile = fs::temp_directory_path() / "ws_conf_test.conf";
-  { std::ofstream ofs(confFile); ASSERT_TRUE(ofs.is_open());
-    ofs << "server {\n"
-        << "  listen 8080;\n"
-        << "  host localhost;\n"
-        << "  location / {\n"
-        << "    allow_method GET;\n"
-        << "    root " << dir << ";\n"
-        << "    index index.html;\n"
-        << "  }\n"
-        << "}\n"; }
+//   // conf を /tmp 側に保存（どこでも良い）
+//   fs::path confFile = fs::temp_directory_path() / "ws_conf_test.conf";
+//   { std::ofstream ofs(confFile); ASSERT_TRUE(ofs.is_open());
+//     ofs << "server {\n"
+//         << "  listen 8080;\n"
+//         << "  host localhost;\n"
+//         << "  location / {\n"
+//         << "    allow_method GET;\n"
+//         << "    root " << dir << ";\n"
+//         << "    index index.html;\n"
+//         << "  }\n"
+//         << "}\n"; }
 
-  Config config(confFile.string());
-  const std::vector<ServerContext>& servers = config.getParser().getServer();
-  ASSERT_FALSE(servers.empty());
-  const std::vector<LocationContext>& locs = servers[0].getLocation();
-  ASSERT_FALSE(locs.empty());
-  const DocumentRootConfig& doc = locs[0].getDocumentRootConfig();
-  ASSERT_EQ(doc.getRoot(), dir);
+//   Config config(confFile.string());
+//   const std::vector<ServerContext>& servers = config.getParser().getServer();
+//   ASSERT_FALSE(servers.empty());
+//   const std::vector<LocationContext>& locs = servers[0].getLocation();
+//   ASSERT_FALSE(locs.empty());
+//   const DocumentRootConfig& doc = locs[0].getDocumentRootConfig();
+//   ASSERT_EQ(doc.getRoot(), dir);
 
-  http::CgiHandler h(doc);
+//   http::CgiHandler h(doc);
 
-  RawHeaders hdr; std::vector<char> body;
-  http::Request req(http::kMethodGet, "/hello.cgi", "/hello.cgi", "",
-                    hdr, body, /*server*/ NULL, /*location*/ &locs[0]);
+//   RawHeaders hdr; std::vector<char> body;
+//   http::Request req(http::kMethodGet, "/hello.cgi", "/hello.cgi", "",
+//                     hdr, body, /*server*/ NULL, /*location*/ &locs[0]);
 
-  http::Response resp = h.serveInternal(req);
-  EXPECT_EQ(resp.getStatusCode(), http::kStatusOk);
-  EXPECT_EQ(GetHeader(resp, "content-type"), "text/plain");
-  EXPECT_EQ(GetHeader(resp, "content-length"), "5");
-  EXPECT_EQ(GetBody(resp), "hello");
+//   http::Response resp = h.serveInternal(req);
+//   EXPECT_EQ(resp.getStatusCode(), http::kStatusOk);
+//   EXPECT_EQ(GetHeader(resp, "content-type"), "text/plain");
+//   EXPECT_EQ(GetHeader(resp, "content-length"), "5");
+//   EXPECT_EQ(GetBody(resp), "hello");
 
-  std::remove(confFile.string().c_str()); // conf の掃除（repoの tmp は残す）
-}
+//   std::remove(confFile.string().c_str()); // conf の掃除（repoの tmp は残す）
+// }

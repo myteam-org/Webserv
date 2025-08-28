@@ -32,6 +32,7 @@ add_library(webserv_lib STATIC
     server/socket/socketAddr.cpp
     server/connection/connection.cpp
     server/connection/connectionManager.cpp
+    server/platform/signalLayer.cpp
     http/request/read/body.cpp
     http/request/read/header_parsing_utils.cpp
     http/request/read/length_body.cpp
@@ -80,15 +81,17 @@ target_include_directories(webserv_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include/io/input/reader
     ${PROJECT_SOURCE_DIR}/include/server
     ${PROJECT_SOURCE_DIR}/include/server/socket
+    ${PROJECT_SOURCE_DIR}/include/server/platform
     ${PROJECT_SOURCE_DIR}/include/http
     ${PROJECT_SOURCE_DIR}/include/http/request/read
     ${PROJECT_SOURCE_DIR}/include/http/handler
     ${PROJECT_SOURCE_DIR}/include/http/handler/router
+    ${PROJECT_SOURCE_DIR}/include/http/handler/router/middleware
     ${PROJECT_SOURCE_DIR}/include/http/request
     ${PROJECT_SOURCE_DIR}/include/action
     ${PROJECT_SOURCE_DIR}/include/http/response
-    ${PROJECT_SOURCE_DIR}/include/http/handler/router/middleware
     ${PROJECT_SOURCE_DIR}/include/http/handler/file
+    ${PROJECT_SOURCE_DIR}/include/http
 )
 
 # 実行ファイルの生成

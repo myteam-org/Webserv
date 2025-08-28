@@ -6,11 +6,18 @@
 #include <vector>
 #include "try.hpp"
 #include <cerrno> 
+#include <fcntl.h>
 EpollEventNotifier::EpollEventNotifier()
-    : epoll_fd_(epoll_create(kMaxAssociatedFD)) {
-    if (!epoll_fd_.getFd().canUnwrap()) {
-        throw std::runtime_error("epoll_create failed");
-    }
+    : epoll_fd_(-1) {}
+
+types::Result<types::Unit, int> EpollEventNotifier::open() {
+    int ep = ::epoll_create(kMaxAssociatedFD);
+    if (ep < 0) return ERR(errno);
+    int flags = ::fcntl(ep, F_GETFD);
+    if (flags >= 0) ::fcntl(ep, F_SETFD, flags | FD_CLOEXEC);
+    epoll_fd_.setFd(ep);
+    if (events_.empty()) events_.resize(kMaxAssociatedFD);
+    return types::ok();
 }
 
 EpollEventNotifier::~EpollEventNotifier() {
@@ -69,15 +76,44 @@ types::Result<std::vector<EpollEvent>, int> EpollEventNotifier::wait() {
     if (!epfdOpt.canUnwrap()) {
         return ERR(EINVAL);
     }
-    std::vector<struct epoll_event> events(kMaxAssociatedFD);
-    const int num_of_events = epoll_wait(epfdOpt.unwrap(), events.data(), kMaxAssociatedFD, kTimeoutImmediate);
-    if (num_of_events <= kEpollError) {
+    if (events_.empty()) {
+        events_.resize(kMaxAssociatedFD);
+    }
+    int n;
+    for (;;) {
+        n = ::epoll_wait(epfdOpt.unwrap(), &events_[0], (int)events_.size(), kEpollTimeoutMS);
+        if (n >= 0) 
+            break;
+        if (errno == EINTR)
+            continue;
         return ERR(errno);
     }
-    std::vector<EpollEvent> ep_events;
-    ep_events.reserve(num_of_events);
-    for (int i = 0; i < num_of_events; i++) {
-        ep_events.push_back(EpollEvent(events[i]));
+    std::vector<EpollEvent> out;
+    out.reserve(n);
+    for (int i = 0; i < n; ++i) {
+        out.push_back(EpollEvent(events_[i]));
     }
-    return OK(ep_events);
+    return OK(out);
 }
+
+types::Result<int,int> EpollEventNotifier::add(FileDescriptor &fd, uint32_t mask) {
+    const types::Option<int> targetFdOpt = fd.getFd();
+    if (!targetFdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    EpollEvent ev(mask, /*userData*/ 0);
+    ev.setUserFd(targetFdOpt.unwrap());
+    return registerFd(fd, ev);
+}
+
+types::Result<int,int> EpollEventNotifier::mod(FileDescriptor &fd, uint32_t mask) {
+    const types::Option<int> targetFdOpt = fd.getFd();
+    if (!targetFdOpt.canUnwrap()) {
+        return ERR(EINVAL);
+    }
+    EpollEvent ev(mask, /*userData*/ 0);
+    ev.setUserFd(targetFdOpt.unwrap());
+    return modifyFd(fd, ev);
+}
+
+

@@ -4,13 +4,29 @@
 #include "http/virtual_server.hpp"
 #include "server/socket/ServerSocket.hpp"
 
-typedef std::pair<std::string, uint16_t> ListenerKey;
+
+struct ListenerKey {
+    std::string addr;  // 正規化済みの数値IP（例: "127.0.0.1" or "0.0.0.0"）
+    uint16_t    port;
+
+    bool operator<(const ListenerKey& rhs) const {
+        if (addr != rhs.addr) return addr < rhs.addr;
+        return port < rhs.port;
+    }
+};
 
 class Server {
     public:
         Server(const std::vector<ServerContext>&);
         ~Server();
-        types::Result<void,int> init();
+        types::Result<types::Unit,int> init();
+        types::Result<types::Unit,int> buildListeners();
+        types::Result<types::Unit,int> run();
+        types::Result<types::Unit,int> initVirtualServers();
+        types::Result<types::Unit,int> wireListenersToServers();
+        bool Server::isCgiInFd(int fd) const;
+        bool Server::isCgiOutFd(int fd) const;
+        bool Server::isListenerFd(int fd) const;
 
     private:
         std::vector<ServerContext> serverCtxs_;
@@ -19,3 +35,5 @@ class Server {
         std::map<std::string, VirtualServer*> virtualServers_;
         std::map<ListenerKey, ServerSocket*> listeners_; 
 };
+
+std::string canonicalizeIp(const std::string& hostName);

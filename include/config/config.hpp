@@ -7,7 +7,7 @@ class ConfigTokenizer;
 #include <algorithm>
 #include <string>
 
-#include "locationContext.hpp"
+#include "config/context/locationContext.hpp"
 #include "parser.hpp"
 #include "serverContext.hpp"
 #include "status.hpp"

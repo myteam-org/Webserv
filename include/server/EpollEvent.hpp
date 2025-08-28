@@ -19,4 +19,6 @@ public:
     bool hasEvents(uint32_t events) const;
     epoll_event_t* raw();
     const epoll_event_t* raw() const;
+    void setUserFd(int fd);
+    int  getUserFd() const;
 };

@@ -7,13 +7,14 @@
 
 class ServerSocket : public ISocket {
 public:
-    ServerSocket(
-        uint16_t port,
-        const std::string &hostName,
-        int domain = AF_INET,
-        int type = SOCK_STREAM,
-        int protocol = kDefaultProtocol
-    );
+    // ServerSocket(
+    //     uint16_t port,
+    //     const std::string &hostName,
+    //     int domain = AF_INET,
+    //     int type = SOCK_STREAM,
+    //     int protocol = kDefaultProtocol
+    // );
+    ServerSocket();
     ~ServerSocket();
     virtual int getRawFd() const;
     void setFd(int fd);
@@ -29,6 +30,8 @@ public:
     types::Result<int, int> listen(int backlog) const;
     typedef types::Result<ConnectionSocket*, int> ConnectionResult;
     ConnectionResult accept() const;
+    types::Result<int,int> open(int domain, int type, int protocol);
+    types::Result<int,int> setReuseAddr(bool on);
 
 private:
     ServerSocket(const ServerSocket&);
@@ -44,3 +47,5 @@ private:
         sockaddr_in *addrIn
     );
 };
+
+static int set_nonblock_and_cloexec(int fd);

@@ -116,4 +116,26 @@ types::Result<int,int> EpollEventNotifier::mod(FileDescriptor &fd, uint32_t mask
     return modifyFd(fd, ev);
 }
 
+types::Result<int,int> EpollEventNotifier::add(int fd, uint32_t mask) {
+    const types::Option<int> epfdOpt = epoll_fd_.getFd();
+    if (!epfdOpt.canUnwrap()) return ERR(EINVAL);
+
+    EpollEvent ev(mask, 0);
+    ev.setUserFd(fd); // data.fd に fd をセット（data.ptr は使わない方針）
+    if (::epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_ADD, fd, ev.raw()) < 0)
+        return ERR(errno);
+    return OK(0);
+}
+
+types::Result<int,int> EpollEventNotifier::mod(int fd, uint32_t mask) {
+    const types::Option<int> epfdOpt = epoll_fd_.getFd();
+    if (!epfdOpt.canUnwrap()) return ERR(EINVAL);
+
+    EpollEvent ev(mask, 0);
+    ev.setUserFd(fd);
+    if (::epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_MOD, fd, ev.raw()) < 0)
+        return ERR(errno);
+    return OK(0);
+}
+
 

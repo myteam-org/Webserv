@@ -23,5 +23,8 @@ public:
     virtual types::Result<int, int> modifyFd(FileDescriptor &fd, EpollEvent &ev);
     types::Result<int,int> add(FileDescriptor& fd, uint32_t mask);
     types::Result<int,int> mod(FileDescriptor& fd, uint32_t mask);
+    types::Result<int,int> add(int fd, uint32_t mask);
+    types::Result<int,int> mod(int fd, uint32_t mask);
+
 
 };

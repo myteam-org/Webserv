@@ -25,9 +25,14 @@ sockaddr* SocketAddr::raw(){
     return reinterpret_cast<sockaddr*>(&storage_);
 }
 
-socklen_t SocketAddr::length() const {
-    return length_;
+
+SocketAddr SocketAddr::makeEmpty() {
+    SocketAddr sa;
+    std::memset(&sa.storage_, 0, sizeof(sa.storage_));
+    sa.length_ = sizeof(sa.storage_);
+    return sa;
 }
+
 
 void SocketAddr::setLength(socklen_t len) {
     length_ = len;
@@ -54,7 +59,9 @@ void SocketAddr::resolveByName(
     freeaddrinfo(res);
 }
 
-
+SocketAddr::SocketAddr() : length_(0) {
+        std::memset(&storage_, 0, sizeof(storage_));
+}
 
 
 std::string SocketAddr::getAddress() const {

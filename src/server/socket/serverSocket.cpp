@@ -47,9 +47,7 @@ types::Result<int,int> ServerSocket::open(int domain, int type, int protocol) {
     return OK(0);
 }
 
-ServerSocket::~ServerSocket() {
-
-}
+ServerSocket::~ServerSocket() {}
 
 types::Result<int,int> ServerSocket::setReuseAddr(bool on) {
     int v = on ? 1 : 0;
@@ -57,7 +55,6 @@ types::Result<int,int> ServerSocket::setReuseAddr(bool on) {
         return ERR(errno);
     return OK(0);
 }
-
 
 int ServerSocket::getRawFd() const {
     return fd_.getFd().unwrapOr(kInvalidResult); 

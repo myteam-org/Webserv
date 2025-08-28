@@ -14,6 +14,7 @@ class SocketAddr : public ISocketAddr {
     friend class ServerSocket;
 public:
     static SocketAddr createIPv4(const std::string& hostName, uint16_t port);
+    static SocketAddr makeEmpty();
     sockaddr* raw();
     socklen_t length() const;
     void setLength(socklen_t len);

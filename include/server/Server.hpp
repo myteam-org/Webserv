@@ -3,6 +3,7 @@
 #include "server/EpollEventNotifier.hpp"
 #include "http/virtual_server.hpp"
 #include "server/socket/ServerSocket.hpp"
+#include "server/fileDescriptor/FdRegistry.hpp"
 
 
 struct ListenerKey {
@@ -24,14 +25,13 @@ class Server {
         types::Result<types::Unit,int> run();
         types::Result<types::Unit,int> initVirtualServers();
         types::Result<types::Unit,int> wireListenersToServers();
-        bool Server::isCgiInFd(int fd) const;
-        bool Server::isCgiOutFd(int fd) const;
-        bool Server::isListenerFd(int fd) const;
+        void acceptLoop(int lfd);
 
     private:
         std::vector<ServerContext> serverCtxs_;
         EpollEventNotifier epollNotifier_;
         ConnectionManager connManager_;
+        FdRegistry fdRegister_;
         std::map<std::string, VirtualServer*> virtualServers_;
         std::map<ListenerKey, ServerSocket*> listeners_; 
 };

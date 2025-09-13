@@ -1,151 +1,191 @@
 #include "http/request/parse/request_parser.hpp"
 
+// c++98
 #include <sstream>
-#include <string>
 
-#include "context.hpp"
-#include "locationContext.hpp"
-#include "request.hpp"
+#include "http/request/read/context.hpp"
+#include "http/request/request.hpp"
+#include "http/method.hpp"
 #include "utils/string.hpp"
-#include "utils/types/either.hpp"
-#include "utils/types/result.hpp"
+#include "utils/types/try.hpp"
+#include "option.hpp"
 
 namespace http {
 namespace parse {
 
-static const std::size_t kMaxRecommendedRequestLineLength = 8000;
-
-RequestParser::RequestParser(http::ReadContext& ctx) : ctx_(&ctx) {}
+RequestParser::RequestParser(http::ReadContext& ctx)
+    : ctx_(&ctx),
+      requestLineParsed_(false),
+      headersParsed_(false),
+      bodyParsed_(false),
+      method_(kMethodUnknown),
+      requestTarget_(),
+      pathOnly_(),
+      queryString_(),
+      version_("HTTP/1.1"),
+      headers_(),
+      body_() {}
 
 RequestParser::~RequestParser() {}
 
-types::Result<types::Unit, error::AppError> RequestParser::parseRequestLine() {
+types::Result<types::Unit, error::AppError>
+RequestParser::parseRequestLine() {
+    if (requestLineParsed_) {
+        return types::ok(types::Unit());
+    }
     const std::string& line = ctx_->getRequestLine();
-    if (!utils::endsWith(line, "\r\n")) {
-        return ERR(error::kBadRequest);
-    }
     std::istringstream iss(line);
-    std::string method;
-    std::string uri;
-    std::string version;
-    if (!(iss >> method >> uri >> version)) {
-        return ERR(error::kBadRequest);
+    std::string methodStr;
+    std::string target;
+    std::string ver;
+    if (!(iss >> methodStr >> target >> ver)) {
+        return types::err(error::kBadRequest);
     }
-    if (method == "GET") {
-        method_ = kMethodGet;
-    } else if (method == "POST") {
-        method_ = kMethodPost;
-    } else if (method == "DELETE") {
-        method_ = kMethodDelete;
-    } else {
-        return ERR(error::kBadMethod);
+
+    method_ = httpMethodFromString(methodStr);
+    if (method_ == kMethodUnknown) {
+        return types::err(error::kBadRequest);
     }
-    if (uri.length() > kMaxRecommendedRequestLineLength) {
-        return ERR(error::kUriTooLong);
+    if (ver.compare(0, 5, "HTTP/") != 0) {
+        return types::err(error::kBadRequest);
     }
-    const std::size_t kHttpVersionPreFixLen = 8;
-    if (version.substr(0, kHttpVersionPreFixLen) != "HTTP/1.1") {
-        return ERR(error::kBadHttpVersion);
+    version_ = ver;
+
+    types::Result<types::Unit, error::AppError> dec =
+        decodeAndNormalizeTarget(target);
+    if (dec.isErr()) {
+        return dec;
     }
-    uri_ = uri;
-    version_ = version;
-    return OK(types::Unit());
+
+    requestLineParsed_ = true;
+    return types::ok(types::Unit());
 }
 
-types::Result<types::Unit, error::AppError> RequestParser::parseHeaders() {
-    headers_ = ctx_->getHeaders();
+types::Result<types::Unit, error::AppError>
+RequestParser::parseHeaders() {
+    if (headersParsed_) {
+        return types::ok(types::Unit());
+    }
+    headers_ = ctx_->getHeaders(); // 既にキーは lower-case 格納前提
 
-    if (checkMissingHost()) {
-        return ERR(error::kMissingHost);
+    if (!checkMissingHost()) {
+        return types::err(error::kBadRequest);
     }
-    const bool hasCL = headers_.find("Content-Length") != headers_.end();
-    if (hasCL && !validateContentLength()) {
-        return ERR(error::kInvalidContentLength);
+    if (!validateContentLength()) {
+        return types::err(error::kBadRequest);
     }
-    const bool hasTE = headers_.find("Transfer-Encoding") != headers_.end();
-    if (hasTE && !validateTransferEncoding()) {
-        return ERR(error::kInvalidTransferEncoding);
+    if (!validateTransferEncoding()) {
+        return types::err(error::kBadRequest);
     }
-    if (hasCL && hasTE) {
-        return ERR(error::kHasContentLengthAndTransferEncoding);
-    }
-    return OK(types::Unit());
+    headersParsed_ = true;
+    return types::ok(types::Unit());
 }
 
-bool RequestParser::checkMissingHost() const {
-    return headers_.find("Host") == headers_.end();
-}
-
-bool RequestParser::validateContentLength() const {
-    const RawHeaders::const_iterator it = headers_.find("Content-Length");
-    if (it == headers_.end()) {
-        return false;
+types::Result<types::Unit, error::AppError>
+RequestParser::parseBody() {
+    if (bodyParsed_) {
+        return types::ok(types::Unit());
     }
-    const std::string& val = it->second;
-    return !val.empty() && !utils::containsNonDigit(val);
-}
-
-bool RequestParser::validateTransferEncoding() const {
-    const RawHeaders::const_iterator it = headers_.find("Transfer-Encoding");
-    if (it == headers_.end()) {
-        return false;
-    }
-    const std::string& val = it->second;
-    return !val.empty() && utils::toLower(val) == "chunked";
-}
-
-types::Result<types::Unit, error::AppError> RequestParser::parseBody() {
-    const std::string& raw = ctx_->getBody();
-    // バイナリ対応のため vector<char> に詰め直す    body_.assign(raw.begin(),
-    // raw.end());
-    return OK(types::Unit());
-}
-
-types::Result<Request, error::AppError> RequestParser::buildRequest() const {
-    const std::string uri = uri_;
-    const types::Result<const LocationContext*, error::AppError> result =
-        chooseLocation(uri);
-    if (result.isErr()) {
-        return ERR(error::kBadLocationContext);
-    }
-    const LocationContext* location = result.unwrap();
-
-    std::string queryString;
-    std::string pathOnly = uri;
-    const std::size_t queryMarkPos = uri.find('?');
-    if (queryMarkPos != std::string::npos) {
-        pathOnly = uri.substr(0, queryMarkPos);
-        queryString = uri.substr(queryMarkPos + 1);
-    }
-    const Request req(method_, uri_, headers_, body_, &ctx_->getServer(),
-                      result.unwrap());
-    return OK(req);
+    const std::string& b = ctx_->getBody();
+    body_.assign(b.begin(), b.end());
+    bodyParsed_ = true;
+    return types::ok(types::Unit());
 }
 
 types::Result<const LocationContext*, error::AppError>
-RequestParser::chooseLocation(const std::string& uri) const {
-    if (!ctx_) {
-        return types::err(error::kBadRequest);
-    }
-    const ServerContext& server = ctx_->getServer();
-    const std::vector<LocationContext>& locations = server.getLocation();
-    const LocationContext* bestMatch = NULL;
-    std::size_t longest = 0;
-
-    for (std::size_t i = 0; i < locations.size(); ++i) {
-        const std::string& path = locations[i].getPath();
-        if (uri.compare(0, path.size(), path) == 0) {
-            if (path.size() > longest) {
-                longest = path.size();
-                bestMatch = &locations[i];
+RequestParser::chooseLocation(const std::string& pathOnly) const {
+    const ServerContext& srv = ctx_->getServer();
+    const LocationContextList locations = srv.getLocation();
+    LocationContextList::const_iterator it = locations.begin();
+    const LocationContext* chosen = NULL;
+    for (; it != locations.end(); ++it) {
+        const std::string& locPath = it->getPath();
+        if (pathOnly.find(locPath) == 0) {
+            if (chosen == NULL || locPath.size() > chosen->getPath().size()) {
+                chosen = &(*it);
             }
         }
     }
-    if (bestMatch) {
-        return types::ok(bestMatch);
+    if (chosen == NULL) {
+        if (!locations.empty()) {
+            chosen = &(*locations.begin());
+        }
     }
-    return types::err(error::kBadRequest);
+    if (chosen == NULL) {
+        return types::err(error::kBadRequest);
+    }
+    return types::ok(chosen);
 }
 
-}  // namespace parse
-}  // namespace http
+const std::string& RequestParser::getPathOnly() const { return pathOnly_; }
+const std::string& RequestParser::getQueryString() const { return queryString_; }
+const std::string& RequestParser::getRequestTarget() const { return requestTarget_; }
+http::HttpMethod RequestParser::getMethod() const { return method_; }
+
+types::Result<http::Request, error::AppError>
+RequestParser::buildRequest() const {
+    if (!requestLineParsed_ || !headersParsed_) {
+        return types::err(error::kBadRequest);
+    }
+    types::Result<const LocationContext*, error::AppError> locResult =
+        chooseLocation(pathOnly_);
+    if (locResult.isErr()) {
+        return types::err(locResult.unwrapErr());
+    }
+    const LocationContext* loc = locResult.unwrap();
+
+    // ★ 修正: 現行 Request コンストラクタ (6 引数) に合わせる
+    // Request が内部で requestTarget_ を split して path/query を設定する想定。
+    http::Request req(
+        method_,
+        requestTarget_,
+        headers_,
+        body_,
+        &ctx_->getServer(),
+        loc
+    );
+    return types::ok(req);
+}
+
+// ---- 内部検証ヘルパ ----
+bool RequestParser::checkMissingHost() const {
+    RawHeaders::const_iterator it = headers_.find("host");
+    return it != headers_.end();
+}
+
+bool RequestParser::validateContentLength() const {
+    RawHeaders::const_iterator it = headers_.find("content-length");
+    if (it == headers_.end()) {
+        return true;
+    }
+    const std::string& v = it->second;
+    if (v.empty()) return false;
+    for (std::string::size_type i = 0; i < v.size(); ++i) {
+        if (v[i] < '0' || v[i] > '9') return false;
+    }
+    return true;
+}
+
+bool RequestParser::validateTransferEncoding() const {
+    return true; // 簡易
+}
+
+types::Result<types::Unit, error::AppError>
+RequestParser::decodeAndNormalizeTarget(const std::string& target) {
+    requestTarget_ = target;
+    std::string::size_type q = target.find('?');
+    if (q == std::string::npos) {
+        pathOnly_ = target;
+        queryString_ = "";
+    } else {
+        pathOnly_ = target.substr(0, q);
+        queryString_ = target.substr(q + 1);
+    }
+    if (pathOnly_.empty()) {
+        pathOnly_ = "/";
+    }
+    return types::ok(types::Unit());
+}
+
+} // namespace parse
+} // namespace http

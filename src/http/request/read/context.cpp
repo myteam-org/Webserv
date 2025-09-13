@@ -1,65 +1,80 @@
-#include "context.hpp"
+#include "http/request/read/context.hpp"
 
-#include "body.hpp"
+// c++98
+#include "http/request/read/body.hpp"
+#include "http/request/read/header.hpp"
+#include "http/request/read/header_parsing_utils.hpp"
+#include "http/request/read/line.hpp"
 #include "config/context/serverContext.hpp"
-#include "header.hpp"
-#include "header_parsing_utils.hpp"
 #include "http/config/config_resolver.hpp"
-#include "reader.hpp"
 
 namespace http {
 
 ReadContext::ReadContext(config::IConfigResolver& resolver, IState* initial)
-    : state_(initial), resolver_(resolver), server_(NULL) {}
+    : state_(initial),
+      resolver_(resolver),
+      requestLine_(),
+      headers_(),
+      body_(),
+      hasRequestLine_(false),
+      hasHeaders_(false),
+      hasBody_(false),
+      server_(NULL) {}
 
-ReadContext::~ReadContext() { delete state_; }
-
-// handle関数
-// 1. 現在のstate_->handle(buf)を呼んで、処理を進める
-// 2. 戻ってきたTransitionReultから
-//   ・requestLine/headers/bodyの情報があれば保存
-//   ・次のstateがあれば切り替える（古いstateはdelete）
-// 3. stateの状態（kDoneなど）を返す
+ReadContext::~ReadContext() {
+    delete state_;
+}
 
 HandleResult ReadContext::handle(ReadBuffer& buf) {
     if (state_ == NULL) {
         return types::ok(IState::kDone);
     }
+
     const TransitionResult tr = state_->handle(*this, buf);
+
     if (tr.getRequestLine().isSome()) {
         requestLine_ = tr.getRequestLine().unwrap();
+        markRequestLine();
     }
     if (tr.getHeaders().isSome()) {
         headers_ = tr.getHeaders().unwrap();
+        markHeaders();
     }
     if (tr.getBody().isSome()) {
         body_ = tr.getBody().unwrap();
+        markBody();
     }
+
     if (tr.getStatus().isOk() && tr.getStatus().unwrap() == IState::kDone) {
         if (dynamic_cast<ReadingRequestHeadersState*>(state_) != NULL) {
             if (parser::hasBody(headers_)) {
-                const types::Option<IState*> opt = createReadingBodyState(headers_);
+                const types::Option<IState*> opt =
+                    createReadingBodyState(headers_);
                 if (opt.isSome()) {
-                    IState* state = opt.unwrap();
-                    this->changeState(state);
+                    changeState(opt.unwrap());
                 } else {
                     return types::err(error::kBadRequest);
                 }
+            } else {
+                changeState(NULL);
             }
+        } else if (dynamic_cast<ReadingRequestBodyState*>(state_) != NULL) {
+            changeState(NULL);
         }
     }
+
     if (tr.getNextState() != NULL) {
         changeState(tr.getNextState());
     }
+
     return tr.getStatus();
 }
 
-// state切り替え機能
-// 外部から明示的にstateを切り替えたいときに使う
-
 void ReadContext::changeState(IState* next) {
-    delete state_;
-    state_ = next;
+    if (state_ != next) {
+        delete state_;
+        state_ = next;
+    }
 }
 
 types::Option<IState*> ReadContext::createReadingBodyState(
@@ -81,42 +96,60 @@ types::Option<IState*> ReadContext::createReadingBodyState(
 
 const IState* ReadContext::getState() const { return state_; }
 
-config::IConfigResolver& ReadContext::getConfigResolver() const {
-    return resolver_;
+bool ReadContext::isRequestLineComplete() const { return hasRequestLine_; }
+bool ReadContext::isHeadersComplete() const { return hasHeaders_; }
+bool ReadContext::isBodyComplete() const {
+    if (!hasHeaders_) {
+        return false;
+    }
+    return hasBody_ || !parser::hasBody(headers_);
 }
 
 void ReadContext::setRequestLine(const std::string& line) {
     requestLine_ = line;
+    markRequestLine();
 }
 
 const std::string& ReadContext::getRequestLine() const { return requestLine_; }
 
 void ReadContext::setHeaders(const RawHeaders& headers) {
     headers_ = headers;
+    markHeaders();
 }
 
 const RawHeaders& ReadContext::getHeaders() const { return headers_; }
 
 void ReadContext::setBody(const std::string& body) {
     body_ = body;
+    markBody();
 }
 
 const std::string& ReadContext::getBody() const { return body_; }
 
 void ReadContext::setServer(const ServerContext& server) { server_ = &server; }
-
 const ServerContext& ReadContext::getServer() const { return *server_; }
-
 bool ReadContext::hasServer() const { return server_ != NULL; }
 
-}  // namespace http
+config::IConfigResolver& ReadContext::getConfigResolver() const {
+    return resolver_;
+}
 
-// HTTPリクエストの読み取り処理におけるstateマシンの実行環境
-// 現在のstate(IState)を持ち、stateの進行に合わせて状態やデータ
-// （リクエストライン・ヘッダー・ボディ）を更新する役割を持つ
-// クラス
-//  ReadContext:状態と読み込み処理を管理するstateマシンのコンテキスト（状態保持）
-//  IState:各段階（リクエストライン、ヘッダ、ボディなど）の処理単位（Stageパターン）
-//  IConfigResolver:コンフィグ情報を提供する依存対象
-//  ReadBuffer:ソケットなどからの読み込みバッファ
-//  RawHeaders:HTTPヘッダー情報
+void ReadContext::resetForNext() {
+    delete state_;
+    state_ = new ReadingRequestLineState();
+
+    requestLine_.clear();
+    headers_.clear();
+    body_.clear();
+
+    hasRequestLine_ = false;
+    hasHeaders_ = false;
+    hasBody_ = false;
+    server_ = NULL;
+}
+
+void ReadContext::markRequestLine() { hasRequestLine_ = true; }
+void ReadContext::markHeaders() { hasHeaders_ = true; }
+void ReadContext::markBody() { hasBody_ = true; }
+
+} // namespace http

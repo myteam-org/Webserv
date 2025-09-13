@@ -1,75 +1,144 @@
-#include "reader.hpp"
-#include "state.hpp"
-#include "context.hpp"
-#include "line.hpp"
+#include "http/request/read/reader.hpp"
+
+// c++98
+#include "http/request/read/state.hpp"
+#include "http/request/read/line.hpp"
+#include "http/request/read/header.hpp"
+#include "http/request/read/body.hpp"
+#include "http/request/parse/request_parser.hpp"
+#include "http/request/request.hpp"
+#include "utils/types/try.hpp"
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
-#include "io/input/read/buffer.hpp"
-#include "config/config.hpp"
-#include "header.hpp"
-#include "body.hpp"
-#include "utils/types/try.hpp"
-#include "http/request/request.hpp"
 
 namespace http {
 
 RequestReader::RequestReader(config::IConfigResolver& resolver)
-    : ctx_(resolver, new ReadingRequestLineState()) {
+    : ctx_(resolver, new ReadingRequestLineState()),
+      parser_(types::none<parse::RequestParser*>()),
+      headersParsed_(false),
+      bodyParsed_(false) {}
+
+RequestReader::~RequestReader() {
+    destroyParser_();
 }
 
-// readRequest関数
-// 1. バッファ読み込み 読み込みバイト数を保持、失敗時はErrでかえす
-// 2. stateを順に進める
-//    ・現在のstate(例：リクエストライン読み取り)に処理を委譲
-//    ・handle()はTransitionResultを返し、次のstateに自動的に推移する
-// 3. エラー処理　state内でエラーが発生したらErrを返す
-// 4. サスペンド処理（データ待ち）
-//    ・kSuspendは「まだ読み込みが不完全」
-//    ・load()で読み込めたバイト数が0->EOF到達->エラー
-//    ・読み込み途中->Noneを返す
-// 5. 最後に全てのstateが終了(getState()==NULL)していたら、
-//    リクエスト生成処理は別で行う前提なので、Noneを返す
-
-RequestReader::ReadRequestResult RequestReader::readRequest(
-    ReadBuffer& buf) {
-
-  const std::size_t loaded = TRY(buf.load());
-
-  while (ctx_.getState() != NULL) {
-    const types::Result<IState::HandleStatus, error::AppError> handleResult =
-        ctx_.handle(buf);
-
-    if (handleResult.isErr()) {
-      return types::Result<types::Option<Request>, error::AppError>(
-          types::err(handleResult.unwrapErr()));
+void RequestReader::destroyParser_() {
+    if (parser_.canUnwrap()) {
+        parse::RequestParser* p = parser_.unwrap();
+        delete p;
+        parser_ = types::none<parse::RequestParser*>();
     }
-
-    if (handleResult.unwrap() == IState::kSuspend) {
-      if (loaded == 0) {
-        return types::Result<types::Option<Request>, error::AppError>(
-            types::err(error::kIOUnknown));
-      }
-      return types::Result<types::Option<Request>, error::AppError>(
-          types::ok(types::none<Request>()));
-    }
-  }
-
-  return types::Result<types::Option<Request>, error::AppError>(
-      types::ok(types::none<Request>()));
 }
 
-}  // namespace http
+types::Result<types::Unit, error::AppError>
+RequestReader::ensureParserInited_() {
+    if (!parser_.canUnwrap()) {
+        parse::RequestParser* p = new parse::RequestParser(ctx_);
+        parser_ = types::some(p);
+    }
+    return types::ok(types::Unit());
+}
 
-// HTTPリクエストを段階的に読み取るためのクラスRequestReaderの実装
-// 状態ごとに分割されたstateパターンを使ってReadBufferから順次リクエストを解析していく
-// クラスの目的：ReadBufferを使ってHTTPリクエスト全体を読み取る
-// stateマシン（ReadContext）を使って、リクエストライン->ヘッダー->ボディと段階的に進む
-// 結果はResult<Option<Request>, AppError>として返す
-//  ・成功+データ：Ok(Some(Request))
-//  ・未完了：Ok(None)
-//  ・エラー：Err(AppError)
-// メンバ変数：ReadContext ctx_
-//  ・stateマシンの実体
-//  ・最初はReadingRequestLineStateから開始
-//  ・stateを切り替えながらbufを読み進める
+types::Result<types::Unit, error::AppError>
+RequestReader::parseHeadersIfNeeded_() {
+    if (headersParsed_) {
+        return types::ok(types::Unit());
+    }
+    if (!ctx_.isHeadersComplete()) {
+        return types::ok(types::Unit());
+    }
+    TRY(ensureParserInited_());
+    parse::RequestParser* p = parser_.unwrap();
+    TRY(p->parseRequestLine());
+    TRY(p->parseHeaders());
+    headersParsed_ = true;
+    return types::ok(types::Unit());
+}
+
+types::Result<types::Unit, error::AppError>
+RequestReader::parseBodyIfNeeded_() {
+    if (bodyParsed_) {
+        return types::ok(types::Unit());
+    }
+    if (!ctx_.isBodyComplete()) {
+        return types::ok(types::Unit());
+    }
+    TRY(ensureParserInited_());
+    parse::RequestParser* p = parser_.unwrap();
+    TRY(p->parseBody());
+    bodyParsed_ = true;
+    return types::ok(types::Unit());
+}
+
+types::Result<Request, error::AppError>
+RequestReader::buildIfReady_() {
+    if (!headersParsed_ || !bodyParsed_) {
+        return types::err(error::kBadRequest);
+    }
+    if (!parser_.canUnwrap()) {
+        return types::err(error::kBadRequest);
+    }
+    parse::RequestParser* p = parser_.unwrap();
+    types::Result<Request, error::AppError> built = p->buildRequest();
+
+    // 次リクエスト準備
+    destroyParser_();
+    headersParsed_ = false;
+    bodyParsed_ = false;
+    ctx_.resetForNext();
+    return built;
+}
+
+RequestReader::ReadRequestResult
+RequestReader::readRequest(ReadBuffer& buf) {
+    // state 完了後の残処理パス
+    if (ctx_.getState() == NULL) {
+        TRY(parseHeadersIfNeeded_());
+        TRY(parseBodyIfNeeded_());
+        if (headersParsed_ && bodyParsed_) {
+            return types::ok(types::some(TRY(buildIfReady_())));
+        }
+        return types::ok(types::none<Request>());
+    }
+
+    for (;;) {
+        const types::Result<IState::HandleStatus, error::AppError> r =
+            ctx_.handle(buf);
+        if (r.isErr()) {
+            // エラー時パーサ破棄
+            destroyParser_();
+            return types::err(r.unwrapErr());
+        }
+
+        if (ctx_.isHeadersComplete() && !headersParsed_) {
+            const types::Result<types::Unit, error::AppError> ph =
+                parseHeadersIfNeeded_();
+            if (ph.isErr()) {
+                destroyParser_();
+                return types::err(ph.unwrapErr());
+            }
+        }
+
+        if (ctx_.getState() == NULL) {
+            const types::Result<types::Unit, error::AppError> pb =
+                parseBodyIfNeeded_();
+            if (pb.isErr()) {
+                destroyParser_();
+                return types::err(pb.unwrapErr());
+            }
+            if (headersParsed_ && bodyParsed_) {
+                return types::ok(types::some(TRY(buildIfReady_())));
+            }
+            return types::ok(types::none<Request>());
+        }
+
+        if (r.unwrap() == IState::kSuspend) {
+            return types::ok(types::none<Request>());
+        }
+        // kDone -> 次 state へ進むのでループ継続
+    }
+}
+
+} // namespace http

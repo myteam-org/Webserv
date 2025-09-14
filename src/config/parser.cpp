@@ -20,12 +20,13 @@ void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(
 
 void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(
     LocationContext&, size_t&) = {
-    &ConfigParser::setRoot_,  &ConfigParser::setMethod_,
-    &ConfigParser::setIndex_, &ConfigParser::setAutoIndex_,
-    &ConfigParser::setIsCgi_, &ConfigParser::setRedirect_,
+    &ConfigParser::setRoot_,        &ConfigParser::setMethod_,
+    &ConfigParser::setIndex_,       &ConfigParser::setAutoIndex_,
+    &ConfigParser::setIsCgi_,       &ConfigParser::setRedirect_,
     &ConfigParser::setEnableUpload_};
 
-ConfigParser::ConfigParser(ConfigTokenizer& tokenizer, const std::string& confFile)
+ConfigParser::ConfigParser(ConfigTokenizer& tokenizer,
+                           const std::string& confFile)
     : tokens_(tokenizer.getTokens()), depth_(0), confFile_(confFile) {
     makeVectorServer_();
 }
@@ -48,7 +49,8 @@ void ConfigParser::makeVectorServer_() {
                          tokens_[i].getLineNumber());
             }
             addServer_(i);
-        } else if ((type >= LISTEN && type <= ENABLE_UPLOAD) && this->depth_ == 0) {
+        } else if ((type >= LISTEN && type <= ENABLE_UPLOAD) &&
+                   this->depth_ == 0) {
             throwErr(this->tokens_[i].getText(), ": Syntax error: line",
                      tokens_[i].getLineNumber());
         } else {
@@ -101,8 +103,13 @@ void ConfigParser::setPort_(ServerContext& server, size_t& index) {
 
     if (this->tokens_[index].getType() == VALUE &&
         Validator::number(portNumber, LISTEN)) {
+        if (server.getListen() != 0) {
+            throwErr(portNumber,
+                     ": Multiple ports on a single virtual server are not "
+                     "supported: line",
+                     this->tokens_[index].getLineNumber());
+        }
         server.setListen(static_cast<u_int16_t>(atoi(portNumber.c_str())));
-
     } else {
         throwErr(portNumber, ": port value error: line",
                  this->tokens_[index].getLineNumber());

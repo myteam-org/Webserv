@@ -18,16 +18,13 @@ void Config::printServer(const std::vector<ServerContext>& server) {
             std::cout << " |- client_max_body_size: "
                       << server[i].getClientMaxBodySize() << std::endl;
         }
-        const std::vector<std::map<int, std::string> >& errorPages =
+        const std::map<http::HttpStatusCode, std::string>& errorPages =
             server[i].getErrorPage();
-        for (size_t j = 0; j < errorPages.size(); ++j) {
-            const std::map<int, std::string>& pageMap = errorPages[j];
-            for (std::map<int, std::string>::const_iterator it =
-                     pageMap.begin();
-                 it != pageMap.end(); ++it) {
+        for (std::map<http::HttpStatusCode, std::string>::const_iterator it =
+                     errorPages.begin();
+                 it != errorPages.end(); ++it) {
                 std::cout << " |- error_page: " << it->first << " -> "
                           << it->second << std::endl;
-            }
         }
         printLocation(server[i]);
         std::cout << std::endl;
@@ -53,6 +50,8 @@ void Config::printLocation(const ServerContext& server) {
         std::cout << "     |- auto_index: " << documentRootConfig.getAutoIndex()
                   << std::endl;
         std::cout << "     |- is_cgi: " << documentRootConfig.getCgiExtensions()
+                  << std::endl;
+        std::cout << "     |- enabel_upload: " << documentRootConfig.getEnableUpload()
                   << std::endl;
         if (!location[k].getRedirect().empty()) {
             std::cout << "     |- redirect: " << location[k].getRedirect()

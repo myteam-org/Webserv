@@ -1,45 +1,53 @@
 #include "parser.hpp"
 
 #include <gtest/gtest.h>
+#include <sys/stat.h>   // mkdir
+#include <sys/types.h>  // mode_t
 
 #include <fstream>
 #include <sstream>
-#include <sys/stat.h>  // mkdir
-#include <sys/types.h> // mode_t
 
+#include "config.hpp"
 #include "serverContext.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
-#include "config.hpp"
 
 class ConfigParserTest : public ::testing::Test {
    protected:
-    void SetUp() override {
-        // Setup code here
-    }
-
     void TearDown() override {
-        // Cleanup code here
-        // Clean up temporary files
-        for (const auto& filename : tempFiles_) {
-            std::remove(filename.c_str());
+        // 作成した一時ファイルを削除
+        for (size_t i = 0; i < tempFiles_.size(); ++i) {
+            std::remove(tempFiles_[i].c_str());
         }
+        tempFiles_.clear();
     }
 
-    // Helper method to create a temporary config file and return
-    // ConfigTokenizer
-    std::unique_ptr<ConfigTokenizer> createTokenizerFromConfig(
-        const std::string& configContent) {
-        // Create a temporary file
-        std::string filename =
-            "test_config_" + std::to_string(fileCounter_++) + ".conf";
-        tempFiles_.push_back(filename);
+    // conf を dir 配下に作ってファイル名を outFilename で返す（C++98）
+    ConfigTokenizer* createTokenizerFromConfig(const std::string& configContent,
+                                               std::string& outFilename,
+                                               const std::string& dir) {
+        // ディレクトリなければ作成
+        mkdir(dir.c_str(), 0700);
 
-        std::ofstream file(filename);
+        std::ostringstream oss;
+        oss << dir << "/test_config_" << fileCounter_++ << ".conf";
+        outFilename = oss.str();
+
+        std::ofstream file(outFilename.c_str());
         file << configContent;
         file.close();
 
-        return std::make_unique<ConfigTokenizer>(filename);
+        // TearDown で消すために保存
+        tempFiles_.push_back(outFilename);
+
+        return new ConfigTokenizer(outFilename);
+    }
+
+    // 毎回書くのが面倒なので、dir を固定した簡易版ヘルパ
+    ConfigTokenizer* makeTok(const std::string& configContent,
+                             std::string& outFilename) {
+        const std::string dir = "./config_file";
+        return createTokenizerFromConfig(configContent, outFilename, dir);
     }
 
    private:
@@ -51,22 +59,30 @@ int ConfigParserTest::fileCounter_ = 0;
 
 // Test constructor and destructor
 TEST_F(ConfigParserTest, ConstructorDestructorTest) {
-    auto tokenizer = createTokenizerFromConfig("");
+    const std::string dir = "./config_file";
+    mkdir(dir.c_str(), 0700);
+    std::string filename;
+    ConfigTokenizer* tokenizer = createTokenizerFromConfig("", filename, dir);
 
-    EXPECT_NO_THROW({ ConfigParser parser(*tokenizer); });
+    EXPECT_NO_THROW({
+        ConfigParser parser(*tokenizer, filename);  // ← filename が confFile
+    });
+
+    std::remove(filename.c_str());
 }
 
 // Test error page configuration
 TEST_F(ConfigParserTest, ParseErrorPageConfiguration) {
     std::string config = R"(
-server {
-    error_page 404 /error/404.html;
-}
-)";
+    server {
+        error_page 404 /error/404.html;
+    }
+    )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
-    ConfigParser parser(*tokenizer);
-    const auto& servers = parser.getServer();
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
+    ConfigParser parser(*tokenizer, filename);
+    const std::vector<ServerContext>& servers = parser.getServer();
 
     EXPECT_EQ(servers.size(), 1);
     // Note: You'll need to add a getter method in ServerContext to test error
@@ -76,14 +92,15 @@ server {
 // Test max body size configuration
 TEST_F(ConfigParserTest, ParseMaxBodySizeConfiguration) {
     std::string config = R"(
-server {
-    client_max_body_size 1024;
-}
-)";
+    server {
+        client_max_body_size 1024;
+    }
+    )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
-    ConfigParser parser(*tokenizer);
-    const auto& servers = parser.getServer();
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
+    ConfigParser parser(*tokenizer, filename);
+    const std::vector<ServerContext>& servers = parser.getServer();
 
     EXPECT_EQ(servers.size(), 1);
     EXPECT_EQ(servers[0].getClientMaxBodySize(), 1024);
@@ -97,9 +114,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test max body size - invalid number
@@ -110,9 +129,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - unmatched braces
@@ -124,9 +145,11 @@ server {
 }
 )";  // Extra closing brace
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - unmatched braces2
@@ -136,8 +159,9 @@ TEST_F(ConfigParserTest, UnmatchedBracesError2) {
     )";  // Extra closing brace
 
     try {
-        auto tokenizer = createTokenizerFromConfig(config);
-        ConfigParser parser(*tokenizer);
+        std::string filename;
+        ConfigTokenizer* tokenizer = makeTok(config, filename);
+        ConfigParser parser(*tokenizer, filename);
         FAIL() << "Expected std::runtime_error";
     } catch (const std::runtime_error& e) {
         EXPECT_STREQ(e.what(), "} server {: Syntax error : line 1");
@@ -153,8 +177,9 @@ TEST_F(ConfigParserTest, UnmatchedBracesError3) {
     )";  // Extra closing brace
 
     try {
-        auto tokenizer = createTokenizerFromConfig(config);
-        ConfigParser parser(*tokenizer);
+        std::string filename;
+        ConfigTokenizer* tokenizer = makeTok(config, filename);
+        ConfigParser parser(*tokenizer, filename);
         FAIL() << "Expected std::runtime_error";
     } catch (const std::runtime_error& e) {
         EXPECT_STREQ(e.what(), "{: Config brace close error: line2");
@@ -170,8 +195,9 @@ TEST_F(ConfigParserTest, ConfigFileBeginningError) {
     )";  // Extra closing brace
 
     try {
-        auto tokenizer = createTokenizerFromConfig(config);
-        ConfigParser parser(*tokenizer);
+        std::string filename;
+        ConfigTokenizer* tokenizer = makeTok(config, filename);
+        ConfigParser parser(*tokenizer, filename);
         FAIL() << "Expected std::runtime_error";
     } catch (const std::runtime_error& e) {
         EXPECT_STREQ(e.what(), "listen: Syntax error: line2");
@@ -188,9 +214,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid port number
@@ -201,9 +229,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid port number
@@ -214,9 +244,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error1
@@ -227,9 +259,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error2
@@ -240,9 +274,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error3
@@ -253,9 +289,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error4
@@ -266,9 +304,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error5
@@ -279,9 +319,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid server block member error6
@@ -292,9 +334,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error1
@@ -307,9 +351,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error2
@@ -323,9 +369,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error3
@@ -338,9 +386,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error4
@@ -353,9 +403,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error5
@@ -368,9 +420,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error6
@@ -383,9 +437,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - invalid location block member error7
@@ -398,9 +454,11 @@ server {
 }
 )";
 
-    auto tokenizer = createTokenizerFromConfig(config);
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
 
-    EXPECT_THROW({ ConfigParser parser(*tokenizer); }, std::runtime_error);
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
 // Test error handling - no listen in server block
@@ -427,15 +485,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -464,15 +526,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -498,15 +564,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -535,15 +605,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -572,15 +646,19 @@ server {
     ofs.close();
 
     testing::internal::CaptureStderr();
-    Config config(confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
+    Config config(
+        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
     std::string output = testing::internal::GetCapturedStderr();
 
     // デバッグ表示
     std::cerr << "Captured stderr:\n" << output << std::endl;
 
     // エラー文の一部を検出
-    EXPECT_NE(output.find("[ server removed: server or location block member error ]"), std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output << "]";
+    EXPECT_NE(output.find(
+                  "[ server removed: server or location block member error ]"),
+              std::string::npos)
+        << "Expected error message not found. Actual output:\n[" << output
+        << "]";
 
     std::remove(confFile.c_str());
 }
@@ -601,9 +679,10 @@ TEST_F(ConfigParserTest, ThrowErrMethod) {
 
 // Test empty configuration
 TEST_F(ConfigParserTest, EmptyConfiguration) {
-    auto tokenizer = createTokenizerFromConfig("");
-    ConfigParser parser(*tokenizer);
-    const auto& servers = parser.getServer();
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok("", filename);
+    ConfigParser parser(*tokenizer, filename);
+    const std::vector<ServerContext>& servers = parser.getServer();
 
     EXPECT_EQ(servers.size(), 0);
 }

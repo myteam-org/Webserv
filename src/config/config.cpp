@@ -1,11 +1,24 @@
 #include "config/config.hpp"
 
 #include <cstddef>
+#include <string>
 
 #include "data.hpp"
 #include "documentRootConfig.hpp"
 #include "locationContext.hpp"
 #include "serverContext.hpp"
+
+namespace {
+static std::string normalizeHostKey(const std::string& host) {
+    if (host.empty()) {
+        return "127.0.0.1";
+    }
+    if (host == "localhost") {
+        return "127.0.0.1";
+    }
+    return host;
+}
+} // namespace
 
 struct ConfigServerValueErrorEraser {
    private:
@@ -23,31 +36,33 @@ struct ConfigServerValueErrorEraser {
 
 struct ConfigServerDuplicateErrorEraser {
    private:
-    std::vector<int>* seenListenValue;
+    std::vector<std::pair<std::string, int> >* seenHostPlusListen;
 
    public:
-    explicit ConfigServerDuplicateErrorEraser(std::vector<int>* seen)
-        : seenListenValue(seen) {}
+    explicit ConfigServerDuplicateErrorEraser(
+        std::vector<std::pair<std::string, int> >* seen)
+        : seenHostPlusListen(seen) {}
 
     bool operator()(const ServerContext& server) {
         const int listen = server.getListen();
+        const std::string hostKey = normalizeHostKey(server.getHost());
 
-        for (std::vector<int>::iterator it = seenListenValue->begin();
-             it != seenListenValue->end(); ++it) {
-            if (*it == listen) {
+        for (std::vector<std::pair<std::string, int> >::iterator it = seenHostPlusListen->begin();
+             it != seenHostPlusListen->end(); ++it) {
+            if (it->second == listen && it->first == hostKey) {
                 std::cerr << "[ server removed: listen port "
                              "duplicate error ]"
                           << std::endl;
                 return (true);
             }
         }
-        seenListenValue->push_back(listen);
+        seenHostPlusListen->push_back(std::make_pair(hostKey, listen));
         return (false);
     }
 };
 
 Config::Config(const std::string& filename)
-    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_) {
+    : tokenizer_(const_cast<std::string&>(filename)), parser_(tokenizer_, filename) {
     checkAndEraseServerNode();
     removeDuplicateListenServers(this->parser_.getServer());
 }
@@ -106,7 +121,7 @@ bool Config::checkAndEraseLocationNode(const ServerContext& server) {
 }
 
 void Config::removeDuplicateListenServers(std::vector<ServerContext>& servers) {
-    std::vector<int> seenListenValue;
+    std::vector<std::pair<std::string, int> > seenListenValue;
 
     servers.erase(
         std::remove_if(servers.begin(), servers.end(),

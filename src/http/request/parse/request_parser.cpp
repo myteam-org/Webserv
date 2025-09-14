@@ -35,6 +35,7 @@ RequestParser::parseRequestLine() {
     }
     const std::string& line = ctx_->getRequestLine();
     std::istringstream iss(line);
+
     std::string methodStr;
     std::string target;
     std::string ver;
@@ -66,7 +67,7 @@ RequestParser::parseHeaders() {
     if (headersParsed_) {
         return types::ok(types::Unit());
     }
-    headers_ = ctx_->getHeaders(); // 既にキーは lower-case 格納前提
+    headers_ = ctx_->getHeaders(); // 既にキーは lower-case で格納されている想定
 
     if (!checkMissingHost()) {
         return types::err(error::kBadRequest);
@@ -124,9 +125,13 @@ http::HttpMethod RequestParser::getMethod() const { return method_; }
 
 types::Result<http::Request, error::AppError>
 RequestParser::buildRequest() const {
+    // request line / headers は最低限必要
     if (!requestLineParsed_ || !headersParsed_) {
         return types::err(error::kBadRequest);
     }
+    // body はメソッドや Transfer-Encoding により後で読むケースもあるので必須とはしない場合もある
+    // 必須にしたい場合は !bodyParsed_ チェックを追加
+
     types::Result<const LocationContext*, error::AppError> locResult =
         chooseLocation(pathOnly_);
     if (locResult.isErr()) {
@@ -134,11 +139,12 @@ RequestParser::buildRequest() const {
     }
     const LocationContext* loc = locResult.unwrap();
 
-    // ★ 修正: 現行 Request コンストラクタ (6 引数) に合わせる
-    // Request が内部で requestTarget_ を split して path/query を設定する想定。
+    // Request は 8 引数 (pathOnly, queryString を明示的に渡す)
     http::Request req(
         method_,
         requestTarget_,
+        pathOnly_,
+        queryString_,
         headers_,
         body_,
         &ctx_->getServer(),
@@ -167,7 +173,7 @@ bool RequestParser::validateContentLength() const {
 }
 
 bool RequestParser::validateTransferEncoding() const {
-    return true; // 簡易
+    return true; // 必要なら将来 chunked 等の厳密判定を実装
 }
 
 types::Result<types::Unit, error::AppError>

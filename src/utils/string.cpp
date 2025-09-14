@@ -1,6 +1,7 @@
 #include "string.hpp"
 
 #include <cctype>
+#include <vector>
 
 static const size_t HEX = 16;
 static const size_t TEN = 10;
@@ -19,6 +20,9 @@ std::string utils::toLower(const std::string &str) {
 }
 
 std::string utils::trim(const std::string &str) {
+    if (str.empty()) {
+        return std::string();
+    }
     std::string::size_type start = 0;
     while (start < str.size() &&
            std::isspace(static_cast<unsigned char>(str[start]))) {
@@ -55,6 +59,24 @@ types::Result<std::size_t, error::AppError> utils::parseHex(
     return types::ok(result);
 }
 
+std::string utils::joinPath(const std::string &leftPath,
+                            const std::string &rightPath) {
+    if (leftPath.empty()) {
+        return rightPath;
+    }
+    if (rightPath.empty()) {
+        return leftPath;
+    }
+
+    if (leftPath[leftPath.size() - 1] == '/' && rightPath[0] == '/') {
+        return leftPath + rightPath.substr(1);
+    }
+    if (leftPath[leftPath.size() - 1] != '/' && rightPath[0] != '/') {
+        return leftPath + "/" + rightPath;
+    }
+    return leftPath + rightPath;
+}
+
 bool utils::containsNonDigit(const std::string &val) {
     for (std::size_t i = 0; i < val.size(); ++i) {
         const char chr = val[i];
@@ -64,4 +86,35 @@ bool utils::containsNonDigit(const std::string &val) {
         }
     }
     return false;
+}
+
+std::string utils::normalizePath(const std::string &path) {
+    std::vector<std::string> parts;
+    std::istringstream iss(path);
+    std::string token;
+
+    while (std::getline(iss, token, '/')) {
+        if (token.empty() || token == ".") {
+            continue;
+        }
+        if (token == "..") {
+            if (!parts.empty()) {
+                parts.pop_back();  // one level up
+            }
+        } else {
+            parts.push_back(token);
+        }
+    }
+
+    if (path.empty()) {
+        return "";
+    }
+    std::string result = path[0] == '/' ? "/" : "";
+    for (size_t i = 0; i < parts.size(); ++i) {
+        result += parts[i];
+        if (i + 1 != parts.size()) {
+            result += "/";
+        }
+    }
+    return result;
 }

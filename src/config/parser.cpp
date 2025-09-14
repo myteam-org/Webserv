@@ -101,8 +101,12 @@ void ConfigParser::setPort_(ServerContext& server, size_t& index) {
 
     if (this->tokens_[index].getType() == VALUE &&
         Validator::number(portNumber, LISTEN)) {
+            if (server.getListen() != 0) {
+                throwErr(portNumber, 
+                    ": Multiple ports on a single virtual server are not supported: line",
+                    this->tokens_[index].getLineNumber());
+            }
         server.setListen(static_cast<u_int16_t>(atoi(portNumber.c_str())));
-
     } else {
         throwErr(portNumber, ": port value error: line",
                  this->tokens_[index].getLineNumber());

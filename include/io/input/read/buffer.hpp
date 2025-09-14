@@ -19,6 +19,7 @@ public:
     typedef types::Result<std::size_t, error::AppError> LoadResult;
     LoadResult load();
     size_t size() const;
+    LoadResult ReadBuffer::fillAvailable();
 
 private:
     std::vector<char> buf_;

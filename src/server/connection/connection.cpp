@@ -2,12 +2,21 @@
 #include <ctime>
 #include "io/input/reader/fd.hpp"
 
-Connection::Connection(int fd, const ISocketAddr& peerAddr)
-    : connSock_(fd, peerAddr),
-      connState_(0),
-      readBuffer_(connSock_),
-      writeBuffer_(connSock_),
-      lastRecv_(std::time(0)) {}
+// Connection::Connection(int fd, const ISocketAddr& peerAddr)
+//     : connSock_(fd, peerAddr),
+//       connState_(0),
+//       readBuffer_(connSock_),
+//       writeBuffer_(connSock_),
+//       lastRecv_(std::time(0)) {}
+
+Connection::Connection(int fd, const ISocketAddr& peerAddr,
+                       http::config::IConfigResolver& resolver)
+    : connSock_(fd, peerAddr)
+    , connState_(0)
+    , readBuffer_(connSock_)
+    , writeBuffer_(connSock_)
+    , requestReader_(resolver)
+    , lastRecv_(std::time(0)) {}
 
 Connection::~Connection() {
     if (connState_) {
@@ -57,6 +66,21 @@ void Connection::setLastRecv(time_t lastRecvVal) {
 bool Connection::isTimeout() const {
     time_t now = std::time(0);
     return (now - lastRecv_) > kTimeoutThresholdSec;
+}
+
+bool Connection::hasPending() const { 
+    return !pending_.empty();
+}
+http::Request& Connection::front(){ 
+    return pending_.front();
+}
+
+void Connection::popFront() { 
+    pending_.pop_front();
+}
+
+void Connection::pushCompleted(http::Request req) { 
+    pending_.push_back(req);
 }
 
 // void Connection::adoptReadBuffer(ReadBuffer* readBuffer) {

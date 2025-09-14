@@ -4,6 +4,12 @@
 #include "http/virtual_server.hpp"
 #include "server/socket/ServerSocket.hpp"
 #include "server/fileDescriptor/FdRegistry.hpp"
+#include "io/handler/IFdHandler.hpp"
+#include "io/handler/ClientHandler.hpp"
+#include "io/handler/CgiStdinHandler.hpp"
+#include "io/handler/CgiStdoutHandler.hpp"
+#include "io/handler/Listenhandler.hpp"
+#include "http/config/config_resolver.hpp";
 
 
 struct ListenerKey {
@@ -26,14 +32,16 @@ class Server {
         types::Result<types::Unit,int> initVirtualServers();
         types::Result<types::Unit,int> wireListenersToServers();
         void acceptLoop(int lfd);
-
+        http::config::IConfigResolver& resolver();
     private:
         std::vector<ServerContext> serverCtxs_;
         EpollEventNotifier epollNotifier_;
         ConnectionManager connManager_;
         FdRegistry fdRegister_;
+        IFdHandler* handlers_[4];
         std::map<std::string, VirtualServer*> virtualServers_;
         std::map<ListenerKey, ServerSocket*> listeners_; 
+        http::config::ConfigResolver resolver_;  ;
 };
 
 std::string canonicalizeIp(const std::string& hostName);

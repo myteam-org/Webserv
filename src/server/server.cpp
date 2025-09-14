@@ -6,7 +6,13 @@
 Server::Server(const std::vector<ServerContext>& serverCtxs) 
     : serverCtxs_(serverCtxs), 
     epollNotifier_(), 
-    connManager_() {}
+    connManager_(),
+    resolver_(serverCtxs_) {
+    handlers_[FD_LISTENER]   = new ListenerHandler(this);
+    handlers_[FD_CLIENT]     = new ClientHandler(this);
+    handlers_[FD_CGI_STDIN]  = new CgiStdinHandler(this);
+    handlers_[FD_CGI_STDOUT] = new CgiStdoutHandler(this);
+}
 
 types::Result<types::Unit, int> Server::init() {
     TRY(epollNotifier_.open());
@@ -69,14 +75,20 @@ types::Result<types::Unit,int> Server::run() {
             const EpollEvent& ev = evs[i];
             const int fd         = ev.getUserFd();
             const uint32_t mask  = ev.getEvents();
-
-            if (fdRegister_.is(fd, FD_LISTENER)) {
-                if (mask & (EPOLLERR | EPOLLHUP)) {
-                    continue;
-                }
-                acceptLoop(fd);        // 非ブロッキング accept を EAGAIN まで
+            FdEntry ent;
+            if (!fdRegister_.find(fd, &ent)) {
+                // epollDelClose(fd);
                 continue;
             }
+            IFdHandler* fdEventHandler = handlers_[ent.kind];
+            fdEventHandler->onEvent(ent, mask);
+            // if (fdRegister_.is(fd, FD_LISTENER)) {
+            //     if (mask & (EPOLLERR | EPOLLHUP)) {
+            //         continue;
+            //     }
+            //     acceptLoop(fd);        // 非ブロッキング accept を EAGAIN まで
+            //     continue;
+            // }
             // if (fdRegister_.is(fd, FD_CGI_STDIN)) {       // CGI stdin (書き込み側=サーバから見てOUT)
             //     Connection* c = connManager_.getByCgiIn(fd);
             //     if (!c) { safeDropUnknownFd(fd); continue; }
@@ -92,38 +104,38 @@ types::Result<types::Unit,int> Server::run() {
             //     continue;
             // }
 
-            types::Result<Connection *, std::string> conRes = connManager_.getConnectionByFd(fd);
-            if (conRes.isErr()) {
-                 //safedrop();
-                 continue;
-            }
-            Connection* conn = conRes.unwrap();
-            if (mask & (EPOLLERR | EPOLLHUP)) { 
-                c->onHangup();
-                continue; 
-            }
-            if (mask & EPOLLRDHUP) { 
-                c->onPeerHalfClose();
-            }
-            if (mask & EPOLLIN) { // RequestReader→pending_
-                c->onReadable();
-            }
-            if (conn->hasPending()) {
-                dispatcher_.ensureVhost(*conn); // ヘッダ揃った後に一度だけ
-                DispatchResult dr = dispatcher_.dispatchNext(*conn);
-                if (dr.next == DispatchResult::kArmOut) {
-                    epollNotifier_.mod(fd, EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLERR);
-                } else if (dr.next == DispatchResult::kStartCgi) {
-            // CGI の fd を epoll 登録 & レジストリ登録
-                fdRegister_.add(dr.cgi_in_w,  FD_CGI_STDIN,  conn);
-                fdRegister_.add(dr.cgi_out_r, FD_CGI_STDOUT, conn);
-                epollNotifier_.add(dr.cgi_in_w,  EPOLLOUT | EPOLLERR);
-                epollNotifier_.add(dr.cgi_out_r, EPOLLIN  | EPOLLERR);
-                }
-            }
-            if (mask & EPOLLOUT) { 
-                c->onWritable(); 
-            }
+            // types::Result<Connection *, std::string> conRes = connManager_.getConnectionByFd(fd);
+            // if (conRes.isErr()) {
+            //      //safedrop();
+            //      continue;
+            // }
+            // Connection* conn = conRes.unwrap();
+            // if (mask & (EPOLLERR | EPOLLHUP)) { 
+            //     c->onHangup();
+            //     continue; 
+            // }
+            // if (mask & EPOLLRDHUP) { 
+            //     c->onPeerHalfClose();
+            // }
+            // if (mask & EPOLLIN) { // RequestReader→pending_
+            //     c->onReadable();
+            // }
+            // if (conn->hasPending()) {
+            //     dispatcher_.ensureVhost(*conn); // ヘッダ揃った後に一度だけ
+            //     DispatchResult dr = dispatcher_.dispatchNext(*conn);
+            //     if (dr.next == DispatchResult::kArmOut) {
+            //         epollNotifier_.mod(fd, EPOLLIN|EPOLLOUT|EPOLLRDHUP|EPOLLERR);
+            //     } else if (dr.next == DispatchResult::kStartCgi) {
+            // // CGI の fd を epoll 登録 & レジストリ登録
+            //     fdRegister_.add(dr.cgi_in_w,  FD_CGI_STDIN,  conn);
+            //     fdRegister_.add(dr.cgi_out_r, FD_CGI_STDOUT, conn);
+            //     epollNotifier_.add(dr.cgi_in_w,  EPOLLOUT | EPOLLERR);
+            //     epollNotifier_.add(dr.cgi_out_r, EPOLLIN  | EPOLLERR);
+            //     }
+            // }
+            // if (mask & EPOLLOUT) { 
+            //     c->onWritable(); 
+            // }
         }
         // sweepTimeouts(); // ヘッダ/ボディ/CGI ごとの壁時計タイムアウトで close
     }
@@ -144,10 +156,10 @@ void Server::acceptLoop(int lfd) {
         }
         peer.setLength(len);
         set_nonblock_and_cloexec(cfd);
-        Connection* c = new Connection(cfd, peer);
-        connManager_.registerConnection(c);
+        Connection* conn = new Connection(cfd, peer, this->resolver());
+        connManager_.registerConnection(conn);
         epollNotifier_.add(cfd, EPOLLIN | EPOLLRDHUP | EPOLLERR);
-        fdRegister_.add(cfd, FD_CLIENT, c);
+        fdRegister_.add(cfd, FD_CLIENT, conn);
     }
 }
 
@@ -157,4 +169,8 @@ std::string canonicalizeIp(const std::string& hostName) {
         return "0.0.0.0";
     SocketAddr sa = SocketAddr::createIPv4(hostName, 0);
     return sa.getAddress();
+}
+
+http::config::IConfigResolver&  Server::resolver() { 
+    return resolver_;
 }

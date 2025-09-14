@@ -4,6 +4,7 @@
 #include "http/response/response.hpp"
 #include "http/response/builder.hpp"
 #include "server/connection/Connection.hpp"
+#include "http/virtual_server.hpp"
 
 class RequestDispatcher {
 public:
@@ -23,7 +24,7 @@ public:
 private:
     DispatchResult dispatchNext(Connection& c, http::Request& req);
     DispatchResult handleGet(Connection& c, const http::Request& req);
-    DispatchResult handleHead(Connection& c, const http::Request& req);
+    // DispatchResult handleHead(Connection& c, const http::Request& req);
     DispatchResult handlePost(Connection& c, const http::Request& req);
     DispatchResult handleDelete(Connection& c, const http::Request& req);
     // CGI
@@ -35,6 +36,7 @@ private:
     bool isCgiTarget(const std::string& path) const;
     // 便利関数（パス解決などは雑にモック）
     std::string resolveTargetPath(Connection& c) const;
+    std::string resolveFilesystemPath(const http::Request& req) const;
     bool wantsCgi(Connection& c) const;
     bool isHead(Connection& c) const;
 };

@@ -18,8 +18,8 @@ class DummyResolver : public http::config::IConfigResolver {
 
 RawHeaders makeValidHeaders() {
   RawHeaders headers;
-  headers["Host"] = "localhost";
-  headers["Content-Length"] = "5";
+  headers["host"] = "localhost";
+  headers["content-length"] = "5";
   return headers;
 }
 
@@ -63,7 +63,7 @@ TEST(RequestParserTest, ReturnsErrorWhenHostMissing) {
   types::Result<types::Unit, error::AppError> result = parser.parseHeaders();
 
   EXPECT_TRUE(result.isErr());
-  EXPECT_EQ(result.unwrapErr(), error::kMissingHost);
+  EXPECT_EQ(result.unwrapErr(), error::kBadRequest);
 }
 
 // テスト：parseBody

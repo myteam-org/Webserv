@@ -1,4 +1,5 @@
 #include "config/config.hpp"
+#include "server/Server.hpp"
 
 int main(int argc, char** argv) {
         if (!Config::checkArgc(argc)) {
@@ -11,6 +12,9 @@ int main(int argc, char** argv) {
         try {
                 const Config config(confFile);
                 config.printParser();
+                Server server(config.getParser().getServer());
+                server.init();
+                server.run();
         } catch (const std::exception& e) {
                 std::cerr << e.what() << std::endl;
                 return (1);

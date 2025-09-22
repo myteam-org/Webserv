@@ -1,6 +1,7 @@
 NAME	= webserv
 CPP	= c++
 CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
+DBGFLAGS := -g -O0
 # CPPFLAG += -g -fsanitize=address
 INC_DIR	= include
 SRCS	= 	src/config/tokenizer.cpp \
@@ -72,6 +73,9 @@ SRCS	= 	src/config/tokenizer.cpp \
 
 OBJS	= $(SRCS:.cpp=.o)
 
+debug: CPPFLAG += $(DBGFLAGS)
+debug: $(NAME)
+
 %.o: %.cpp
 	$(CPP) $(CPPFLAG) -I$(INC_DIR) -c $< -o $@
 
@@ -87,5 +91,7 @@ fclean: clean
 	rm -f $(NAME)
 
 re: fclean all
+
+
 
 .PHONY: all re clean fclean

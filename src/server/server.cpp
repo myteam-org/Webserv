@@ -9,11 +9,18 @@ Server::Server(const std::vector<ServerContext>& serverCtxs)
     connManager_(),
     dispatcher_(0),
     resolver_(serverCtxs_),
-    endpointResolver_(vsByKey_) {
+    endpointResolver_(vsByKey_) {   
     handlers_[FD_LISTENER]   = new ListenerHandler(this);
     handlers_[FD_CLIENT]     = new ClientHandler(this);
     handlers_[FD_CGI_STDIN]  = new CgiStdinHandler(this);
     handlers_[FD_CGI_STDOUT] = new CgiStdoutHandler(this);
+}
+
+Server::~Server() {
+    delete handlers_[FD_LISTENER];
+    delete handlers_[FD_CLIENT];
+    delete handlers_[FD_CGI_STDIN];
+    delete handlers_[FD_CGI_STDOUT];
 }
 
 types::Result<types::Unit, int> Server::init() {
@@ -82,8 +89,9 @@ types::Result<types::Unit,int> Server::initDispatcher() {
 types::Result<types::Unit,int> Server::run() {
     for (;;) {
         types::Result<std::vector<EpollEvent>, int> r = epollNotifier_.wait(); // 200ms など
-        if (r.isErr()) return types::err<int>(r.unwrapErr());
-
+        if (r.isErr()) {
+            return types::err<int>(r.unwrapErr());
+        }
         const std::vector<EpollEvent>& evs = r.unwrap();
         for (size_t i = 0; i < evs.size(); ++i) {
             const EpollEvent& ev = evs[i];

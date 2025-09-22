@@ -17,6 +17,7 @@ public:
     // CGI stdout/ stdin 用のモック（今は形だけ）
     DispatchResult onCgiStdout(Connection& c);
     DispatchResult onCgiStdin(Connection& c);
+    DispatchResult RequestDispatcher::emitError(Connection& c, http::HttpStatusCode status, const std::string& plain);
 
 private:
     // std::map<std::string, VirtualServer*> vServers_;
@@ -29,4 +30,5 @@ private:
     bool shouldClose(const http::Request& req) const;
     bool isCgiTarget(const std::string& path) const;
     bool wantsCgi(Connection& c) const;
+    http::Response RequestDispatcher::buildErrorResponse(VirtualServer* vs, http::HttpStatusCode status, const std::string& plain);
 };

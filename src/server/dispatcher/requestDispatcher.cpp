@@ -1,10 +1,5 @@
 #include "server/dispatcher/RequestDispatcher.hpp"
 
-//直列化した文字列を積む
-// void pushRawToWriteBuffer(Connection& c, const std::string& bytes) {
-//         c.getWriteBuffer().append(bytes);
-// }
-
 DispatchResult RequestDispatcher::step(Connection& c) {
     if (!c.hasPending()) {
         return DispatchResult::kNone;
@@ -68,6 +63,27 @@ DispatchResult RequestDispatcher::onCgiStdin(Connection& /*c*/) {
 void RequestDispatcher::enqueueResponse(Connection& c, const http::Response& resp) {
     const std::string raw = const_cast<http::Response&>(resp).toString();
     c.getWriteBuffer().append(raw);
+}
+
+DispatchResult RequestDispatcher::emitError(Connection& c,
+                                            http::HttpStatusCode status,
+                                            const std::string& plain) {
+    VirtualServer* vs = resovler_.resolveByFd(c.getFd());
+    http::Response resp = buildErrorResponse(vs, status, plain);
+    // エラーは基本 close（nginx も 400/414/431/413 等は close 方向）
+    c.markCloseAfterWrite();
+    enqueueResponse(c, resp);
+    return DispatchResult::ArmOut();
+}
+
+http::Response RequestDispatcher::buildErrorResponse(
+        VirtualServer* vs, http::HttpStatusCode status, const std::string& plain) {
+    // TODO: vs に error_page 設定があればファイルを読み込み、
+    //             body/Content-Type を差し替える処理をここに追加
+    http::ResponseBuilder rb;
+    rb.status(status).header("Content-Type", "text/plain");
+    rb.text(plain, status);
+    return rb.build();
 }
 
 // bool RequestDispatcher::wantsCgi(Connection& c) const {

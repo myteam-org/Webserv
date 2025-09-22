@@ -1,7 +1,7 @@
 #pragma once
 
-#include "internal.hpp"
-#include "middleware/chain.hpp"
+#include "http/handler/router/internal.hpp"
+#include "http/handler/router/middleware/chain.hpp"
 
 namespace http {
     class Router : public IHandler {

@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include "cgi.hpp"
+#include "http/handler/file/cgi.hpp"
 #include "config/context/documentRootConfig.hpp"
 #include "utils/path.hpp"
 #include "utils/string.hpp"

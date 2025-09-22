@@ -1,4 +1,4 @@
-#include "delete.hpp"
+#include "http/handler/file/delete.hpp"
 #include "http/response/builder.hpp"
 #include "utils/logger.hpp"
 #include <sys/stat.h>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "buffer.hpp"
-#include "context.hpp"
-#include "state.hpp"
+#include "io/input/read/buffer.hpp"
+#include "http/request/read/context.hpp"
+#include "http/request/read/state.hpp"
 
 namespace http {
 

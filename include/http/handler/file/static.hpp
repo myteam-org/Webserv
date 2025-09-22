@@ -1,8 +1,8 @@
 #pragma once
 
-#include "handler.hpp"
+#include "http/handler/handler.hpp"
 #include "config/config.hpp"
-#include "result.hpp"
+#include "utils/types/result.hpp"
 
 namespace http {
 

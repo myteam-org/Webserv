@@ -1,6 +1,6 @@
 #pragma once
 #include "http/request/request.hpp"
-#include "either.hpp"
+#include "utils/types/either.hpp"
 #include "action/action.hpp"
 #include "http/response/response.hpp"
 

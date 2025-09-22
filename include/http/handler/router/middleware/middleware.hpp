@@ -1,6 +1,6 @@
 #pragma once
-#include "action.hpp"
-#include "handler.hpp"
+#include "action/action.hpp"
+#include "http/handler/handler.hpp"
 
 namespace http {
     class IMiddleware {

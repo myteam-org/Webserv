@@ -1,7 +1,7 @@
 #pragma once
 
-#include "response.hpp"
-#include "response_headers.hpp"
+#include "http/response/response.hpp"
+#include "http/response/response_headers.hpp"
 #include "http/status.hpp"
 #include "utils/types/option.hpp"
 #include <sstream>

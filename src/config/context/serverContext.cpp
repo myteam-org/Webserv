@@ -1,4 +1,4 @@
-#include "serverContext.hpp"
+#include "config/context/serverContext.hpp"
 
 ServerContext::ServerContext(const std::string& text)
     : value_(text), listen_(0), clientMaxBodySize_(MAX_BODY_SIZE), host_("127.0.0.1") {

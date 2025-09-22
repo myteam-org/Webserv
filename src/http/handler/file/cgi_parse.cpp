@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "cgi.hpp"
+#include "http/handler/file/cgi.hpp"
 #include "http/response/builder.hpp"
 #include "utils/string.hpp"
 

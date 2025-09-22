@@ -1,9 +1,8 @@
 #pragma once
 
 #include "config/config.hpp"
-#include "handler/router/builder.hpp"
-#include "handler/router/router.hpp"
-#include "router/router.hpp"
+#include "http/handler/router/builder.hpp"
+#include "http/handler/router/router.hpp"
 
 class VirtualServer {
    public:

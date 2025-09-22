@@ -1,8 +1,6 @@
 #include "server/Server.hpp"
 #include "utils/types/try.hpp"
-
 #include "server/socket/SocketAddr.hpp"
-#include "Server.hpp"
 
 Server::Server(const std::vector<ServerContext>& serverCtxs) 
     : serverCtxs_(serverCtxs), 
@@ -228,8 +226,8 @@ void Server::applyDispatchResult(Connection& c, const DispatchResult& dr) {
     }
 }
 
-
 bool Server::overlapsWildcard(const std::string& a, const std::string& b) {
+
     size_t ca = a.find(':');
     size_t cb = b.find(':');
     if (ca == std::string::npos || cb == std::string::npos) {

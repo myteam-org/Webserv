@@ -1,8 +1,8 @@
 #pragma once
 
-#include "buffer.hpp"
-#include "state.hpp"
-#include "chunked_body.hpp"
+#include "io/input/write/buffer.hpp"
+#include "http/request/read/state.hpp"
+#include "http/request/read/chunked_body.hpp"
 
 namespace http {
 

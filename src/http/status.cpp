@@ -1,5 +1,5 @@
-#include "status.hpp"
-#include "option.hpp"
+#include "http/status.hpp"
+#include "utils/types/option.hpp"
 
 namespace http {
     types::Option<HttpStatusCode> httpStatusCodeFromInt(int code) { // NOLINT

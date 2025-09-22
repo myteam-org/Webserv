@@ -1,4 +1,4 @@
-#include "buffer.hpp"
+#include "io/input/read/buffer.hpp"
 #include "utils/types/try.hpp"
 #include <string>
 #include <algorithm>
@@ -71,25 +71,28 @@ size_t ReadBuffer::size() const {
 // ・内部にstd::vector<char> buf_を持ち、読み込み済みのデータを一時保持する
 
 
-ReadBuffer::LoadResult ReadBuffer::fillAvailable() {
-    std::size_t total = 0;
-    for (;;) {
-        if (reader_.eof()) {
-            break;
-        }
 
-        char tmp[kLoadSize];
-        types::Result<std::size_t, error::AppError> r = reader_.read(tmp, kLoadSize);
-        // if (r.isErr()) {
-        //     // errnoを見ない設計なら基本ここに来ない（致命だけに限るならそのままerr）
-        //     return types::err(r.unwrapErr());
-        // }
-        std::size_t n = r.unwrap();
-        if (n == 0) 
-            break;                 // 進捗なし or EOF → ここで打ち切り
-        // チャンクの途中で打ち切りになった場合でもうまくいくのか？？
-        buf_.insert(buf_.end(), tmp, tmp + n);
-        total += n;
-    }
-    return types::ok(total);
-}
+
+// ReadBuffer::LoadResult ReadBuffer::fillAvailable() {
+//     std::size_t total = 0;
+//     for (;;) {
+//         if (reader_.eof()) {
+//             break;
+//         }
+
+//         char tmp[kLoadSize];
+//         types::Result<std::size_t, error::AppError> r = reader_.read(tmp, kLoadSize);
+//         // if (r.isErr()) {
+//         //     // errnoを見ない設計なら基本ここに来ない（致命だけに限るならそのままerr）
+//         //     return types::err(r.unwrapErr());
+//         // }
+//         std::size_t n = r.unwrap();
+//         if (n == 0) 
+//             break;                 // 進捗なし or EOF → ここで打ち切り
+//         // チャンクの途中で打ち切りになった場合でもうまくいくのか？？
+//         buf_.insert(buf_.end(), tmp, tmp + n);
+//         total += n;
+//     }
+//     return types::ok(total);
+// }
+

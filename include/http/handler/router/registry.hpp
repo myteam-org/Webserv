@@ -2,10 +2,10 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include "method.hpp"
-#include "option.hpp"
-#include "matcher.hpp"
-#include "handler/handler.hpp"
+#include "http/method.hpp"
+#include "utils/types/option.hpp"
+#include "http/handler/matcher.hpp"
+#include "http/handler/handler.hpp"
 
 namespace http {
     class RouteRegistry {

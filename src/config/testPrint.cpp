@@ -1,10 +1,10 @@
 #include <cstddef>
 
 #include "config/config.hpp"
-#include "data.hpp"
-#include "documentRootConfig.hpp"
-#include "locationContext.hpp"
-#include "serverContext.hpp"
+#include "config/data.hpp"
+#include "config/context/documentRootConfig.hpp"
+#include "config/context/locationContext.hpp"
+#include "config/context/serverContext.hpp"
 
 void Config::printServer(const std::vector<ServerContext>& server) {
     for (size_t i = 0; i < server.size(); ++i) {

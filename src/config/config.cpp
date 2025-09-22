@@ -3,10 +3,10 @@
 #include <cstddef>
 #include <string>
 
-#include "data.hpp"
-#include "documentRootConfig.hpp"
-#include "locationContext.hpp"
-#include "serverContext.hpp"
+#include "config/data.hpp"
+#include "config/context/documentRootConfig.hpp"
+#include "config/context/locationContext.hpp"
+#include "config/context/serverContext.hpp"
 
 namespace {
 static std::string normalizeHostKey(const std::string& host) {

@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "parser.hpp"
-#include "tokenizer.hpp"
+#include "config/parser.hpp"
+#include "config/tokenizer.hpp"
 
 Token::Token(const std::string& text, int lineNumber, TokenPosition position)
     : text_(text), lineNumber_(lineNumber), position_(position) {

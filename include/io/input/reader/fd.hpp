@@ -1,6 +1,6 @@
 #pragma once
 
-#include "reader.hpp"
+#include "io/input/reader/reader.hpp"
 #include <cstddef> // for std::size_t
 
 namespace io {

@@ -13,7 +13,7 @@ namespace http {
         kMethodOptions,
         kMethodTrace,
         kMethodConnect,
-        kMethodPatch,
+        kMethodPatch
     };
 
     HttpMethod httpMethodFromString(const std::string &method);

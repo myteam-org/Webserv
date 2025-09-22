@@ -5,12 +5,12 @@
 #include <cstddef>
 #include <stdexcept>
 
-#include "config.hpp"
-#include "locationContext.hpp"
-#include "serverContext.hpp"
-#include "token.hpp"
-#include "tokenizer.hpp"
-#include "validator.hpp"
+#include "config/config.hpp"
+#include "config/context/locationContext.hpp"
+#include "config/context/serverContext.hpp"
+#include "config/token.hpp"
+#include "config/tokenizer.hpp"
+#include "config/validator.hpp"
 
 void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(
     ServerContext&, size_t&) = {

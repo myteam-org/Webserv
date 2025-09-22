@@ -1,8 +1,7 @@
-#include "locationContext.hpp"
+#include "config/context/locationContext.hpp"
 
 #include <string>
-
-#include "data.hpp"
+#include "config/data.hpp"
 
 LocationContext::LocationContext(const std::string& text) : value_(text) {
     this->allowedMethod_[GET] = OFF;

@@ -2,8 +2,8 @@
 
 #include <string>
 
-#include "body.hpp"
-#include "raw_headers.hpp"
+#include "http/request/read/body.hpp"
+#include "http/request/read/raw_headers.hpp"
 
 namespace http {
 namespace parser {

@@ -13,6 +13,6 @@ namespace error {
         kHasContentLengthAndTransferEncoding,
         kcontainsNonDigit,
         kBadLocationContext,
-        kUriTooLong,
+        kUriTooLong
     };
 } // namespace error

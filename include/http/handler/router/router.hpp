@@ -1,6 +1,6 @@
 #pragma once
 
-#include "internal.hpp"
+#include "http/handler/router/internal.hpp"
 #include "middleware/chain.hpp"
 
 namespace http {

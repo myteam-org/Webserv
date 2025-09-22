@@ -1,5 +1,5 @@
 #include "http/request/request.hpp"
-#include "internal.hpp"
+#include "http/handler/router/internal.hpp"
 #include "http/response/builder.hpp"
 namespace http {
     InternalRouter::InternalRouter(const RouteRegistry& registry) 

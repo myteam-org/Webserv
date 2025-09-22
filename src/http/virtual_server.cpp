@@ -1,16 +1,16 @@
-#include "virtual_server.hpp"
+#include "http/virtual_server.hpp"
 
-#include "handler/router/builder.hpp"
+#include "http/handler/router/builder.hpp"
 #include "http/handler/file/cgi.hpp"
 #include "http/handler/file/delete.hpp"
 #include "http/handler/file/redirect.hpp"
 #include "http/handler/file/static.hpp"
 #include "http/handler/file/upload.hpp"
 #include "http/status.hpp"
-#include "middleware/chain.hpp"
-#include "router/middleware/error_page.hpp"
-#include "router/middleware/logger.hpp"
-#include "router/router.hpp"
+#include "http/handler/router/middleware/chain.hpp"
+#include "http/handler/router/middleware/error_page.hpp"
+#include "http/handler/router/middleware/logger.hpp"
+#include "http/handler/router/router.hpp"
 
 VirtualServer::VirtualServer(const ServerContext &serverConfig,
                              const std::string &bindAddress)

@@ -52,6 +52,7 @@ class Server {
         RequestDispatcher *dispatcher_;
         std::map<ListenerKey, ServerSocket*> listeners_; 
         http::config::ConfigResolver resolver_;
+        bool overlapsWildcard(const std::string& a, const std::string& b);
 };
 
 std::string canonicalizeIp(const std::string& hostName);

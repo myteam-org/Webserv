@@ -229,7 +229,7 @@ void Server::applyDispatchResult(Connection& c, const DispatchResult& dr) {
 }
 
 
-bool overlapsWildcard(const std::string& a, const std::string& b) {
+bool Server::overlapsWildcard(const std::string& a, const std::string& b) {
     size_t ca = a.find(':');
     size_t cb = b.find(':');
     if (ca == std::string::npos || cb == std::string::npos) {

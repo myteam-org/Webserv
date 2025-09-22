@@ -9,7 +9,9 @@
 #include "io/handler/CgiStdinHandler.hpp"
 #include "io/handler/CgiStdoutHandler.hpp"
 #include "io/handler/Listenhandler.hpp"
-#include "http/config/config_resolver.hpp";
+#include "http/config/config_resolver.hpp"
+#include "server/dispatcher/RequestDispatcher.hpp"
+#include "server/resolver/EndpointResolver.hpp"
 
 
 struct ListenerKey {
@@ -26,22 +28,30 @@ class Server {
     public:
         Server(const std::vector<ServerContext>&);
         ~Server();
-        types::Result<types::Unit,int> init();
-        types::Result<types::Unit,int> buildListeners();
-        types::Result<types::Unit,int> run();
-        types::Result<types::Unit,int> initVirtualServers();
-        types::Result<types::Unit,int> wireListenersToServers();
+        types::Result<types::Unit, int> init();
+        types::Result<types::Unit, int> buildListeners();
+        types::Result<types::Unit, int> run();
+        types::Result<types::Unit, int> initVirtualServers();
+        types::Result<types::Unit, int> wireListenersToServers();
+        types::Result<types::Unit, int> initDispatcher();
         void acceptLoop(int lfd);
         http::config::IConfigResolver& resolver();
+        void applyDispatchResult(Connection& c, const DispatchResult& dr);
+        void armInOnly(int fd);
+        void armOutOnly(int fd);
+        void armInOut(int fd);
+        RequestDispatcher* getDispatcher() const;
     private:
         std::vector<ServerContext> serverCtxs_;
         EpollEventNotifier epollNotifier_;
         ConnectionManager connManager_;
         FdRegistry fdRegister_;
         IFdHandler* handlers_[4];
-        std::map<std::string, VirtualServer*> virtualServers_;
+        std::map<std::string, VirtualServer*> vsByKey_;
+        EndpointResolver endpointResolver_;
+        RequestDispatcher *dispatcher_;
         std::map<ListenerKey, ServerSocket*> listeners_; 
-        http::config::ConfigResolver resolver_;  ;
+        http::config::ConfigResolver resolver_;
 };
 
 std::string canonicalizeIp(const std::string& hostName);

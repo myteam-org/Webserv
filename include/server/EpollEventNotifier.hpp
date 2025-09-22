@@ -25,6 +25,7 @@ public:
     types::Result<int,int> mod(FileDescriptor& fd, uint32_t mask);
     types::Result<int,int> add(int fd, uint32_t mask);
     types::Result<int,int> mod(int fd, uint32_t mask);
+    types::Result<int,int> del(int fd);
 
 
 };

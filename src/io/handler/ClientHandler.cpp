@@ -1,6 +1,8 @@
 #pragma once
 #include "io/handler/IFdHandler.hpp"
 #include "server/Server.hpp"
+#include "http/request/read/reader.hpp"
+#include "io/input/writer/writer.hpp"
 
 explicit ClientHandler::ClientHandler(Server* s) : srv_(s) {};
 
@@ -18,16 +20,12 @@ void ClientHandler::onEvent(const FdEntry& e, uint32_t m){
     }
     if (m & EPOLLIN) { 
         onReadable(*c);
-        if (c->hasPending()) {
-            DispatchResult dr = srv_->dispatcher().step(*c);
-            srv_->applyDispatchResult(*c, dr);
-        }
+        maybeDispatch(*c);
     }
     if (m & EPOLLOUT) {
         onWritable(*c);
     }
 };
-
 
 void ClientHandler::onReadable(Connection& c) {
     // 1) 読む（WouldBlock まで）
@@ -44,31 +42,64 @@ void ClientHandler::onReadable(Connection& c) {
 
     // 2) 進める（取れるだけ）
     for (;;) {
-        http::StepResult step = c.getRequestReader().tryParseOne(c.getReadBuffer());
-        if (step.isErr()) {
-            failAndClose(c, step.unwrapErr()); // 400等へ
+        const http::RequestReader::ReadRequestResult readRes = c.getRequestReader().readRequest(c.getReadBuffer());
+        if (readRes.isErr()) {
+            failAndClose(c, readRes.unwrapErr()); // 400等へ
             return;
         }
-        const http::ParseProgress& p = step.unwrap();
-        if (p.code == http::ParseProgress::kCompleted) {
-            // 1件完成
-            const http::Request& req = p.req.unwrap();
-            c.pendingPush(req);
-            c.getRequestReader().resetForNext(); // 次のリクエスト準備（パイプライン可）
+        types::Option<http::Request> reqOpt = readRes.unwrap();
+        // request 完成判断
+        if (!reqOpt.isNone()) {
+            const http::Request& req = reqOpt.unwrap();
+            c.pushCreatedReq(req);
             continue; // さらに取れるだけ回す
         }
         // NeedMore
         break;
     }
-
-    // 必要ならここで dispatcher 呼ぶ（front が QUEUED なら、など）
-    maybeDispatch(c);
 }
 
+void ClientHandler::maybeDispatch(Connection& c) {
+    // 先頭がまだ dispatch されておらず、書きかけがない時だけ
+    if (!c.hasPending()) {
+        return;
+    }
+    if (c.isFrontDispatched()) {
+        return;
+    }
+    if (!c.getWriteBuffer().isEmpty()) {
+        return;
+    }
+    DispatchResult dispatchResult = srv_->getDispatcher()->step(c);  // ← ここで markFrontDispatched() も行う（後述）
+    srv_->applyDispatchResult(c, dispatchResult);
+}
 
 void ClientHandler::onWritable(Connection& c) {
-    // c.writeBuffer().flush();
-    // flush完了で popFront(), close 判定
+    WriteBuffer &writeBuffer = c.getWriteBuffer();
+    for (;;) {
+        types::Result<std::size_t, error::AppError>  writeRes = writeBuffer.flush();
+        if (writeRes.isErr()) { 
+            handleWriteError(c, errno);
+            return; 
+        }
+        if (writeRes.unwrap() == 0) {
+            break;
+        }
+    }
+    if (writeBuffer.isEmpty()) {
+        if (c.hasPending()) {
+            c.popFront(); // popでresetFrontDispatched()
+        }
+        if (c.shouldCloseAfterWrite() || c.isPeerHalfClosed()) {
+            srv_->applyDispatchResult(c, DispatchResult::kClose);
+            return;
+        }
+        if (c.hasPending()) {
+            maybeDispatch(c);  // パイプライン前進
+        } else {
+            srv_->armInOnly(c.getFd());
+        }
+    }
 }
 
 void ClientHandler::handleHangup(Connection& c) {
@@ -76,5 +107,5 @@ void ClientHandler::handleHangup(Connection& c) {
 }
 
 void ClientHandler::handlePeerHalfClose(Connection& c) {
-    c.onPeerHalfClose(); // これは Connection 内の状態フラグ更新だけ
+    c.onPeerHalfClose();
 }

@@ -139,3 +139,13 @@ types::Result<int,int> EpollEventNotifier::mod(int fd, uint32_t mask) {
 }
 
 
+types::Result<int,int> EpollEventNotifier::del(int fd) {
+    const types::Option<int> epfdOpt = epoll_fd_.getFd();
+    if (!epfdOpt.canUnwrap()) return ERR(EINVAL);
+
+    EpollEvent ev(0, 0);
+    ev.setUserFd(fd);
+    if (::epoll_ctl(epfdOpt.unwrap(), EPOLL_CTL_DEL, fd, ev.raw()) < 0)
+        return ERR(errno);
+    return OK(0);
+}

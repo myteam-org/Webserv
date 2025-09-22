@@ -1,94 +1,47 @@
 #include "server/dispatcher/RequestDispatcher.hpp"
 
-// ===== あなた側の Connection に依存する最小アダプタ =====
-// 1) 直列化した文字列をどこへ積むか：WriteBuffer 相当の API 名に合わせて差し替えてください。
-namespace {
-    void pushRawToWriteBuffer(Connection& c, const std::string& bytes) {
-        // 例: c.getWriteBuffer().append(bytes);
-        // なければ一時的に:
-        // c.debugAppendWrite(bytes);
-    }
+//直列化した文字列を積む
+// void pushRawToWriteBuffer(Connection& c, const std::string& bytes) {
+//         c.getWriteBuffer().append(bytes);
+// }
 
-    // 2) Request 情報の最小取得：実プロジェクトの API に合わせて差し替え
-    std::string getMethod(const Connection& c);          // "GET","HEAD","POST","DELETE"
-    std::string getRequestTarget(const Connection& c);   // "/index.html" 等
-    std::string getHttpVersion(const Connection& c);     // "HTTP/1.1"
-    bool        headerConnectionClose(const Connection& c); // Connection: close 判定
-}
-
-// ===== RequestDispatcher 実装 =====
 DispatchResult RequestDispatcher::step(Connection& c) {
     if (!c.hasPending()) {
         return DispatchResult::kNone;
     }
     http::Request& req = c.front(); // pending_ の先頭を参照
-    return dispatchNext(c, req);
-}
-
-void RequestDispatcher::ensureVhost(Connection& /*c*/) {
-    // いまはモック：何もしない
+    DispatchResult dispatchResult = dispatchNext(c, req);
+    if (dispatchResult.isArmOut()) {
+        c.markFrontDispatched();
+    }
+    return dispatchResult;
 }
 
 DispatchResult RequestDispatcher::dispatchNext(Connection& c, http::Request& req) {
-    VirtualServer vserver = chooseVServer(req.getServer());
-    Either<IAction*, http::Response> responseRes = vserver.getRouter().serve(req);
-    if (responseRes.isRight()) {
-        enqueue(responseRes.unwrapRight());        // WriteBufferへ
+    VirtualServer *vserver = resovler_.resolveByFd(c.getFd());
+    if (!vserver) { 
+        http::ResponseBuilder rb;
+        rb.status(http::kStatusBadRequest).text("Bad Request", http::kStatusBadRequest);
+        enqueueResponse(c, rb.build());
+        // close方針にするなら:
+        c.markCloseAfterWrite();
         return DispatchResult::ArmOut();
     }
-}
-
-DispatchResult RequestDispatcher::handleGet(Connection& c, const http::Request& req) {
-    const std::string fs = resolveFilesystemPath(req);
-
+    Either<IAction*, http::Response> responseRes = vserver->getRouter().serve(req);
+    if (responseRes.isRight()) {
+        http::Response resp = responseRes.unwrapRight();
+        // 接続方針を Connection に伝える
+        if (shouldClose(req)) {
+            c.markCloseAfterWrite();
+        }
+        enqueueResponse(c, resp);        // WriteBufferへ
+        return DispatchResult::ArmOut();
+    }
+    //To Do : cgi 処理など
     http::ResponseBuilder rb;
-    rb.file(fs, http::kStatusOk); // your builder: 404/CT/CL を面倒見てくれる実装
-    if (shouldClose(req)) rb.header("Connection", "close");
+    rb.status(http::kStatusNotImplemented).text("Not Implemented", http::kStatusNotImplemented);
     enqueueResponse(c, rb.build());
-    return DispatchResult::kArmOut;
-}
-
-// DispatchResult RequestDispatcher::handleHead(Connection& c, const http::Request& req) {
-//     const std::string fs = resolveFilesystemPath(req);
-//     size_t sz = 0;
-//     http::ResponseBuilder rb;
-
-//     // HEAD: GET と同じヘッダ + ボディ無し
-//     if (statFileSize(fs, sz)) {
-//         rb.status(http::kStatusOk)
-//           .header("Content-Type", detectMime(fs))
-//           .header("Content-Length", utils::toString(sz)); // ★先にCLを入れる
-//         // body は none のまま（ResponseBuilder::build が CL を維持する）
-//     } else {
-//         rb.status(http::kStatusNotFound)
-//           .header("Content-Type", "text/plain; charset=UTF-8")
-//           .header("Content-Length", "0"); // ボディ無し
-//     }
-
-//     if (shouldClose(req)) rb.header("Connection", "close");
-//     enqueueResponse(c, rb.build());
-//     return DispatchResult::kArmOut;
-// }
-
-DispatchResult RequestDispatcher::handlePost(Connection& c, const http::Request& req) {
-    // 本番は upload_path に書き出す/CGI へ渡す。
-    // まずは通電目的のモック: 201 Created
-    http::ResponseBuilder rb;
-    rb.status(http::kStatusCreated)
-      .text("created", http::kStatusCreated);
-    if (shouldClose(req)) rb.header("Connection", "close");
-    enqueueResponse(c, rb.build());
-    return DispatchResult::kArmOut;
-}
-
-DispatchResult RequestDispatcher::handleDelete(Connection& c, const http::Request& req) {
-    // 本番は unlink()。まずはモック: 200 OK
-    http::ResponseBuilder rb;
-    rb.status(http::kStatusOk)
-      .text("deleted", http::kStatusOk);
-    if (shouldClose(req)) rb.header("Connection", "close");
-    enqueueResponse(c, rb.build());
-    return DispatchResult::kArmOut;
+    return DispatchResult::ArmOut();
 }
 
 DispatchResult RequestDispatcher::startCgi(Connection& /*c*/, const std::string& /*scriptPath*/) {
@@ -114,48 +67,14 @@ DispatchResult RequestDispatcher::onCgiStdin(Connection& /*c*/) {
 
 void RequestDispatcher::enqueueResponse(Connection& c, const http::Response& resp) {
     const std::string raw = const_cast<http::Response&>(resp).toString();
-    pushRawToWriteBuffer(c, raw);
+    c.getWriteBuffer().append(raw);
 }
 
-// bool RequestDispatcher::shouldKeepAlive(Connection& c) const {
-//     const std::string ver = getHttpVersion(c);
-//     if (ver == "HTTP/1.1") return !headerConnectionClose(c);
-//     // HTTP/1.0 はデフォルト close。Keep-Alive ヘッダがあるなら維持（モックでは非対応）
-//     return false;
-// }
-
-// std::string RequestDispatcher::resolveFilesystemPath(const http::Request& req) const {
-//     const DocumentRootConfig* docRoot = req.getDocumentRoot();
-//     std::string base = docRoot ? docRoot->getRoot() : "./www";
-//     std::string path = req.getPath(); // 例: "/index.html" or "/docs/"
-
-//     // ディレクトリなら index.html を補う
-//     if (!path.empty() && path[path.size()-1] == '/') {
-//         const std::string indexFile = docRoot ? docRoot->getIndex() : "index.html";
-//         path += indexFile;
-//     }
-//     // ディレクトリトラバーサル防止: "../" を潰す
-//     path = utils::normalizePath(path);
-//     return base + path;
-// }
-
-
-// std::string RequestDispatcher::resolveTargetPath(Connection& c) const {
-//     // 通常は vhost + location でルート解決
+// bool RequestDispatcher::wantsCgi(Connection& c) const {
 //     const std::string uri = getRequestTarget(c);
-//     if (uri == "/" || uri.empty()) return "./www/index.html";
-//     return std::string("./www") + uri; // モック
+//     // 超簡易：.cgi とか .py なら CGI とみなす
+//     const std::string::size_type dot = uri.rfind('.');
+//     if (dot == std::string::npos) return false;
+//     const std::string ext = uri.substr(dot);
+//     return (ext == ".cgi" || ext == ".py" || ext == ".php");
 // }
-
-bool RequestDispatcher::wantsCgi(Connection& c) const {
-    const std::string uri = getRequestTarget(c);
-    // 超簡易：.cgi とか .py なら CGI とみなす
-    const std::string::size_type dot = uri.rfind('.');
-    if (dot == std::string::npos) return false;
-    const std::string ext = uri.substr(dot);
-    return (ext == ".cgi" || ext == ".py" || ext == ".php");
-}
-
-bool RequestDispatcher::isHead(Connection& c) const {
-    return getMethod(c) == "HEAD";
-}

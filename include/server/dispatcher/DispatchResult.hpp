@@ -21,4 +21,9 @@ struct DispatchResult {
     static DispatchResult StartCgi(const CgiFds& fds) { DispatchResult r(kStartCgi); r.cgi = fds; return r; }
     static DispatchResult Done()     { return DispatchResult(kDone); }
     static DispatchResult Close()    { return DispatchResult(kClose); }
+    bool isNone()     const { return kind == kNone; }
+    bool isArmOut()   const { return kind == kArmOut; }
+    bool isStartCgi() const { return kind == kStartCgi; }
+    bool isDone()     const { return kind == kDone; }
+    bool isClose()    const { return kind == kClose; }
 };

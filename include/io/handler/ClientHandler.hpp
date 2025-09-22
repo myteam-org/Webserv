@@ -12,4 +12,5 @@ private:
     void onWritable(Connection& c);
     void handleHangup(Connection& c);
     void handlePeerHalfClose(Connection& c);
+    void maybeDispatch(Connection& c);
 };

@@ -1,7 +1,7 @@
 #pragma once
-#include "request/request.hpp"
-#include "handler/handler.hpp"
-#include "router/registry.hpp"
+#include "http/request/request.hpp"
+#include "http/handler/handler.hpp"
+#include "http/handler/router/registry.hpp"
 
 namespace http {
     class InternalRouter : public IHandler {

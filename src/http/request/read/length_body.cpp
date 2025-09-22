@@ -1,7 +1,7 @@
-#include "length_body.hpp"
+#include "http/request/read/length_body.hpp"
 
-#include "buffer.hpp"
-#include "state.hpp"
+#include "io/input/read/buffer.hpp"
+#include "http/request/read/state.hpp"
 #include "utils/types/error.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"

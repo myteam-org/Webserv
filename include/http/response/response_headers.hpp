@@ -1,6 +1,6 @@
 #pragma once
 
-#include "response_header_types.hpp"
+#include "http/response/response_header_types.hpp"
 
 namespace http {
 

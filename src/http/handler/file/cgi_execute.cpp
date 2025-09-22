@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "cgi.hpp"
+#include "http/handler/file/cgi.hpp"
 
 namespace http {
 

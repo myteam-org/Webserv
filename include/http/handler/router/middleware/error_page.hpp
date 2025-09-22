@@ -1,8 +1,8 @@
 #pragma once
 
 #include "utils/types/either.hpp"
-#include "handler/handler.hpp"
-#include "handler/router/middleware/middleware.hpp"
+#include "http/handler/handler.hpp"
+#include "http/handler/router/middleware/middleware.hpp"
 #include "config/config.hpp"
 
 namespace http {

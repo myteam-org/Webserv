@@ -3,8 +3,8 @@
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
-#include "buffer.hpp"
-#include "utils.hpp"
+#include "io/input/read/buffer.hpp"
+#include "http/request/read/utils.hpp"
 #include "http/request/read/raw_headers.hpp"
 
 namespace http {
@@ -19,12 +19,13 @@ namespace http {
 //   ・ReadingBodyState
 
 class ReadContext;
+class TransitionResult;
 
 class IState {
  public:
   enum HandleStatus { kSuspend, kDone };
   virtual ~IState() {}
-  virtual struct TransitionResult handle(ReadContext& ctx, ReadBuffer& buf) = 0;
+  virtual TransitionResult handle(ReadContext& ctx, ReadBuffer& buf) = 0;
 };
 
 // TransitionResult

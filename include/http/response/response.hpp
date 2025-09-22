@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include "status.hpp"
-#include "option.hpp"
-#include "response_header_types.hpp"
+#include "http/status.hpp"
+#include "utils/types/option.hpp"
+#include "http/response/response_header_types.hpp"
 #include <iostream>
 
 namespace http {

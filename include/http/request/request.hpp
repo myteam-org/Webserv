@@ -2,9 +2,9 @@
 
 // #include "serverContext.hpp"
 // #include "locationContext.hpp"
-#include "option.hpp"
-#include "method.hpp"
-#include "raw_headers.hpp"
+#include "utils/types/option.hpp"
+#include "http/method.hpp"
+#include "http/request/read/raw_headers.hpp"
 #include <map>
 #include <vector>
 #include <string>

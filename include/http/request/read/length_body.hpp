@@ -1,9 +1,9 @@
 #pragma once
 
-#include "body.hpp"
-#include "read/utils.hpp"
-#include "buffer.hpp"
-#include "state.hpp"
+#include "http/request/read/body.hpp"
+#include "http/request/read/utils.hpp"
+#include "io/input/read/buffer.hpp"
+#include "http/request/read/state.hpp"
 
 namespace http {
 

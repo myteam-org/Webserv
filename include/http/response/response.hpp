@@ -31,8 +31,8 @@ namespace http {
     private:
         static const std::string defaultHttpVersion;
         HttpStatusCode status_;
-        std::string httpVersion_;
         ResponseHeaderFields headers_;
         types::Option<std::string> body_;
+        std::string httpVersion_;
     };
 } //namespace http

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstring>
 #include <fcntl.h>
+#include "server/fileDescriptor/FdUtils.hpp"
 
 // ServerSocket::ServerSocket(
 //     uint16_t port, 
@@ -38,7 +39,7 @@ types::Result<int,int> ServerSocket::open(int domain, int type, int protocol) {
     if (s < 0) {
         return ERR(errno);
     }
-    if (set_nonblock_and_cloexec(s) < 0) {
+    if (FdUtils::set_nonblock_and_cloexec(s) < 0) {
         const int e = errno;
         ::close(s);
         return ERR(e);
@@ -86,7 +87,7 @@ types::Result<int, int> ServerSocket::socket(
     int protocol
     ) {
     const int res = ::socket(domain, type, protocol);
-    set_nonblock_and_cloexec(res);
+    FdUtils::set_nonblock_and_cloexec(res);
     if (res == kInvalidResult) {
         return ERR(errno);
     }
@@ -129,20 +130,20 @@ ServerSocket::ConnectionResult ServerSocket::accept() const{
 const int ServerSocket::kDefaultProtocol;
 const int ServerSocket::kInvalidResult;
 
-static int set_nonblock_and_cloexec(int fd) {
-    int fl = fcntl(fd, F_GETFL, 0);
-    if (fl == -1) {
-        return -1;
-    }
-    if (fcntl(fd, F_SETFL, fl | O_NONBLOCK) == -1) {
-        return -1;
-    }
-    int fdfl = fcntl(fd, F_GETFD, 0);
-    if (fdfl == -1) {
-        return -1;
-    }
-    if (fcntl(fd, F_SETFD, fdfl | FD_CLOEXEC) == -1) {
-        return -1;
-    }
-    return 0;
-}
+// static int set_nonblock_and_cloexec(int fd) {
+//     int fl = fcntl(fd, F_GETFL, 0);
+//     if (fl == -1) {
+//         return -1;
+//     }
+//     if (fcntl(fd, F_SETFL, fl | O_NONBLOCK) == -1) {
+//         return -1;
+//     }
+//     int fdfl = fcntl(fd, F_GETFD, 0);
+//     if (fdfl == -1) {
+//         return -1;
+//     }
+//     if (fcntl(fd, F_SETFD, fdfl | FD_CLOEXEC) == -1) {
+//         return -1;
+//     }
+//     return 0;
+// }

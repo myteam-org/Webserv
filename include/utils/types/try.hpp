@@ -1,8 +1,8 @@
 #ifndef UTILS_TYPES_TRY_HPP
 #define UTILS_TYPES_TRY_HPP
 
-#include "result.hpp"
-#include "option.hpp"
+#include "utils/types/result.hpp"
+#include "utils/types/option.hpp"
 
 template <typename T, typename E>
 Err<E> tryDefault(const types::Result<T, E> &res) {

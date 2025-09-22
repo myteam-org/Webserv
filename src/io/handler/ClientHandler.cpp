@@ -1,10 +1,9 @@
-#pragma once
 #include "io/handler/IFdHandler.hpp"
 #include "server/Server.hpp"
 #include "http/request/read/reader.hpp"
 #include "io/input/writer/writer.hpp"
 
-explicit ClientHandler::ClientHandler(Server* s) : srv_(s) {};
+ClientHandler::ClientHandler(Server* s) : srv_(s) {}
 
 void ClientHandler::onEvent(const FdEntry& e, uint32_t m){
     Connection* c = e.conn;

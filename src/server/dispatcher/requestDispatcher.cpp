@@ -1,5 +1,8 @@
 #include "server/dispatcher/RequestDispatcher.hpp"
 
+RequestDispatcher::RequestDispatcher(EndpointResolver& resolver) : resovler_(resolver) {    
+}
+
 DispatchResult RequestDispatcher::step(Connection& c) {
     if (!c.hasPending()) {
         return DispatchResult::kNone;
@@ -26,9 +29,9 @@ DispatchResult RequestDispatcher::dispatchNext(Connection& c, http::Request& req
     if (responseRes.isRight()) {
         http::Response resp = responseRes.unwrapRight();
         // 接続方針を Connection に伝える
-        if (shouldClose(req)) {
-            c.markCloseAfterWrite();
-        }
+        // if (shouldClose(req)) {
+        //     c.markCloseAfterWrite();
+        // }
         enqueueResponse(c, resp);        // WriteBufferへ
         return DispatchResult::ArmOut();
     }

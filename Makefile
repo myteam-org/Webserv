@@ -63,6 +63,7 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/server/connection/connection.cpp \
 	src/server/epollEvent.cpp \
 	src/server/fileDescriptor/fdRegistry.cpp \
+	src/server/fileDescriptor/fdUtils.cpp \
 	src/server/dispatcher/requestDispatcher.cpp \
 	src/server/epollEventNotifier.cpp \
 	src/server/resolver/endpointResolver.cpp \

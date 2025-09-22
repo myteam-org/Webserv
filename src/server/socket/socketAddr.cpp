@@ -21,6 +21,10 @@ SocketAddr SocketAddr::createIPv4(const std::string& hostName, uint16_t port) {
     return sockAddr;
 }
 
+socklen_t SocketAddr::length() const {
+    return length_;
+}
+
 sockaddr* SocketAddr::raw(){
     return reinterpret_cast<sockaddr*>(&storage_);
 }

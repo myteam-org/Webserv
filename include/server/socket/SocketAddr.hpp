@@ -7,7 +7,7 @@
 #include <arpa/inet.h>   // inet_pton
 #include <sys/socket.h>  // sockaddr_storage, sockaddr
 #include <sys/types.h>
-#include "ISocketAddr.hpp"
+#include "server/socket/ISocketAddr.hpp"
 
 
 class SocketAddr : public ISocketAddr {
@@ -30,7 +30,7 @@ public:
     static const int kFourthOctetShift = 0;
     static const uint32_t kOctetMask = 0xFF;
 private:
-    SocketAddr() : length_(0) {};
+    SocketAddr();
     sockaddr_storage storage_;
     socklen_t length_;
 };

@@ -1,3 +1,4 @@
+#pragma once
 #include "config/context/serverContext.hpp"
 #include "server/connection/ConnectionManager.hpp"
 #include "server/EpollEventNotifier.hpp"
@@ -48,11 +49,13 @@ class Server {
         FdRegistry fdRegister_;
         IFdHandler* handlers_[4];
         std::map<std::string, VirtualServer*> vsByKey_;
-        EndpointResolver endpointResolver_;
         RequestDispatcher *dispatcher_;
         std::map<ListenerKey, ServerSocket*> listeners_; 
         http::config::ConfigResolver resolver_;
+        EndpointResolver endpointResolver_;
         bool overlapsWildcard(const std::string& a, const std::string& b);
+        std::string makeEndpointKeyFromConfig(const std::string& hostName, unsigned short port);
+        std::string u16toString(unsigned short port);
 };
 
 std::string canonicalizeIp(const std::string& hostName);

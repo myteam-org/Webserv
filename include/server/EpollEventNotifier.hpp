@@ -1,7 +1,7 @@
 #pragma once
 
 #include "IEventNotifier.hpp"
-#include "../utils/types/result.hpp"
+#include "utils/types/result.hpp"
 #include <sys/epoll.h>
 #include <vector>
 #include "io/base/FileDescriptor.hpp"

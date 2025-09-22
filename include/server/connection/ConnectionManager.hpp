@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
-#include "ConnectionSocket.hpp"
-#include "Connection.hpp"
+#include "server/socket/ConnectionSocket.hpp"
+#include "server/connection/Connection.hpp"
 
 class ConnectionManager {
 public:

@@ -97,20 +97,32 @@ void Connection::onPeerHalfClose() {
 
 bool Connection::shouldCloseAfterWrite() const {
     return closeAfterWrite_;
-};
+}
 
 void Connection::markCloseAfterWrite() {
     closeAfterWrite_ = true;
-};
+}
 
 bool Connection::isFrontDispatched() const {
     return frontDispatched_;
-};
+}
 
 void Connection::markFrontDispatched() {
     frontDispatched_ = true;
-};
+}
 
 void Connection::resetFrontDispatched() {
     frontDispatched_ = false;
-};
+}
+
+http::RequestReader& Connection::getRequestReader() {
+    return requestReader_;
+}
+
+const http::RequestReader& Connection::getRequestReader() const {
+    return requestReader_;
+}
+
+int Connection::getFd() const {
+    return connSock_.getRawFd();
+}

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ISocket.hpp"
+#include "server/socket/ISocket.hpp"
 #include <sys/socket.h>
-#include "SocketAddr.hpp"
-#include "ConnectionSocket.hpp"
+#include "server/socket/SocketAddr.hpp"
+#include "server/socket/ConnectionSocket.hpp"
 
 class ServerSocket : public ISocket {
 public:
@@ -37,8 +37,8 @@ private:
     ServerSocket(const ServerSocket&);
     ServerSocket& operator=(const ServerSocket&);
     FileDescriptor fd_;
-    std::string bindAddress_;
     uint16_t bindPort_;
+    std::string bindAddress_;
     static const int kDefaultProtocol = 0;
     static const int kInvalidResult = -1;
     void resolveByName(
@@ -48,4 +48,3 @@ private:
     );
 };
 
-static int set_nonblock_and_cloexec(int fd);

@@ -2,6 +2,8 @@
 #include "io/handler/IFdHandler.hpp"
 #include "server/Server.hpp"
 
+class Server;
+
 class ClientHandler : public IFdHandler {
 public:
     explicit ClientHandler(Server* s);

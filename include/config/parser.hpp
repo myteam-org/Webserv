@@ -7,8 +7,8 @@ class ServerContext;
 
 #include <vector>
 
-#include "token.hpp"
-#include "tokenizer.hpp"
+#include "config/token.hpp"
+#include "config/tokenizer.hpp"
 
 class ConfigParser {
    public:

@@ -1,10 +1,10 @@
-#include "validator.hpp"
+#include "config/validator.hpp"
 
 #include <unistd.h>
 
 #include <stdexcept>
 
-#include "token.hpp"
+#include "config/token.hpp"
 
 bool Validator::number(const std::string& number, int type) {
     for (size_t i = 0; i < number.size(); ++i) {

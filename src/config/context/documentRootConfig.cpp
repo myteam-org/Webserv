@@ -1,4 +1,4 @@
-#include "documentRootConfig.hpp"
+#include "config/context/documentRootConfig.hpp"
 
 DocumentRootConfig::DocumentRootConfig()
     : index_("index.html"), autoIndex_(OFF), cgiExtensions_(OFF), enableUpload_(OFF) {

@@ -1,10 +1,10 @@
-#include "EpollEvent.hpp"
-#include "EpollEventNotifier.hpp"
+#include "server/EpollEvent.hpp"
+#include "server/EpollEventNotifier.hpp"
 #include <unistd.h>
 #include <sys/epoll.h>
 #include <string.h>
 #include <vector>
-#include "try.hpp"
+#include "utils/types/try.hpp"
 #include <cerrno> 
 EpollEventNotifier::EpollEventNotifier()
     : epoll_fd_(epoll_create(kMaxAssociatedFD)) {

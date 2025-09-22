@@ -2,11 +2,11 @@
 
 #include <iostream>
 
-#include "data.hpp"
-#include "documentRootConfig.hpp"
-#include "parser.hpp"
-#include "token.hpp"
-#include "method.hpp"
+#include "config/data.hpp"
+#include "config/context/documentRootConfig.hpp"
+#include "config/parser.hpp"
+#include "config/token.hpp"
+#include "http/method.hpp"
 
 typedef std::vector<LocationContext> LocationContextList;
 

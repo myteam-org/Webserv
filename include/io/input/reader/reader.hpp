@@ -1,7 +1,7 @@
 #pragma once
 
-#include "result.hpp"
-#include "error.hpp"
+#include "utils/types/result.hpp"
+#include "utils/types/error.hpp"
 
 namespace io {
     class IReader {

@@ -7,10 +7,10 @@ class ConfigTokenizer;
 #include <algorithm>
 #include <string>
 
-#include "locationContext.hpp"
-#include "parser.hpp"
-#include "serverContext.hpp"
-#include "status.hpp"
+#include "config/context/locationContext.hpp"
+#include "config/parser.hpp"
+#include "config/context/serverContext.hpp"
+#include "http/status.hpp"
 
 #define FILE_NAME "./config_file/default.conf"
 

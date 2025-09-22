@@ -1,10 +1,10 @@
 #pragma once
 
 #include "config/config.hpp"
-#include "either.hpp"
-#include "handler.hpp"
+#include "utils/types/either.hpp"
+#include "http/handler/handler.hpp"
 #include "http/response/response.hpp"
-#include "result.hpp"
+#include "utils/types/result.hpp"
 
 static const unsigned char kAsciiSpace = 0x20;
 

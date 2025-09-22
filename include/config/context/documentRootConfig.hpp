@@ -1,9 +1,9 @@
 #pragma once
 
 #include <iostream>
-#include "data.hpp"
-#include "parser.hpp"
-#include "token.hpp"
+#include "config/data.hpp"
+#include "config/parser.hpp"
+#include "config/token.hpp"
 
 class DocumentRootConfig {
    public:

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "handler.hpp"
+#include "http/handler/handler.hpp"
 
 namespace http {
     class RedirectHandler : public IHandler {

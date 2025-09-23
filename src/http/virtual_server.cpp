@@ -12,6 +12,8 @@
 #include "http/handler/router/middleware/logger.hpp"
 #include "http/handler/router/router.hpp"
 
+#include "utils/logger.hpp"
+
 VirtualServer::VirtualServer(const ServerContext &serverConfig,
                              const std::string &bindAddress)
     : serverConfig_(serverConfig), bindAddress_(bindAddress), router_(NULL) {
@@ -41,6 +43,7 @@ void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
     }
     if (allowed[POST] == ON) {
         routerBuilder.route(http::kMethodPost, path, new http::UploadFileHandler(docRoot));
+        LOG_INFO("registered uploadFileHandler");
     }
     if (allowed[DELETE] == ON) {
         routerBuilder.route(http::kMethodDelete, path, new http::DeleteFileHandler(docRoot));

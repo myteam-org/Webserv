@@ -1,6 +1,7 @@
 #include "http/request/request.hpp"
 #include "http/handler/router/internal.hpp"
 #include "http/response/builder.hpp"
+#include "utils/logger.hpp"
 namespace http {
     InternalRouter::InternalRouter(const RouteRegistry& registry) 
         : registry_(registry) {}
@@ -13,9 +14,12 @@ namespace http {
         }
         
         const std::string& matchedPath = matchResult.unwrap();
+        Logger& log = Logger::instance();
+        LOG_INFO("MatchedPath information:" + matchedPath + "");
         IHandler* handler = registry_.findHandler(req.getMethod(), matchedPath);
         
         if (!handler) {
+            LOG_WARN("handler is not registered. matched path or method is not allowed");
             const std::vector<HttpMethod> allowedMethods = registry_.getAllowedMethods(matchedPath);
             if (!allowedMethods.empty()) {
                 return Right(ResponseBuilder().status(kStatusMethodNotAllowed).build());

@@ -2,6 +2,7 @@
 #include "server/Server.hpp"
 #include "http/request/read/reader.hpp"
 #include "io/input/writer/writer.hpp"
+#include "utils/logger.hpp"
 
 ClientHandler::ClientHandler(Server* s) : srv_(s) {}
 
@@ -55,6 +56,7 @@ void ClientHandler::onReadable(Connection& c) {
     for (;;) {
         const http::RequestReader::ReadRequestResult readRes = c.getRequestReader().readRequest(c.getReadBuffer());
         if (readRes.isErr()) {
+            LOG_ERROR("Request cannot be parsed");
             failAndClose(c, readRes.unwrapErr()); //400
             return;
         }
@@ -168,5 +170,6 @@ http::HttpStatusCode ClientHandler::mapParseErrorToHttpStatus(error::AppError er
         case error::kUriTooLong:
             return http::kStatusUriTooLong;                         // 414
     }
+    LOG_WARN("Does not match any error");
     return http::kStatusBadRequest;                                 // 400
 }

@@ -6,12 +6,21 @@
 #include "http/response/builder.hpp"
 #include "utils/string.hpp"
 
+#include "utils/logger.hpp"
 namespace http {
 CgiHandler::CgiHandler(const DocumentRootConfig& docRootConfig)
     : docRootConfig_(docRootConfig) {}
 
 Either<IAction*, Response> CgiHandler::serve(const Request& req) {
-    return Right(this->serveInternal(req));
+    std::string scriptPath;
+    std::string pathInfo;
+    Logger& log = Logger::instance();
+    LOG_INFO("cgiHandler serve:");
+    if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
+        return Right(ResponseBuilder().status(kStatusNotFound).build());
+    }
+    return Left(static_cast<IAction*>(0));
+    // return Right(this->serveInternal(req));
 }
 
 Response CgiHandler::serveInternal(const Request& req) const {
@@ -20,7 +29,6 @@ Response CgiHandler::serveInternal(const Request& req) const {
     if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
         return ResponseBuilder().status(kStatusNotFound).build();
     }
-
     const std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
     const std::string realScriptPath = utils::normalizePath(joined);
 
@@ -34,9 +42,9 @@ Response CgiHandler::serveInternal(const Request& req) const {
 
     std::string cgiOut;
     int exitCode = 0;
-    if (!executeCgi(argv, env, stdinBody, &cgiOut, &exitCode)) {
-        return ResponseBuilder().status(kStatusBadGateway).build();
-    }
+    // if (!executeCgi(argv, env, stdinBody, &cgiOut, &exitCode)) {
+    //     return ResponseBuilder().status(kStatusBadGateway).build();
+    // }
 
     return parseCgiAndBuildResponse(cgiOut);
 }

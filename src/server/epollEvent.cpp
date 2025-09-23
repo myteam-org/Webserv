@@ -43,3 +43,11 @@ epoll_event_t* EpollEvent::raw() {
 const epoll_event_t* EpollEvent::raw() const {
     return &ev_;
 }
+
+void EpollEvent::setUserFd(int fd) { 
+    ev_.data.fd = fd;
+}
+
+int  EpollEvent::getUserFd() const { 
+    return ev_.data.fd;
+}

@@ -1,7 +1,7 @@
 #include "server/Server.hpp"
 #include "utils/types/try.hpp"
 #include "server/socket/SocketAddr.hpp"
-
+#include "server/fileDescriptor/FdUtils.hpp"
 
 Server::Server(const std::vector<ServerContext>& serverCtxs) 
     : serverCtxs_(serverCtxs), 
@@ -9,11 +9,18 @@ Server::Server(const std::vector<ServerContext>& serverCtxs)
     connManager_(),
     dispatcher_(0),
     resolver_(serverCtxs_),
-    endpointResolver_(vsByKey_) {
+    endpointResolver_(vsByKey_) {   
     handlers_[FD_LISTENER]   = new ListenerHandler(this);
     handlers_[FD_CLIENT]     = new ClientHandler(this);
     handlers_[FD_CGI_STDIN]  = new CgiStdinHandler(this);
     handlers_[FD_CGI_STDOUT] = new CgiStdoutHandler(this);
+}
+
+Server::~Server() {
+    delete handlers_[FD_LISTENER];
+    delete handlers_[FD_CLIENT];
+    delete handlers_[FD_CGI_STDIN];
+    delete handlers_[FD_CGI_STDOUT];
 }
 
 types::Result<types::Unit, int> Server::init() {
@@ -82,8 +89,9 @@ types::Result<types::Unit,int> Server::initDispatcher() {
 types::Result<types::Unit,int> Server::run() {
     for (;;) {
         types::Result<std::vector<EpollEvent>, int> r = epollNotifier_.wait(); // 200ms など
-        if (r.isErr()) return types::err<int>(r.unwrapErr());
-
+        if (r.isErr()) {
+            return types::err<int>(r.unwrapErr());
+        }
         const std::vector<EpollEvent>& evs = r.unwrap();
         for (size_t i = 0; i < evs.size(); ++i) {
             const EpollEvent& ev = evs[i];
@@ -115,7 +123,7 @@ void Server::acceptLoop(int lfd) {
             break;
         }
         peer.setLength(len);
-        set_nonblock_and_cloexec(cfd);
+        FdUtils::set_nonblock_and_cloexec(cfd);
         Connection* conn = new Connection(cfd, peer, this->resolver());
         connManager_.registerConnection(conn);
         epollNotifier_.add(cfd, EPOLLIN | EPOLLRDHUP | EPOLLERR);
@@ -131,12 +139,12 @@ std::string canonicalizeIp(const std::string& hostName) {
     return sa.getAddress();
 }
 
-std::string makeEndpointKeyFromConfig(const std::string& hostName, unsigned short port) {
+std::string Server::makeEndpointKeyFromConfig(const std::string& hostName, unsigned short port) {
     const std::string ip = canonicalizeIp(hostName);
     return ip + ":" + u16toString(port);
 }
 
-static std::string u16toString(unsigned short port) {
+std::string Server::u16toString(unsigned short port) {
     std::ostringstream oss;
     oss << port;
     return oss.str();
@@ -175,8 +183,8 @@ void Server::applyDispatchResult(Connection& c, const DispatchResult& dr) {
         const int out_r = dr.cgi.stdout_fd;  // 子→サーバから読む（IN）
         // モック（-1）のときは何もしない
         if (in_w >= 0 && out_r >= 0) {
-            set_nonblock_and_cloexec(in_w);
-            set_nonblock_and_cloexec(out_r);
+            FdUtils::set_nonblock_and_cloexec(in_w);
+            FdUtils::set_nonblock_and_cloexec(out_r);
             fdRegister_.add(in_w,  FD_CGI_STDIN,  &c);
             fdRegister_.add(out_r, FD_CGI_STDOUT, &c);
             epollNotifier_.add(in_w,  EPOLLOUT | EPOLLERR);
@@ -227,8 +235,8 @@ void Server::applyDispatchResult(Connection& c, const DispatchResult& dr) {
     }
 }
 
+bool Server::overlapsWildcard(const std::string& a, const std::string& b) {
 
-bool overlapsWildcard(const std::string& a, const std::string& b) {
     size_t ca = a.find(':');
     size_t cb = b.find(':');
     if (ca == std::string::npos || cb == std::string::npos) {

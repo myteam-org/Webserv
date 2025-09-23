@@ -1,6 +1,7 @@
 NAME	= webserv
 CPP	= c++
 CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
+DBGFLAGS := -g -O0
 # CPPFLAG += -g -fsanitize=address
 INC_DIR	= include
 SRCS	= 	src/config/tokenizer.cpp \
@@ -63,6 +64,7 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/server/connection/connection.cpp \
 	src/server/epollEvent.cpp \
 	src/server/fileDescriptor/fdRegistry.cpp \
+	src/server/fileDescriptor/fdUtils.cpp \
 	src/server/dispatcher/requestDispatcher.cpp \
 	src/server/epollEventNotifier.cpp \
 	src/server/resolver/endpointResolver.cpp \
@@ -70,6 +72,9 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/main.cpp
 
 OBJS	= $(SRCS:.cpp=.o)
+
+debug: CPPFLAG += $(DBGFLAGS)
+debug: $(NAME)
 
 %.o: %.cpp
 	$(CPP) $(CPPFLAG) -I$(INC_DIR) -c $< -o $@
@@ -86,5 +91,7 @@ fclean: clean
 	rm -f $(NAME)
 
 re: fclean all
+
+
 
 .PHONY: all re clean fclean

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "types/error.hpp"
-#include "types/option.hpp"
-#include "types/result.hpp"
+#include "utils/types/error.hpp"
+#include "utils/types/option.hpp"
+#include "utils/types/result.hpp"
 #include <sstream>
 
 namespace utils {

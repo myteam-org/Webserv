@@ -21,15 +21,15 @@ FdReader::ReadResult FdReader::read(char *buf, std::size_t nbyte) {
     }
 
     const ssize_t bytesRead = ::read(fd_, buf, nbyte);
-    if (bytesRead < 0) {
-        return ERR(error::kIOUnknown);
+    if (bytesRead > 0) {
+        return OK(static_cast<std::size_t>(bytesRead));
     }
     if (bytesRead == 0) {
         eof_ = true;  // EOF 到達
         return OK(static_cast<std::size_t>(0));
     }
-
-    return OK(static_cast<std::size_t>(bytesRead));
+    // r < 0: errno は見ない。いまは進めない/非致命扱い。
+    return OK(static_cast<std::size_t>(0));
 }
 
 bool FdReader::eof() {

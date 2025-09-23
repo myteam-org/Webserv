@@ -72,6 +72,7 @@ size_t ReadBuffer::size() const {
 
 
 
+
 // ReadBuffer::LoadResult ReadBuffer::fillAvailable() {
 //     std::size_t total = 0;
 //     for (;;) {
@@ -94,3 +95,4 @@ size_t ReadBuffer::size() const {
 //     }
 //     return types::ok(total);
 // }
+

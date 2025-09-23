@@ -1,5 +1,5 @@
 #include "server/fileDescriptor/FdRegistry.hpp"
-#include <utility> // std::make_pair
+
 
 bool FdRegistry::add(int fd, FdKind k, Connection* c) {
     if (fd < 0) {

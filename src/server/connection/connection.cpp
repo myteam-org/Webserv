@@ -2,12 +2,24 @@
 #include <ctime>
 #include "io/input/reader/fd.hpp"
 
-Connection::Connection(int fd, const ISocketAddr& peerAddr)
-    : connSock_(fd, peerAddr),
-      connState_(0),
-      readBuffer_(connSock_),
-      writeBuffer_(connSock_),
-      lastRecv_(std::time(0)) {}
+// Connection::Connection(int fd, const ISocketAddr& peerAddr)
+//     : connSock_(fd, peerAddr),
+//       connState_(0),
+//       readBuffer_(connSock_),
+//       writeBuffer_(connSock_),
+//       lastRecv_(std::time(0)) {}
+
+Connection::Connection(int fd, const ISocketAddr& peerAddr,
+                       http::config::IConfigResolver& resolver)
+    : connSock_(fd, peerAddr)
+    , connState_(0)
+    , readBuffer_(connSock_)
+    , writeBuffer_(connSock_)
+    , requestReader_(resolver)
+    , frontDispatched_(false)
+    , closeAfterWrite_(false)
+    , peerHalfClosed_(false)
+    , lastRecv_(std::time(0)) {}
 
 Connection::~Connection() {
     if (connState_) {
@@ -59,33 +71,58 @@ bool Connection::isTimeout() const {
     return (now - lastRecv_) > kTimeoutThresholdSec;
 }
 
-// void Connection::adoptReadBuffer(ReadBuffer* readBuffer) {
-//     if (readBuffer_ != readBuffer) {
-//         if (readBuffer_) {
-//             delete readBuffer_;
-//         }
-//         readBuffer_ = readBuffer;
-//     }
-// }
+bool Connection::hasPending() const { 
+    return !pending_.empty();
+}
+http::Request& Connection::front(){ 
+    return pending_.front();
+}
 
-// void Connection::adoptWriteBuffer(WriteBuffer* writeBuffer) {
-//     if (writeBuffer_ != writeBuffer) {
-//         if (writeBuffer_) {
-//             delete writeBuffer_;
-//         }
-//         writeBuffer_ = writeBuffer;
-//     }
-// }
-// void Connection::resetReadBuffer() {
-//     if (readBuffer_) {
-//         delete readBuffer_;
-//         readBuffer_ = 0;
-//     }
-// }
+void Connection::popFront() { 
+    pending_.pop_front();
+    resetFrontDispatched();
+}
 
-// void Connection::resetWriteBuffer() {
-//     if (writeBuffer_) {
-//         delete writeBuffer_;
-//         writeBuffer_ = 0;
-//     }
-// }
+void Connection::pushCreatedReq(http::Request req) { 
+    pending_.push_back(req);
+}
+
+bool Connection::isPeerHalfClosed() const {
+    return peerHalfClosed_;
+}
+
+void Connection::onPeerHalfClose() {
+    peerHalfClosed_ = true;
+}
+
+bool Connection::shouldCloseAfterWrite() const {
+    return closeAfterWrite_;
+}
+
+void Connection::markCloseAfterWrite() {
+    closeAfterWrite_ = true;
+}
+
+bool Connection::isFrontDispatched() const {
+    return frontDispatched_;
+}
+
+void Connection::markFrontDispatched() {
+    frontDispatched_ = true;
+}
+
+void Connection::resetFrontDispatched() {
+    frontDispatched_ = false;
+}
+
+http::RequestReader& Connection::getRequestReader() {
+    return requestReader_;
+}
+
+const http::RequestReader& Connection::getRequestReader() const {
+    return requestReader_;
+}
+
+int Connection::getFd() const {
+    return connSock_.getRawFd();
+}

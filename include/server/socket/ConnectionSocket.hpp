@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ISocket.hpp"
-#include "SocketAddr.hpp"
+#include "server/socket/ISocket.hpp"
+#include "server/socket/SocketAddr.hpp"
 #include <sstream>
 #include <arpa/inet.h>
 #include <netinet/in.h>

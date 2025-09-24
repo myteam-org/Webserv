@@ -13,6 +13,7 @@
 #include "utils/types/error.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"
+#include <cstdlib>
 
 namespace http {
 
@@ -73,6 +74,36 @@ TransitionResult ReadingRequestHeadersState::handleHeadersComplete(
         return tr;
     }
     ctx.setServer(*serverContext);
+
+    // --- Body判定追加 ---
+    bool hasBody = false;
+    BodyEncodingType bodyType = kNone;
+    BodyLengthConfig bodyConfig;
+
+    const std::string contentLengthValue = parser::extractHeader(headers, "content-length");
+    if (!contentLengthValue.empty()) {
+        hasBody = true;
+        bodyType = kContentLength;
+        bodyConfig.contentLength = std::atoi(contentLengthValue.c_str());
+        bodyConfig.clientMaxBodySize = serverContext->getClientMaxBodySize();
+    }
+
+    const std::string transferEncodingValue = parser::extractHeader(headers, "transfer-encoding");
+    if (!transferEncodingValue.empty() && transferEncodingValue.find("chunked") != std::string::npos) {
+        hasBody = true;
+        bodyType = kChunked;
+        bodyConfig.contentLength = 0;
+        bodyConfig.clientMaxBodySize = serverContext->getClientMaxBodySize();
+    }
+
+    // bodyが必要ならbodyステート生成＆遷移
+    if (hasBody) {
+        IState* bodyState = new ReadingRequestBodyState(bodyType, bodyConfig);
+        tr.setNextState(bodyState);
+        tr.setHeaders(types::some(headers));
+        tr.setStatus(types::ok(kDone));
+        return tr;
+    }
     tr.setHeaders(types::some(headers));
     tr.setStatus(types::ok(kDone));
     return tr;

@@ -10,6 +10,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <vector>      // 追加: パス正規化用
+#include <string>      // 追加: パス正規化用
+#include <algorithm>   // 追加: パス正規化用
 
 #include "http/response/builder.hpp"
 #include "io/base/FileDescriptor.hpp"
@@ -181,53 +184,55 @@ static bool parseFirstFilePart(const std::string& body,
     return false;
 }
 
-// ===== 既存: パス検証 =====
+// ===== 追加: C++98でのパス正規化 =====
+static std::string normalizePath(const std::string& path) {
+    std::vector<std::string> stack;
+    std::string::size_type i = 0, len = path.length();
+    while (i < len) {
+        // スラッシュをスキップ
+        while (i < len && path[i] == '/') ++i;
+        if (i >= len) break;
+        // セグメント抽出
+        std::string::size_type j = i;
+        while (j < len && path[j] != '/') ++j;
+        std::string seg = path.substr(i, j - i);
+        if (seg == ".") {
+            // 無視
+        } else if (seg == "..") {
+            if (!stack.empty()) stack.pop_back();
+        } else if (!seg.empty()) {
+            stack.push_back(seg);
+        }
+        i = j;
+    }
+    std::string result = "/";
+    for (size_t k = 0; k < stack.size(); ++k) {
+        if (k > 0) result += "/";
+        result += stack[k];
+    }
+    return result;
+}
+
+// ===== 既存: パス検証（realpath → normalizePathで代替） =====
 static bool isPathUnderRootUnified(const std::string& rootPath,
                                    const std::string& targetPath) {
     LOG_DEBUG("=== UNIFIED PATH VALIDATION ===");
     LOG_DEBUG("Target path: [" + targetPath + "]");
     LOG_DEBUG("Root path: [" + rootPath + "]");
 
-    char rootReal_c[PATH_MAX] = {0};
-    if (realpath(rootPath.c_str(), rootReal_c) == NULL) {
-        LOG_DEBUG("Failed to get absolute path for root: " + rootPath);
-        return false;
-    }
-    std::string rootReal(rootReal_c);
+    std::string rootNorm = normalizePath(rootPath);
+    std::string targetNorm = normalizePath(targetPath);
 
-    // 親ディレクトリとファイル名
-    std::string parentPath;
-    std::string filename;
-    std::string::size_type lastSlashPos = targetPath.rfind('/');
-    if (lastSlashPos == std::string::npos) {
-        parentPath = ".";
-        filename = targetPath;
-    } else {
-        parentPath = targetPath.substr(0, lastSlashPos);
-        filename = targetPath.substr(lastSlashPos + 1);
-        if (parentPath.empty()) parentPath = "/";
-    }
+    // 末尾スラッシュ調整
+    if (!rootNorm.empty() && rootNorm[rootNorm.length()-1] != '/')
+        rootNorm += '/';
+    if (!targetNorm.empty() && targetNorm[targetNorm.length()-1] != '/')
+        targetNorm += '/';
 
-    char parentReal_c[PATH_MAX] = {0};
-    if (realpath(parentPath.c_str(), parentReal_c) == NULL) {
-        LOG_DEBUG("Failed to get absolute path for parent: " + parentPath);
-        return false;
-    }
+    LOG_DEBUG("Target normalized: [" + targetNorm + "]");
+    LOG_DEBUG("Root normalized: [" + rootNorm + "]");
 
-    std::string targetReal(parentReal_c);
-    if (!targetReal.empty() && targetReal[targetReal.length() - 1] != '/')
-        targetReal += '/';
-    targetReal += filename;
-
-    rootReal   = utils::path::normalizeSlashes(rootReal);
-    targetReal = utils::path::normalizeSlashes(targetReal);
-    if (!rootReal.empty() && rootReal[rootReal.length() - 1] != '/')
-        rootReal += '/';
-
-    LOG_DEBUG("Target absolute: [" + targetReal + "]");
-    LOG_DEBUG("Root absolute: [" + rootReal + "]");
-
-    bool isValid = (targetReal.find(rootReal) == 0);
+    bool isValid = (targetNorm.find(rootNorm) == 0);
     LOG_DEBUG(std::string("Path validation result: ") + (isValid ? "OK" : "NG"));
     return isValid;
 }

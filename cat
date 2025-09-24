@@ -1,0 +1,870 @@
+diff --git a/Makefile b/Makefile
+index de80eb5..0daadf7 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ NAME	= webserv
+ CPP	= c++
+ CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
+-DBGFLAGS := -g -O0
++DBGFLAGS := -g
+ # CPPFLAG += -g -fsanitize=address
+ INC_DIR	= include
+ SRCS	= 	src/config/tokenizer.cpp \
+@@ -94,4 +94,4 @@ re: fclean all
+ 
+ 
+ 
+-.PHONY: all re clean fclean
+\ No newline at end of file
++.PHONY: all re clean fclean
+diff --git a/src/config/parser.cpp b/src/config/parser.cpp
+index 6b5548f..accee96 100644
+--- a/src/config/parser.cpp
++++ b/src/config/parser.cpp
+@@ -11,6 +11,7 @@
+ #include "config/token.hpp"
+ #include "config/tokenizer.hpp"
+ #include "config/validator.hpp"
++#include "utils/logger.hpp"
+ 
+ void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(
+     ServerContext&, size_t&) = {
+@@ -28,18 +29,23 @@ void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(
+ ConfigParser::ConfigParser(ConfigTokenizer& tokenizer,
+                            const std::string& confFile)
+     : tokens_(tokenizer.getTokens()), depth_(0), confFile_(confFile) {
++    LOG_INFO("ConfigParser created");
+     makeVectorServer_();
+ }
+ 
+-ConfigParser::~ConfigParser() {}
++ConfigParser::~ConfigParser() {
++    LOG_INFO("ConfigParser destroyed");
++}
+ 
+ void ConfigParser::makeVectorServer_() {
++    LOG_INFO("Parsing server configurations...");
+     for (size_t i = 0; i < this->tokens_.size(); ++i) {
+         const TokenType type = this->tokens_[i].getType();
+         const int lineNumber = this->tokens_[i].getLineNumber();
+         if (type == BRACE) {
+             updateDepth(tokens_[i], lineNumber);
+             if (this->depth_ == 0) {
++                LOG_INFO("Finished parsing server configurations");
+                 return;
+             }
+         } else if (type == SERVER) {
+@@ -75,6 +81,7 @@ void ConfigParser::updateDepth(const Token& token, int lineNumber) {
+ }
+ 
+ void ConfigParser::addServer_(size_t& index) {
++    LOG_INFO("Adding new server block");
+     // NOLINTNEXTLINE(misc-const-correctness)
+     ServerContext server("server");
+ 
+@@ -90,12 +97,14 @@ void ConfigParser::addServer_(size_t& index) {
+                 break;
+             }
+         } else if (type >= LISTEN && type <= LOCATION) {
++            LOG_DEBUG("Parsing server directive: " + tokens_[index].getText());
+             (this->*funcServer_[type])(server, index);
+         } else {
+             continue;
+         }
+     }
+     this->servers_.push_back(server);
++    LOG_INFO("Server block added");
+ }
+ 
+ void ConfigParser::setPort_(ServerContext& server, size_t& index) {
+@@ -163,6 +172,7 @@ void ConfigParser::setErrPage_(ServerContext& server, size_t& index) {
+ }
+ 
+ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
++    LOG_INFO("Adding new location block");
+     // NOLINTNEXTLINE(misc-const-correctness)
+     LocationContext location("location");
+     const std::string path = incrementAndCheckSize_(index);
+@@ -184,11 +194,13 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
+                 break;
+             }
+         } else if (type >= ROOT && type <= ENABLE_UPLOAD) {
++            LOG_DEBUG("Parsing location directive: " + tokens_[index].getText());
+             (this->*funcLocation_[type - FUNC_SERVER_SIZE])(location, index);
+         } else {
+             continue;
+         }
+     }
++    LOG_INFO("Location block added for path: " + path);
+ }
+ 
+ void ConfigParser::setDefaultMethod_(LocationContext& location) {
+diff --git a/src/http/handler/file/upload.cpp b/src/http/handler/file/upload.cpp
+index ef55de8..3f91638 100644
+--- a/src/http/handler/file/upload.cpp
++++ b/src/http/handler/file/upload.cpp
+@@ -6,17 +6,234 @@
+ #include <unistd.h>
+ 
+ #include <cerrno>
++#include <climits>
+ #include <cstdlib>
+ #include <cstring>
+ #include <fstream>
+ 
+ #include "http/response/builder.hpp"
+ #include "io/base/FileDescriptor.hpp"
++#include "utils/logger.hpp"
+ #include "utils/path.hpp"
+ #include "utils/string.hpp"
+ 
+ namespace http {
+ 
++// ===== 追加: multipart ヘルパ =====
++
++static std::string trim(const std::string& s) {
++    std::string::size_type b = 0;
++    while (b < s.size() && (s[b] == ' ' || s[b] == '\t' || s[b] == '\r' || s[b] == '\n'))
++        ++b;
++    std::string::size_type e = s.size();
++    while (e > b && (s[e - 1] == ' ' || s[e - 1] == '\t' || s[e - 1] == '\r' || s[e - 1] == '\n'))
++        --e;
++    return s.substr(b, e - b);
++}
++
++static std::string sanitizeFilename(const std::string& orig) {
++    if (orig.empty()) return "uploaded_file";
++    std::string r;
++    for (std::string::size_type i = 0; i < orig.size(); ++i) {
++        char c = orig[i];
++        if (c == '/' || c == '\\' || c == ':' || c == 0) c = '_';
++        r += c;
++    }
++    // ".." を潰す
++    if (r == "." || r == "..") r = "_";
++    return r;
++}
++
++static std::string extractBoundary(const std::string& contentType) {
++    // 例: multipart/form-data; boundary=----WebKitFormBoundaryABC123
++    const std::string key = "boundary=";
++    std::string::size_type pos = contentType.find(key);
++    if (pos == std::string::npos) return "";
++    pos += key.size();
++    // 引用符で囲まれる場合対応
++    if (pos < contentType.size() && (contentType[pos] == '"' || contentType[pos] == '\'')) {
++        char quote = contentType[pos];
++        ++pos;
++        std::string::size_type end = contentType.find(quote, pos);
++        if (end == std::string::npos) return "";
++        return contentType.substr(pos, end - pos);
++    }
++    // 空白かセミコロンまで
++    std::string::size_type end = pos;
++    while (end < contentType.size() &&
++           contentType[end] != ';' &&
++           contentType[end] != ' ' &&
++           contentType[end] != '\r' &&
++           contentType[end] != '\n' &&
++           contentType[end] != '\t') {
++        ++end;
++    }
++    return contentType.substr(pos, end - pos);
++}
++
++// 最初のファイルパートのみ抜き出し
++static bool parseFirstFilePart(const std::string& body,
++                               const std::string& boundaryRaw,
++                               std::string& outFilename,
++                               std::string& outData) {
++    outFilename = "";
++    outData.clear();
++    if (boundaryRaw.empty()) return false;
++
++    const std::string boundary = "--" + boundaryRaw;
++    std::string::size_type searchPos = 0;
++
++    while (true) {
++        // 境界線を探す
++        std::string::size_type bPos = body.find(boundary, searchPos);
++        if (bPos == std::string::npos) break;
++        bPos += boundary.size();
++
++        // 終端か？
++        if (bPos + 2 <= body.size() && body.compare(bPos, 2, "--") == 0) {
++            break; // 終了
++        }
++
++        // CRLF をスキップ
++        if (bPos + 2 <= body.size() && body.compare(bPos, 2, "\r\n") == 0) {
++            bPos += 2;
++        } else if (bPos < body.size() && (body[bPos] == '\n')) {
++            bPos += 1;
++        }
++
++        // ヘッダ終了位置を探す
++        std::string::size_type headerEnd = body.find("\r\n\r\n", bPos);
++        std::string::size_type headerSepLen = 4;
++        if (headerEnd == std::string::npos) {
++            // "\n\n" のみのパターン緩和
++            headerEnd = body.find("\n\n", bPos);
++            headerSepLen = 2;
++        }
++        if (headerEnd == std::string::npos) break;
++
++        std::string headersBlock = body.substr(bPos, headerEnd - bPos);
++
++        // パートのデータ開始
++        std::string::size_type dataStart = headerEnd + headerSepLen;
++
++        // 次の境界を探す
++        std::string::size_type nextBoundary = body.find(boundary, dataStart);
++        if (nextBoundary == std::string::npos) {
++            // 終端が見つからない→不正 or 最後まで
++            nextBoundary = body.size();
++        }
++
++        // パートの生データ範囲（末尾の CRLF を落としたい）
++        std::string::size_type dataEnd = nextBoundary;
++        // 末尾に "\r\n" があれば削る
++        if (dataEnd >= 2 && body.compare(dataEnd - 2, 2, "\r\n") == 0) {
++            dataEnd -= 2;
++        } else if (dataEnd >= 1 && body[dataEnd - 1] == '\n') {
++            dataEnd -= 1;
++        }
++
++        // ヘッダを行単位で解析
++        std::string filename;
++        {
++            std::string::size_type lineStart = 0;
++            while (lineStart < headersBlock.size()) {
++                std::string::size_type lineEnd = headersBlock.find("\r\n", lineStart);
++                std::string line;
++                if (lineEnd == std::string::npos) {
++                    line = headersBlock.substr(lineStart);
++                    lineStart = headersBlock.size();
++                } else {
++                    line = headersBlock.substr(lineStart, lineEnd - lineStart);
++                    lineStart = lineEnd + 2;
++                }
++                line = trim(line);
++                if (line.empty()) continue;
++                // Content-Disposition 行を探す
++                std::string lower = line;
++                for (std::string::size_type i = 0; i < lower.size(); ++i) {
++                    if (lower[i] >= 'A' && lower[i] <= 'Z')
++                        lower[i] = lower[i] - 'A' + 'a';
++                }
++                if (lower.find("content-disposition:") == 0) {
++                    // filename="..."
++                    const std::string key = "filename=\"";
++                    std::string::size_type fPos = line.find(key);
++                    if (fPos != std::string::npos) {
++                        fPos += key.size();
++                        std::string::size_type fEnd = line.find('"', fPos);
++                        if (fEnd != std::string::npos) {
++                            filename = line.substr(fPos, fEnd - fPos);
++                        }
++                    }
++                }
++            }
++        }
++
++        if (!filename.empty()) {
++            outFilename = sanitizeFilename(filename);
++            outData.assign(body, dataStart, dataEnd - dataStart);
++            return true;
++        }
++
++        // 次へ
++        searchPos = nextBoundary;
++    }
++    return false;
++}
++
++// ===== 既存: パス検証 =====
++static bool isPathUnderRootUnified(const std::string& rootPath,
++                                   const std::string& targetPath) {
++    LOG_DEBUG("=== UNIFIED PATH VALIDATION ===");
++    LOG_DEBUG("Target path: [" + targetPath + "]");
++    LOG_DEBUG("Root path: [" + rootPath + "]");
++
++    char rootReal_c[PATH_MAX] = {0};
++    if (realpath(rootPath.c_str(), rootReal_c) == NULL) {
++        LOG_DEBUG("Failed to get absolute path for root: " + rootPath);
++        return false;
++    }
++    std::string rootReal(rootReal_c);
++
++    // 親ディレクトリとファイル名
++    std::string parentPath;
++    std::string filename;
++    std::string::size_type lastSlashPos = targetPath.rfind('/');
++    if (lastSlashPos == std::string::npos) {
++        parentPath = ".";
++        filename = targetPath;
++    } else {
++        parentPath = targetPath.substr(0, lastSlashPos);
++        filename = targetPath.substr(lastSlashPos + 1);
++        if (parentPath.empty()) parentPath = "/";
++    }
++
++    char parentReal_c[PATH_MAX] = {0};
++    if (realpath(parentPath.c_str(), parentReal_c) == NULL) {
++        LOG_DEBUG("Failed to get absolute path for parent: " + parentPath);
++        return false;
++    }
++
++    std::string targetReal(parentReal_c);
++    if (!targetReal.empty() && targetReal[targetReal.length() - 1] != '/')
++        targetReal += '/';
++    targetReal += filename;
++
++    rootReal   = utils::path::normalizeSlashes(rootReal);
++    targetReal = utils::path::normalizeSlashes(targetReal);
++    if (!rootReal.empty() && rootReal[rootReal.length() - 1] != '/')
++        rootReal += '/';
++
++    LOG_DEBUG("Target absolute: [" + targetReal + "]");
++    LOG_DEBUG("Root absolute: [" + rootReal + "]");
++
++    bool isValid = (targetReal.find(rootReal) == 0);
++    LOG_DEBUG(std::string("Path validation result: ") + (isValid ? "OK" : "NG"));
++    return isValid;
++}
++
++// ===== UploadFileHandler 実装 =====
++
+ UploadFileHandler::UploadFileHandler(const DocumentRootConfig& docRootConfig)
+     : docRootConfig_(docRootConfig) {}
+ 
+@@ -25,91 +242,127 @@ Either<IAction*, Response> UploadFileHandler::serve(const Request& request) {
+ }
+ 
+ Response UploadFileHandler::serveInternal(const Request& request) const {
+-    // このロケーションでアップロードが許可されていなければ拒否
++    const std::string& rel = request.getPath(); // "/upload"
++    LOG_DEBUG("File upload request detected for path: " + rel);
++
++    LOG_DEBUG("Checking upload permissions for location: " + rel);
+     if (!docRootConfig_.getEnableUpload()) {
++        LOG_DEBUG("Returning 403 Forbidden: Upload is not enabled for this location");
+         return ResponseBuilder().status(kStatusForbidden).build();
+     }
+ 
+-    // Parser が decode + remove_dot_segments 済みのパスを返す前提
+-    const std::string& rel = request.getPath();
++    const std::string root = utils::path::normalizeSlashes(docRootConfig_.getRoot());
++
++    // ここでは /upload をファイル名に使わない（API エンドポイント扱い）
++    // Content-Type 確認
++    const types::Option<std::string> ctOpt = request.getHeader("Content-Type");
++    if (ctOpt.isNone()) {
++        LOG_DEBUG("Returning 400 Bad Request: Missing Content-Type");
++        return ResponseBuilder().status(kStatusBadRequest).build();
++    }
++    const std::string contentType = ctOpt.unwrap();
++    if (contentType.find("multipart/form-data") == std::string::npos) {
++        LOG_DEBUG("Returning 400 Bad Request: Not multipart/form-data");
++        return ResponseBuilder().status(kStatusBadRequest).build();
++    }
++    std::string boundary = extractBoundary(contentType);
++    if (boundary.empty()) {
++        LOG_DEBUG("Returning 400 Bad Request: Boundary not found");
++        return ResponseBuilder().status(kStatusBadRequest).build();
++    }
++
++    // ボディ取得
++    const std::vector<char>& bodyVec = request.getBody();
++    std::string bodyStr;
++    if (!bodyVec.empty())
++        bodyStr.assign(&bodyVec[0], bodyVec.size());
+ 
+-    const std::string& root = docRootConfig_.getRoot();
+-    const std::string joined = utils::joinPath(root, rel);
++    // パート解析
++    std::string filename;
++    std::string fileData;
++    if (!parseFirstFilePart(bodyStr, boundary, filename, fileData)) {
++        LOG_DEBUG("Returning 400 Bad Request: No file part with filename");
++        return ResponseBuilder().status(kStatusBadRequest).build();
++    }
+ 
+-    // スラッシュ正規化（'\\' -> '/', '//' 圧縮）
+-    const std::string full = utils::path::normalizeSlashes(joined);
++    // 保存パス構築
++    std::string savePath = root;
++    if (!savePath.empty() && savePath[savePath.size() - 1] != '/')
++        savePath += '/';
++    savePath += filename;
+ 
+-    // ルート配下チェック
+-    if (!utils::path::isPathUnderRoot(root, full)) {
++    // パス検証
++    if (!isPathUnderRootUnified(root, savePath)) {
++        LOG_DEBUG("Returning 403 Forbidden: Path is not under root directory");
+         return ResponseBuilder().status(kStatusForbidden).build();
+     }
+ 
+-    // 親ディレクトリの存在/権限
++    // 親ディレクトリ確認
+     const types::Result<types::Unit, HttpStatusCode> dirCheck =
+-        checkParentDir(full);
++        checkParentDir(savePath);
+     if (dirCheck.isErr()) {
+         return ResponseBuilder().status(dirCheck.unwrapErr()).build();
+     }
+ 
+-    // 6) 書き込み
+-    return writeToFile(full, request.getBody());
++    // 書き込み
++    int raw_fd;
++#ifdef O_CLOEXEC
++    raw_fd = open(savePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
++#else
++    raw_fd = open(savePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
++    if (raw_fd >= 0) {
++        fcntl(raw_fd, F_SETFD, FD_CLOEXEC);
++    }
++#endif
++    if (raw_fd < 0) {
++        LOG_DEBUG("Returning 403 Forbidden: Failed to open file for writing");
++        return ResponseBuilder().status(kStatusForbidden).build();
++    }
++    {
++        FileDescriptor fd(raw_fd);
++        const types::Option<int> fdOpt = fd.getFd();
++        if (fdOpt.isNone()) {
++            LOG_DEBUG("Returning 403 Forbidden: Invalid FD");
++            return ResponseBuilder().status(kStatusForbidden).build();
++        }
++        if (!fileData.empty()) {
++            ssize_t written = write(fdOpt.unwrap(), fileData.data(), fileData.size());
++            if (written < 0 || static_cast<size_t>(written) != fileData.size()) {
++                return ResponseBuilder().status(kStatusInternalServerError).build();
++            }
++        }
++    }
++
++    LOG_DEBUG("Upload successful: " + savePath);
++    return ResponseBuilder().status(kStatusCreated).build();
+ }
+ 
+-types::Result<types::Unit, HttpStatusCode> UploadFileHandler::checkParentDir(
+-    const std::string& normalized) const {
+-    const std::string& root = docRootConfig_.getRoot();
+-    if (!utils::path::isPathUnderRoot(root, normalized)) {
++types::Result<types::Unit, HttpStatusCode>
++UploadFileHandler::checkParentDir(const std::string& normalized) const {
++    const std::string root = utils::path::normalizeSlashes(docRootConfig_.getRoot());
++    if (!isPathUnderRootUnified(root, normalized)) {
++        LOG_DEBUG("Returning 403 Forbidden: Normalized path is not under root directory");
+         return ERR(kStatusForbidden);
+     }
++    std::string::size_type lastSlash = normalized.rfind('/');
++    std::string dirPath =
++        (lastSlash == std::string::npos) ? root : normalized.substr(0, lastSlash);
+ 
+-    const std::string::size_type lastSlash = normalized.rfind('/');
+-    const std::string dirPath = (lastSlash == std::string::npos)
+-                                    ? root
+-                                    : normalized.substr(0, lastSlash);
+     struct stat sta;
+     if (stat(dirPath.c_str(), &sta) != 0) {
+         return ERR(kStatusNotFound);
+     }
+     if (!S_ISDIR(sta.st_mode)) {
++        LOG_DEBUG("Returning 403 Forbidden: Parent path is not a directory");
+         return ERR(kStatusForbidden);
+     }
+     if (access(dirPath.c_str(), W_OK | X_OK) != 0) {
++        LOG_DEBUG("Returning 403 Forbidden: No permission on parent directory");
+         return ERR(kStatusForbidden);
+     }
+     return OK(types::Unit());
+ }
+ 
+-// O_CLOEXEC は 「close-on-exec フラグをつけてファイルディスクリプタを開く」
+-// という意味で、exec()系システムコールを実行したときにそのファイルディスクリプタが
+-// 自動的に閉じられるようにする
+-Response UploadFileHandler::writeToFile(const std::string& path,
+-                                        const std::vector<char>& body) {
+-    int raw_fd;
+-#ifdef O_CLOEXEC
+-    raw_fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+-#else
+-    raw_fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+-    if (raw_fd >= 0) {
+-        fcntl(raw_fd, F_SETFD, FD_CLOEXEC);
+-    }
+-#endif
+-    if (raw_fd < 0) {
+-        return ResponseBuilder().status(kStatusForbidden).build();
+-    }
+-    const FileDescriptor fd(raw_fd);
+-    const types::Option<int> fdOpt = fd.getFd();
+-    if (fdOpt.isNone()) {
+-        return ResponseBuilder().status(kStatusForbidden).build();
+-    }
+-    if (body.empty()) {
+-        return ResponseBuilder().status(kStatusCreated).build();
+-    }
+-    const ssize_t written = write(fdOpt.unwrap(), body.data(), body.size());
+-    if (written < 0 || static_cast<size_t>(written) != body.size()) {
+-        return ResponseBuilder().status(kStatusInternalServerError).build();
+-    }
+-
+-    return ResponseBuilder().status(kStatusCreated).build();
+-}
++// 旧 writeToFile は使わない（multipart 専用保存を serveInternal 内で完結）
+ 
+-}  // namespace http
++} // namespace http
+diff --git a/src/http/request/read/header.cpp b/src/http/request/read/header.cpp
+index 0a0d101..f71df7f 100644
+--- a/src/http/request/read/header.cpp
++++ b/src/http/request/read/header.cpp
+@@ -1,18 +1,20 @@
+ #include "http/request/read/header.hpp"
+ 
+-#include "http/request/read/body.hpp"
+ #include "config/context/serverContext.hpp"
++#include "http/config/config_resolver.hpp"
++#include "http/request/read/body.hpp"
+ #include "http/request/read/context.hpp"
+ #include "http/request/read/header_parsing_utils.hpp"
+-#include "http/config/config_resolver.hpp"
+ #include "http/request/read/length_body.hpp"
+ #include "http/request/read/raw_headers.hpp"
+ #include "http/request/read/state.hpp"
+ #include "http/request/read/utils.hpp"
++#include "utils/logger.hpp"
+ #include "utils/string.hpp"
+ #include "utils/types/error.hpp"
+ #include "utils/types/option.hpp"
+ #include "utils/types/result.hpp"
++#include <cstdlib>
+ 
+ namespace http {
+ 
+@@ -25,8 +27,8 @@ ReadingRequestHeadersState::~ReadingRequestHeadersState() {}
+ // 3. 必要なら次の状態(ReadingRequestBodyState)へ遷移させる
+ // 4. TransitionResultにヘッダーや次のステートをセットして返す
+ 
+-TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
+-                                                    ReadBuffer& buf) {
++TransitionResult ReadingRequestHeadersState::handle(ReadContext &ctx,
++                                                    ReadBuffer &buf) {
+     TransitionResult tr;
+     RawHeaders headers;
+ 
+@@ -52,30 +54,72 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
+             tr.setStatus(types::err(error::kBadRequest));
+             return tr;
+         }
+-        const std::string key = utils::toLower(utils::trim(line.substr(0, colon)));
++        const std::string key =
++            utils::toLower(utils::trim(line.substr(0, colon)));
+         const std::string value = utils::trim(line.substr(colon + 1));
+         headers.insert(std::make_pair(key, value));
+     }
+ }
+ 
+ TransitionResult ReadingRequestHeadersState::handleHeadersComplete(
+-    ReadContext& ctx, TransitionResult& tr, const RawHeaders& headers) {
++    ReadContext &ctx, TransitionResult &tr, const RawHeaders &headers) {
++    LOG_DEBUG("handleHeadersComplete");
+     const std::string host = parser::extractHeader(headers, "Host");
+-    const types::Result<const ServerContext*, error::AppError> result =
++    const types::Result<const ServerContext *, error::AppError> result =
+         ctx.getConfigResolver().chooseServer(host);
+     if (result.isErr()) {
+         tr.setStatus(types::err(result.unwrapErr()));
+         return tr;
+     }
+-    const ServerContext* serverContext = result.unwrap();
++    const ServerContext *serverContext = result.unwrap();
+     if (serverContext == NULL) {
+         tr.setStatus(types::err(error::kIOUnknown));
+         return tr;
+     }
+     ctx.setServer(*serverContext);
++
++    // --- Body判定追加 ---
++    bool hasBody = false;
++    BodyEncodingType bodyType = kNone;
++    BodyLengthConfig bodyConfig;
++
++    const std::string contentLengthValue =
++        parser::extractHeader(headers, "content-length");
++    LOG_DEBUG("content-length: " + contentLengthValue);
++    if (!contentLengthValue.empty()) {
++        hasBody = true;
++        bodyType = kContentLength;
++        bodyConfig.contentLength = std::atoi(contentLengthValue.c_str());
++        bodyConfig.clientMaxBodySize = serverContext->getClientMaxBodySize();
++        LOG_DEBUG("hasBody is true by Content-Length");
++    }
++
++    const std::string transferEncodingValue =
++        parser::extractHeader(headers, "transfer-encoding");
++    LOG_DEBUG("transfer-encoding: " + transferEncodingValue);
++    if (!transferEncodingValue.empty() &&
++        transferEncodingValue.find("chunked") != std::string::npos) {
++        hasBody = true;
++        bodyType = kChunked;
++        bodyConfig.contentLength = 0;
++        bodyConfig.clientMaxBodySize = serverContext->getClientMaxBodySize();
++        LOG_DEBUG("hasBody is true by Transfer-Encoding");
++    }
++
++    // bodyが必要ならbodyステート生成＆遷移
++    if (hasBody) {
++        LOG_DEBUG("Transition to ReadingRequestBodyState");
++        IState *bodyState = new ReadingRequestBodyState(bodyType, bodyConfig);
++        tr.setNextState(bodyState);
++        tr.setHeaders(types::some(headers));
++        tr.setStatus(types::ok(kDone));
++        return tr;
++    }
++    LOG_DEBUG("No body, request reading complete.");
+     tr.setHeaders(types::some(headers));
+     tr.setStatus(types::ok(kDone));
+     return tr;
+ }
+ 
+-}  // namespace http
++} // namespace http
++
+diff --git a/src/io/handler/ClientHandler.cpp b/src/io/handler/ClientHandler.cpp
+index 9de34c9..e149a54 100644
+--- a/src/io/handler/ClientHandler.cpp
++++ b/src/io/handler/ClientHandler.cpp
+@@ -63,7 +63,7 @@ void ClientHandler::onReadable(Connection& c) {
+         if (!reqOpt.isNone()) {
+             const http::Request& req = reqOpt.unwrap();
+             c.pushCreatedReq(req);
+-            continue; // さらに取れるだけ回す
++            // continue; // さらに取れるだけ回す
+         }
+         // NeedMore
+         break;
+diff --git a/src/main.cpp b/src/main.cpp
+index a35e2ea..2636b66 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -1,23 +1,32 @@
+ #include "config/config.hpp"
+ #include "server/Server.hpp"
++#include "utils/logger.hpp"
+ 
+ int main(int argc, char** argv) {
++        SET_LOG_LEVEL(Logger::kDebug);
++        LOG_INFO("Server starting...");
+         if (!Config::checkArgc(argc)) {
++                LOG_ERROR("Invalid number of arguments");
+                 return (1);
+         }
+         const std::string confFile = Config::setFile(argc, argv);
++        LOG_INFO("Using configuration file: " + confFile);
+ 
+         Config::checkFile(confFile);
+ 
+         try {
+                 const Config config(confFile);
+-                config.printParser();
++                LOG_INFO("Configuration loaded successfully");
++                // config.printParser();
+                 Server server(config.getParser().getServer());
+                 server.init();
++                LOG_INFO("Server initialized");
+                 server.run();
+         } catch (const std::exception& e) {
++                LOG_ERROR("An exception occurred: " + std::string(e.what()));
+                 std::cerr << e.what() << std::endl;
+                 return (1);
+         }
++        LOG_INFO("Server shutting down");
+         return (0);
+ }
+diff --git a/src/server/server.cpp b/src/server/server.cpp
+index 12ee7f9..3eaced0 100644
+--- a/src/server/server.cpp
++++ b/src/server/server.cpp
+@@ -2,6 +2,8 @@
+ #include "utils/types/try.hpp"
+ #include "server/socket/SocketAddr.hpp"
+ #include "server/fileDescriptor/FdUtils.hpp"
++#include "utils/logger.hpp"
++#include "utils/string.hpp"
+ 
+ Server::Server(const std::vector<ServerContext>& serverCtxs) 
+     : serverCtxs_(serverCtxs), 
+@@ -10,6 +12,7 @@ Server::Server(const std::vector<ServerContext>& serverCtxs)
+     dispatcher_(0),
+     resolver_(serverCtxs_),
+     endpointResolver_(vsByKey_) {   
++    LOG_INFO("Server created");
+     handlers_[FD_LISTENER]   = new ListenerHandler(this);
+     handlers_[FD_CLIENT]     = new ClientHandler(this);
+     handlers_[FD_CGI_STDIN]  = new CgiStdinHandler(this);
+@@ -17,6 +20,7 @@ Server::Server(const std::vector<ServerContext>& serverCtxs)
+ }
+ 
+ Server::~Server() {
++    LOG_INFO("Server destroyed");
+     delete handlers_[FD_LISTENER];
+     delete handlers_[FD_CLIENT];
+     delete handlers_[FD_CGI_STDIN];
+@@ -24,52 +28,64 @@ Server::~Server() {
+ }
+ 
+ types::Result<types::Unit, int> Server::init() {
++    LOG_INFO("Initializing server...");
+     TRY(epollNotifier_.open());
+     TRY(initVirtualServers());
+     TRY(buildListeners());
+     TRY(initDispatcher());
++    LOG_INFO("Server initialized successfully");
+     return types::ok(types::Unit());
+ }
+ 
+ types::Result<types::Unit, int> Server::initVirtualServers() {
++    LOG_INFO("Initializing virtual servers...");
+     for (size_t i = 0; i < serverCtxs_.size(); ++i) {
+         const ServerContext& sc = serverCtxs_[i];
+ 
+         const std::string key = makeEndpointKeyFromConfig(sc.getHost(), sc.getListen());
++        LOG_DEBUG("Processing virtual server with key: " + key);
+         for (std::map<std::string, VirtualServer*>::const_iterator it = vsByKey_.begin();
+              it != vsByKey_.end(); ++it) {
+             if (key == it->first || overlapsWildcard(key, it->first)) {
++                LOG_ERROR("Duplicate or overlapping server configuration for key: " + key);
+                 return types::err<int>(EINVAL); // ワイルドカードと重複エラー
+             }
+         }
+         VirtualServer* vs = new VirtualServer(sc, /*bindAddress=*/canonicalizeIp(sc.getHost()));
+         vsByKey_[key] = vs;
++        LOG_INFO("Virtual server created for key: " + key);
+     }
++    LOG_INFO("Virtual servers initialized successfully");
+     return types::ok();
+ }
+ 
+-// Todo: VirtualServer が複数の listen ポートを許容する場合、2 重ループにて処理する必要がある。
+ types::Result<types::Unit,int> Server::buildListeners() {
++    LOG_INFO("Building listeners...");
+     for (size_t i = 0; i < serverCtxs_.size(); ++i) {
+         const ServerContext& sc = serverCtxs_[i];
+         ListenerKey key;
+         key.addr = canonicalizeIp(sc.getHost());
+         key.port = sc.getListen();
+         if (listeners_.find(key) != listeners_.end()) {
++            LOG_DEBUG("Listener already exists for " + key.addr + ":" + u16toString(key.port));
+             continue;
+         }
++        LOG_INFO("Creating listener for " + key.addr + ":" + u16toString(key.port));
+         ServerSocket* ls = new ServerSocket();
+         types::Result<int, int> r = ls->open(AF_INET, SOCK_STREAM, 0);
+         if (r.isErr()) {
++            LOG_ERROR("Failed to open server socket");
+             return types::err<int>(r.unwrapErr());
+         }
+         types::Result<int, int> r2 = ls->setReuseAddr(true);
+         if (r2.isErr()) {
++           LOG_ERROR("Failed to set SO_REUSEADDR");
+            return types::err<int>(r2.unwrapErr());
+         };
+         SocketAddr sa = SocketAddr::createIPv4(key.addr, key.port);
+         types::Result<int, int> r3 = ls->bind(sa);
+         if (r3.isErr()) {
++           LOG_ERROR("Failed to bind socket to " + key.addr + ":" + u16toString(key.port));
+            return types::err<int>(r3.unwrapErr());
+         };
+         listeners_[key] = ls;
+@@ -77,7 +93,9 @@ types::Result<types::Unit,int> Server::buildListeners() {
+         const int lfd = ls->getRawFd();
+         epollNotifier_.add(lfd, EPOLLIN | EPOLLERR);
+         fdRegister_.add(lfd, FD_LISTENER, 0);
++        LOG_INFO("Listener created and listening on " + key.addr + ":" + u16toString(key.port));
+     }
++    LOG_INFO("Listeners built successfully");
+     return types::ok();
+ }
+ 
+@@ -87,21 +105,27 @@ types::Result<types::Unit,int> Server::initDispatcher() {
+ }
+ 
+ types::Result<types::Unit,int> Server::run() {
++    LOG_INFO("Server run loop started");
+     for (;;) {
++        LOG_DEBUG("Waiting for events...");
+         types::Result<std::vector<EpollEvent>, int> r = epollNotifier_.wait(); // 200ms など
+         if (r.isErr()) {
++            LOG_ERROR("epoll_wait failed");
+             return types::err<int>(r.unwrapErr());
+         }
+         const std::vector<EpollEvent>& evs = r.unwrap();
++        LOG_DEBUG("Received " + utils::toString(evs.size()) + " events");
+         for (size_t i = 0; i < evs.size(); ++i) {
+             const EpollEvent& ev = evs[i];
+             const int fd         = ev.getUserFd();
+             const uint32_t mask  = ev.getEvents();
+             FdEntry fdEntry;
+             if (!fdRegister_.find(fd, &fdEntry)) {
++                LOG_WARN("No FdEntry found for fd: " + utils::toString(fd));
+                 // epollDelClose(fd);
+                 continue;
+             }
++            LOG_DEBUG("Dispatching event for fd: " + utils::toString(fd));
+             IFdHandler* fdEventHandler = handlers_[fdEntry.kind];
+             fdEventHandler->onEvent(fdEntry, mask);
+         }
+@@ -110,6 +134,7 @@ types::Result<types::Unit,int> Server::run() {
+ }
+ 
+ void Server::acceptLoop(int lfd) {
++    LOG_INFO("Accepting new connections on fd: " + utils::toString(lfd));
+     for (;;) {
+         SocketAddr peer = SocketAddr::makeEmpty();
+         socklen_t len = peer.length();
+@@ -117,17 +142,20 @@ void Server::acceptLoop(int lfd) {
+         peer.setLength(len);
+         if (cfd < 0) {
+             if (errno == EAGAIN || errno == EWOULDBLOCK) {
++                LOG_DEBUG("No more incoming connections");
+                 break;
+             }
+-            // Todo : emit log.
++            LOG_ERROR("accept failed");
+             break;
+         }
+         peer.setLength(len);
++        LOG_INFO("Accepted new connection on fd: " + utils::toString(cfd));
+         FdUtils::set_nonblock_and_cloexec(cfd);
+         Connection* conn = new Connection(cfd, peer, this->resolver());
+         connManager_.registerConnection(conn);
+         epollNotifier_.add(cfd, EPOLLIN | EPOLLRDHUP | EPOLLERR);
+         fdRegister_.add(cfd, FD_CLIENT, conn);
++        LOG_DEBUG("Connection registered for fd: " + utils::toString(cfd));
+     }
+ }
+ 
+diff --git a/test.txt b/test.txt
+new file mode 100644
+index 0000000..fcf0cdb
+--- /dev/null
++++ b/test.txt
+@@ -0,0 +1 @@
++hello. did this upload?
+diff --git a/www/user_uploads/file b/www/user_uploads/file
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/www/user_uploads/test.txt b/www/user_uploads/test.txt
+new file mode 100644
+index 0000000..fcf0cdb
+--- /dev/null
++++ b/www/user_uploads/test.txt
+@@ -0,0 +1 @@
++hello. did this upload?

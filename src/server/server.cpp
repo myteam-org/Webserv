@@ -43,7 +43,6 @@ types::Result<types::Unit, int> Server::initVirtualServers() {
         const ServerContext& sc = serverCtxs_[i];
 
         const std::string key = makeEndpointKeyFromConfig(sc.getHost(), sc.getListen());
-        LOG_DEBUG("Processing virtual server with key: " + key);
         for (std::map<std::string, VirtualServer*>::const_iterator it = vsByKey_.begin();
              it != vsByKey_.end(); ++it) {
             if (key == it->first || overlapsWildcard(key, it->first)) {
@@ -67,7 +66,6 @@ types::Result<types::Unit,int> Server::buildListeners() {
         key.addr = canonicalizeIp(sc.getHost());
         key.port = sc.getListen();
         if (listeners_.find(key) != listeners_.end()) {
-            LOG_DEBUG("Listener already exists for " + key.addr + ":" + u16toString(key.port));
             continue;
         }
         LOG_INFO("Creating listener for " + key.addr + ":" + u16toString(key.port));
@@ -107,14 +105,12 @@ types::Result<types::Unit,int> Server::initDispatcher() {
 types::Result<types::Unit,int> Server::run() {
     LOG_INFO("Server run loop started");
     for (;;) {
-        LOG_DEBUG("Waiting for events...");
         types::Result<std::vector<EpollEvent>, int> r = epollNotifier_.wait(); // 200ms など
         if (r.isErr()) {
             LOG_ERROR("epoll_wait failed");
             return types::err<int>(r.unwrapErr());
         }
         const std::vector<EpollEvent>& evs = r.unwrap();
-        LOG_DEBUG("Received " + utils::toString(evs.size()) + " events");
         for (size_t i = 0; i < evs.size(); ++i) {
             const EpollEvent& ev = evs[i];
             const int fd         = ev.getUserFd();
@@ -125,7 +121,6 @@ types::Result<types::Unit,int> Server::run() {
                 // epollDelClose(fd);
                 continue;
             }
-            LOG_DEBUG("Dispatching event for fd: " + utils::toString(fd));
             IFdHandler* fdEventHandler = handlers_[fdEntry.kind];
             fdEventHandler->onEvent(fdEntry, mask);
         }
@@ -142,7 +137,6 @@ void Server::acceptLoop(int lfd) {
         peer.setLength(len);
         if (cfd < 0) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
-                LOG_DEBUG("No more incoming connections");
                 break;
             }
             LOG_ERROR("accept failed");
@@ -155,7 +149,6 @@ void Server::acceptLoop(int lfd) {
         connManager_.registerConnection(conn);
         epollNotifier_.add(cfd, EPOLLIN | EPOLLRDHUP | EPOLLERR);
         fdRegister_.add(cfd, FD_CLIENT, conn);
-        LOG_DEBUG("Connection registered for fd: " + utils::toString(cfd));
     }
 }
 

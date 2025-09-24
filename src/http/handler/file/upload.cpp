@@ -216,10 +216,6 @@ static std::string normalizePath(const std::string& path) {
 // ===== 既存: パス検証（realpath → normalizePathで代替） =====
 static bool isPathUnderRootUnified(const std::string& rootPath,
                                    const std::string& targetPath) {
-    LOG_DEBUG("=== UNIFIED PATH VALIDATION ===");
-    LOG_DEBUG("Target path: [" + targetPath + "]");
-    LOG_DEBUG("Root path: [" + rootPath + "]");
-
     std::string rootNorm = normalizePath(rootPath);
     std::string targetNorm = normalizePath(targetPath);
 
@@ -229,11 +225,7 @@ static bool isPathUnderRootUnified(const std::string& rootPath,
     if (!targetNorm.empty() && targetNorm[targetNorm.length()-1] != '/')
         targetNorm += '/';
 
-    LOG_DEBUG("Target normalized: [" + targetNorm + "]");
-    LOG_DEBUG("Root normalized: [" + rootNorm + "]");
-
     bool isValid = (targetNorm.find(rootNorm) == 0);
-    LOG_DEBUG(std::string("Path validation result: ") + (isValid ? "OK" : "NG"));
     return isValid;
 }
 
@@ -248,11 +240,8 @@ Either<IAction*, Response> UploadFileHandler::serve(const Request& request) {
 
 Response UploadFileHandler::serveInternal(const Request& request) const {
     const std::string& rel = request.getPath(); // "/upload"
-    LOG_DEBUG("File upload request detected for path: " + rel);
 
-    LOG_DEBUG("Checking upload permissions for location: " + rel);
     if (!docRootConfig_.getEnableUpload()) {
-        LOG_DEBUG("Returning 403 Forbidden: Upload is not enabled for this location");
         return ResponseBuilder().status(kStatusForbidden).build();
     }
 
@@ -262,17 +251,14 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
     // Content-Type 確認
     const types::Option<std::string> ctOpt = request.getHeader("Content-Type");
     if (ctOpt.isNone()) {
-        LOG_DEBUG("Returning 400 Bad Request: Missing Content-Type");
         return ResponseBuilder().status(kStatusBadRequest).build();
     }
     const std::string contentType = ctOpt.unwrap();
     if (contentType.find("multipart/form-data") == std::string::npos) {
-        LOG_DEBUG("Returning 400 Bad Request: Not multipart/form-data");
         return ResponseBuilder().status(kStatusBadRequest).build();
     }
     std::string boundary = extractBoundary(contentType);
     if (boundary.empty()) {
-        LOG_DEBUG("Returning 400 Bad Request: Boundary not found");
         return ResponseBuilder().status(kStatusBadRequest).build();
     }
 
@@ -286,7 +272,6 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
     std::string filename;
     std::string fileData;
     if (!parseFirstFilePart(bodyStr, boundary, filename, fileData)) {
-        LOG_DEBUG("Returning 400 Bad Request: No file part with filename");
         return ResponseBuilder().status(kStatusBadRequest).build();
     }
 
@@ -298,7 +283,6 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
 
     // パス検証
     if (!isPathUnderRootUnified(root, savePath)) {
-        LOG_DEBUG("Returning 403 Forbidden: Path is not under root directory");
         return ResponseBuilder().status(kStatusForbidden).build();
     }
 
@@ -320,14 +304,12 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
     }
 #endif
     if (raw_fd < 0) {
-        LOG_DEBUG("Returning 403 Forbidden: Failed to open file for writing");
         return ResponseBuilder().status(kStatusForbidden).build();
     }
     {
         FileDescriptor fd(raw_fd);
         const types::Option<int> fdOpt = fd.getFd();
         if (fdOpt.isNone()) {
-            LOG_DEBUG("Returning 403 Forbidden: Invalid FD");
             return ResponseBuilder().status(kStatusForbidden).build();
         }
         if (!fileData.empty()) {
@@ -338,7 +320,6 @@ Response UploadFileHandler::serveInternal(const Request& request) const {
         }
     }
 
-    LOG_DEBUG("Upload successful: " + savePath);
     return ResponseBuilder().status(kStatusCreated).build();
 }
 
@@ -346,7 +327,6 @@ types::Result<types::Unit, HttpStatusCode>
 UploadFileHandler::checkParentDir(const std::string& normalized) const {
     const std::string root = utils::path::normalizeSlashes(docRootConfig_.getRoot());
     if (!isPathUnderRootUnified(root, normalized)) {
-        LOG_DEBUG("Returning 403 Forbidden: Normalized path is not under root directory");
         return ERR(kStatusForbidden);
     }
     std::string::size_type lastSlash = normalized.rfind('/');
@@ -358,11 +338,9 @@ UploadFileHandler::checkParentDir(const std::string& normalized) const {
         return ERR(kStatusNotFound);
     }
     if (!S_ISDIR(sta.st_mode)) {
-        LOG_DEBUG("Returning 403 Forbidden: Parent path is not a directory");
         return ERR(kStatusForbidden);
     }
     if (access(dirPath.c_str(), W_OK | X_OK) != 0) {
-        LOG_DEBUG("Returning 403 Forbidden: No permission on parent directory");
         return ERR(kStatusForbidden);
     }
     return OK(types::Unit());

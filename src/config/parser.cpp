@@ -97,7 +97,6 @@ void ConfigParser::addServer_(size_t& index) {
                 break;
             }
         } else if (type >= LISTEN && type <= LOCATION) {
-            LOG_DEBUG("Parsing server directive: " + tokens_[index].getText());
             (this->*funcServer_[type])(server, index);
         } else {
             continue;
@@ -194,7 +193,6 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
                 break;
             }
         } else if (type >= ROOT && type <= ENABLE_UPLOAD) {
-            LOG_DEBUG("Parsing location directive: " + tokens_[index].getText());
             (this->*funcLocation_[type - FUNC_SERVER_SIZE])(location, index);
         } else {
             continue;

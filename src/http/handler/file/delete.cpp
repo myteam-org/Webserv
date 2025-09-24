@@ -5,63 +5,93 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
-#include <string>
 
 namespace http {
+
     DeleteFileHandler::DeleteFileHandler(const DocumentRootConfig &docRootConfig)
-        : docRootConfig_(docRootConfig) {}
+        : docRootConfig_(docRootConfig), locationPath_("") {}
+
+    DeleteFileHandler::DeleteFileHandler(const DocumentRootConfig &docRootConfig,
+                                         const std::string &locationPath)
+        : docRootConfig_(docRootConfig), locationPath_(locationPath)
+    {
+        if (locationPath_.length() > 1 &&
+            locationPath_[locationPath_.length() - 1] == '/')
+            locationPath_.erase(locationPath_.length() - 1);
+    }
+
+    DeleteFileHandler::~DeleteFileHandler() {
+    }
 
     Either<IAction *, Response> DeleteFileHandler::serve(const Request &request) {
         return Right(this->serveInternal(request));
     }
 
-    Response DeleteFileHandler::serveInternal(const Request &req) const {
-        LOG_DEBUG("docRootConfig_.getRoot(): " + docRootConfig_.getRoot());
-        LOG_DEBUG("req.getRequestTarget(): " + req.getRequestTarget());
+    std::string DeleteFileHandler::stripOneLeadingSlash(const std::string &s) {
+        if (!s.empty() && s[0] == '/')
+            return s.substr(1);
+        return s;
+    }
 
-        // 先頭が /upload/ なら除去
-        std::string target = req.getRequestTarget();
-        const std::string upload_prefix = "/upload/";
-        if (target.compare(0, upload_prefix.length(), upload_prefix) == 0) {
-            target = target.substr(upload_prefix.length());
+    std::string DeleteFileHandler::normalizeRelative(const std::string &s) {
+        if (s.find("..") != std::string::npos)
+            return std::string();
+        return s;
+    }
+
+    std::string DeleteFileHandler::makeRelativeFromLocation(const std::string &requestTarget) const {
+        if (locationPath_.empty())
+            return stripOneLeadingSlash(requestTarget);
+
+        if (requestTarget == locationPath_)
+            return std::string();
+
+        if (requestTarget.length() > locationPath_.length() &&
+            requestTarget.compare(0, locationPath_.length(), locationPath_) == 0 &&
+            requestTarget[locationPath_.length()] == '/')
+        {
+            return requestTarget.substr(locationPath_.length() + 1);
         }
-        LOG_DEBUG("修正後のリクエストターゲット: " + target);
+        return std::string();
+    }
 
-        // パスを構築
-        const std::string path = docRootConfig_.getRoot() + '/' + target;
-        LOG_DEBUG("DELETEリクエスト対象パス: " + path);
+    Response DeleteFileHandler::serveInternal(const Request &req) const {
+        const std::string requestTarget = req.getRequestTarget();
 
-        struct stat buf;
-        memset(&buf, 0, sizeof(buf));
+        std::string relative = makeRelativeFromLocation(requestTarget);
 
-        if (stat(path.c_str(), &buf) == -1) {
-            LOG_DEBUG("stat失敗: errno=" + std::string(strerror(errno)));
-            if (errno == ENOENT) {
-                LOG_DEBUG("ファイルが存在しません: " + path);
+        if (!locationPath_.empty()) {
+            if (relative.empty() && requestTarget != locationPath_) {
                 return ResponseBuilder().status(kStatusNotFound).build();
             }
-            LOG_DEBUG("stat失敗(その他エラー): " + path);
-            return ResponseBuilder().status(kStatusInternalServerError).build();
         }
 
-        if (!S_ISREG(buf.st_mode)) {
-            if (S_ISDIR(buf.st_mode)) {
-                LOG_DEBUG("対象がディレクトリです: " + path);
-            } else {
-                LOG_DEBUG("対象が通常ファイルではありません: mode=other path=" + path);
-            }
+        if (relative.empty()) {
+            return ResponseBuilder().status(kStatusNotFound).build();
+        }
+
+        // relative = normalizeRelative(relative); // 必要なら有効化
+
+        std::string path = docRootConfig_.getRoot();
+        if (!path.empty() && path[path.length() - 1] != '/')
+            path += '/';
+        path += relative;
+
+
+        struct stat st;
+        if (stat(path.c_str(), &st) == -1) {
+            if (errno == ENOENT)
+                return ResponseBuilder().status(kStatusNotFound).build();
+            return ResponseBuilder().status(kStatusInternalServerError).build();
+        }
+        if (!S_ISREG(st.st_mode)) {
             return ResponseBuilder().status(kStatusForbidden).build();
         }
-
-        int remove_result = remove(path.c_str());
-        LOG_DEBUG("remove結果: " + std::string(remove_result == 0 ? "成功" : "失敗") +
-                  " errno=" + std::string(strerror(errno)));
-        if (remove_result) {
-            LOG_DEBUG("ファイル削除失敗: " + path);
+        errno = 0;
+        if (remove(path.c_str()) != 0) {
             return ResponseBuilder().status(kStatusInternalServerError).build();
         }
-
-        LOG_DEBUG("ファイル削除成功: " + path);
         return ResponseBuilder().status(kStatusNoContent).build();
     }
-} //namespace http
+
+} // namespace http

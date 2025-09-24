@@ -1,7 +1,7 @@
 NAME	= webserv
 CPP	= c++
 CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
-DBGFLAGS := -g -O0
+DBGFLAGS := -g
 # CPPFLAG += -g -fsanitize=address
 INC_DIR	= include
 SRCS	= 	src/config/tokenizer.cpp \

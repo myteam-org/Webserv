@@ -11,6 +11,7 @@
 #include "http/handler/router/middleware/error_page.hpp"
 #include "http/handler/router/middleware/logger.hpp"
 #include "http/handler/router/router.hpp"
+#include "utils/logger.hpp"
 
 VirtualServer::VirtualServer(const ServerContext &serverConfig,
                              const std::string &bindAddress)
@@ -30,51 +31,62 @@ const ServerContext &VirtualServer::getServerConfig() const {
 
 http::Router &VirtualServer::getRouter() { return *router_; }
 
-void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
-                                     const LocationContext &locationContext) {
-    const DocumentRootConfig &docRoot = locationContext.getDocumentRootConfig();
-    const std::string &path = locationContext.getPath();
-    const OnOff *allowed = locationContext.getAllowedMethod();
-
-    if (allowed[GET] == ON) {
-        routerBuilder.route(http::kMethodGet, path, new http::StaticFileHandler(docRoot));
-    }
-    if (allowed[POST] == ON) {
-        routerBuilder.route(http::kMethodPost, path, new http::UploadFileHandler(docRoot));
-    }
-    if (allowed[DELETE] == ON) {
-        routerBuilder.route(http::kMethodDelete, path, new http::DeleteFileHandler(docRoot));
-    }
-}
-
-// LocationContext redirect_文字列がある場合はRedirectHandlerをnewする
-// DocumentRootConfig cgi_ == ONの時は、CgiHandlerをnewする
-// どちらでもない時はregisterHandlers()を呼んで該当のHandlerをnewする
 void VirtualServer::setupRouter() {
-    const http::HttpMethod httpMethods[] = {http::kMethodGet, http::kMethodPost, http::kMethodDelete};
-    
     http::RouterBuilder routerBuilder;
     const LocationContextList locationContextList = serverConfig_.getLocation();
-    for (LocationContextList::const_iterator locationIterator =
-             locationContextList.begin();
-             locationIterator != locationContextList.end(); ++locationIterator) {
-        const LocationContext &locationContext = *locationIterator;
-        const std::string &path = locationContext.getPath();
-        const DocumentRootConfig &docRoot = locationContext.getDocumentRootConfig();
-        const OnOff *allowedMethod = locationContext.getAllowedMethod();
-        for (size_t i = 0; i < sizeof(httpMethods)/sizeof(httpMethods[0]); ++i) {
-            const std::string &redirect = locationContext.getRedirect();
-            if (!redirect.empty() && allowedMethod[httpMethods[i]] == ON) {
-                routerBuilder.route(httpMethods[i], path, new http::RedirectHandler(redirect));
-            } else if (docRoot.getCgiExtensions() == ON && allowedMethod[httpMethods[i]] == ON) {
-                //     routerBuilder.route(allowedMethods[i], path, new http::CgiHandler(docRoot));
+
+    for (LocationContextList::const_iterator it = locationContextList.begin();
+         it != locationContextList.end(); ++it) {
+
+        const LocationContext &loc = *it;
+        const std::string &path = loc.getPath();
+        const DocumentRootConfig &docRoot = loc.getDocumentRootConfig();
+        const OnOff *allowed = loc.getAllowedMethod();
+        const std::string &redirect = loc.getRedirect();
+
+        // Redirect 優先 (任意: メソッド別に許可チェック)
+        if (!redirect.empty()) {
+            // 各許可メソッドに RedirectHandler を登録
+            if (allowed[GET] == ON)
+                routerBuilder.route(http::kMethodGet, path,
+                                    new http::RedirectHandler(redirect));
+            if (allowed[POST] == ON)
+                routerBuilder.route(http::kMethodPost, path,
+                                    new http::RedirectHandler(redirect));
+            if (allowed[DELETE] == ON)
+                routerBuilder.route(http::kMethodDelete, path,
+                                    new http::RedirectHandler(redirect));
+            continue;
+        }
+
+        // CGI 対応 (いまはコメントアウトされていたので保留)
+        bool cgiOn = (docRoot.getCgiExtensions() == ON);
+
+        if (allowed[GET] == ON) {
+            if (cgiOn) {
+                // routerBuilder.route(http::kMethodGet, path, new http::CgiHandler(docRoot, path));
             } else {
-                registerHandlers(routerBuilder, locationContext);
+                routerBuilder.route(http::kMethodGet, path,
+                                    new http::StaticFileHandler(docRoot));
             }
         }
+        if (allowed[POST] == ON) {
+            if (cgiOn) {
+                // routerBuilder.route(http::kMethodPost, path, new http::CgiHandler(docRoot, path));
+            } else {
+                routerBuilder.route(http::kMethodPost, path,
+                                    new http::UploadFileHandler(docRoot));
+            }
+        }
+        if (allowed[DELETE] == ON) {
+            routerBuilder.route(http::kMethodDelete, path,
+                                new http::DeleteFileHandler(docRoot, path));
+        }
     }
+
     routerBuilder.middleware(new http::Logger());
     routerBuilder.middleware(new http::ErrorPage(serverConfig_.getErrorPage()));
+
     if (router_ != NULL) {
         delete router_;
     }

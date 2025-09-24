@@ -77,7 +77,6 @@ TransitionResult ReadingRequestHeadersState::handleHeadersComplete(
     }
     ctx.setServer(*serverContext);
 
-    // --- Body判定追加 ---
     bool hasBody = false;
     BodyEncodingType bodyType = kNone;
     BodyLengthConfig bodyConfig;

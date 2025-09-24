@@ -10,9 +10,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <vector>      // 追加: パス正規化用
-#include <string>      // 追加: パス正規化用
-#include <algorithm>   // 追加: パス正規化用
+#include <vector>
+#include <string>
+#include <algorithm>
 
 #include "http/response/builder.hpp"
 #include "io/base/FileDescriptor.hpp"
@@ -22,7 +22,6 @@
 
 namespace http {
 
-// ===== 追加: multipart ヘルパ =====
 
 static std::string trim(const std::string& s) {
     std::string::size_type b = 0;
@@ -184,7 +183,6 @@ static bool parseFirstFilePart(const std::string& body,
     return false;
 }
 
-// ===== 追加: C++98でのパス正規化 =====
 static std::string normalizePath(const std::string& path) {
     std::vector<std::string> stack;
     std::string::size_type i = 0, len = path.length();
@@ -213,7 +211,6 @@ static std::string normalizePath(const std::string& path) {
     return result;
 }
 
-// ===== 既存: パス検証（realpath → normalizePathで代替） =====
 static bool isPathUnderRootUnified(const std::string& rootPath,
                                    const std::string& targetPath) {
     std::string rootNorm = normalizePath(rootPath);
@@ -229,7 +226,6 @@ static bool isPathUnderRootUnified(const std::string& rootPath,
     return isValid;
 }
 
-// ===== UploadFileHandler 実装 =====
 
 UploadFileHandler::UploadFileHandler(const DocumentRootConfig& docRootConfig)
     : docRootConfig_(docRootConfig) {}
@@ -345,7 +341,5 @@ UploadFileHandler::checkParentDir(const std::string& normalized) const {
     }
     return OK(types::Unit());
 }
-
-// 旧 writeToFile は使わない（multipart 専用保存を serveInternal 内で完結）
 
 } // namespace http

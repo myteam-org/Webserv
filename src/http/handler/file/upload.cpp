@@ -6,16 +6,233 @@
 #include <unistd.h>
 
 #include <cerrno>
+#include <climits>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
 
 #include "http/response/builder.hpp"
 #include "io/base/FileDescriptor.hpp"
+#include "utils/logger.hpp"
 #include "utils/path.hpp"
 #include "utils/string.hpp"
 
 namespace http {
+
+// ===== 追加: multipart ヘルパ =====
+
+static std::string trim(const std::string& s) {
+    std::string::size_type b = 0;
+    while (b < s.size() && (s[b] == ' ' || s[b] == '\t' || s[b] == '\r' || s[b] == '\n'))
+        ++b;
+    std::string::size_type e = s.size();
+    while (e > b && (s[e - 1] == ' ' || s[e - 1] == '\t' || s[e - 1] == '\r' || s[e - 1] == '\n'))
+        --e;
+    return s.substr(b, e - b);
+}
+
+static std::string sanitizeFilename(const std::string& orig) {
+    if (orig.empty()) return "uploaded_file";
+    std::string r;
+    for (std::string::size_type i = 0; i < orig.size(); ++i) {
+        char c = orig[i];
+        if (c == '/' || c == '\\' || c == ':' || c == 0) c = '_';
+        r += c;
+    }
+    // ".." を潰す
+    if (r == "." || r == "..") r = "_";
+    return r;
+}
+
+static std::string extractBoundary(const std::string& contentType) {
+    // 例: multipart/form-data; boundary=----WebKitFormBoundaryABC123
+    const std::string key = "boundary=";
+    std::string::size_type pos = contentType.find(key);
+    if (pos == std::string::npos) return "";
+    pos += key.size();
+    // 引用符で囲まれる場合対応
+    if (pos < contentType.size() && (contentType[pos] == '"' || contentType[pos] == '\'')) {
+        char quote = contentType[pos];
+        ++pos;
+        std::string::size_type end = contentType.find(quote, pos);
+        if (end == std::string::npos) return "";
+        return contentType.substr(pos, end - pos);
+    }
+    // 空白かセミコロンまで
+    std::string::size_type end = pos;
+    while (end < contentType.size() &&
+           contentType[end] != ';' &&
+           contentType[end] != ' ' &&
+           contentType[end] != '\r' &&
+           contentType[end] != '\n' &&
+           contentType[end] != '\t') {
+        ++end;
+    }
+    return contentType.substr(pos, end - pos);
+}
+
+// 最初のファイルパートのみ抜き出し
+static bool parseFirstFilePart(const std::string& body,
+                               const std::string& boundaryRaw,
+                               std::string& outFilename,
+                               std::string& outData) {
+    outFilename = "";
+    outData.clear();
+    if (boundaryRaw.empty()) return false;
+
+    const std::string boundary = "--" + boundaryRaw;
+    std::string::size_type searchPos = 0;
+
+    while (true) {
+        // 境界線を探す
+        std::string::size_type bPos = body.find(boundary, searchPos);
+        if (bPos == std::string::npos) break;
+        bPos += boundary.size();
+
+        // 終端か？
+        if (bPos + 2 <= body.size() && body.compare(bPos, 2, "--") == 0) {
+            break; // 終了
+        }
+
+        // CRLF をスキップ
+        if (bPos + 2 <= body.size() && body.compare(bPos, 2, "\r\n") == 0) {
+            bPos += 2;
+        } else if (bPos < body.size() && (body[bPos] == '\n')) {
+            bPos += 1;
+        }
+
+        // ヘッダ終了位置を探す
+        std::string::size_type headerEnd = body.find("\r\n\r\n", bPos);
+        std::string::size_type headerSepLen = 4;
+        if (headerEnd == std::string::npos) {
+            // "\n\n" のみのパターン緩和
+            headerEnd = body.find("\n\n", bPos);
+            headerSepLen = 2;
+        }
+        if (headerEnd == std::string::npos) break;
+
+        std::string headersBlock = body.substr(bPos, headerEnd - bPos);
+
+        // パートのデータ開始
+        std::string::size_type dataStart = headerEnd + headerSepLen;
+
+        // 次の境界を探す
+        std::string::size_type nextBoundary = body.find(boundary, dataStart);
+        if (nextBoundary == std::string::npos) {
+            // 終端が見つからない→不正 or 最後まで
+            nextBoundary = body.size();
+        }
+
+        // パートの生データ範囲（末尾の CRLF を落としたい）
+        std::string::size_type dataEnd = nextBoundary;
+        // 末尾に "\r\n" があれば削る
+        if (dataEnd >= 2 && body.compare(dataEnd - 2, 2, "\r\n") == 0) {
+            dataEnd -= 2;
+        } else if (dataEnd >= 1 && body[dataEnd - 1] == '\n') {
+            dataEnd -= 1;
+        }
+
+        // ヘッダを行単位で解析
+        std::string filename;
+        {
+            std::string::size_type lineStart = 0;
+            while (lineStart < headersBlock.size()) {
+                std::string::size_type lineEnd = headersBlock.find("\r\n", lineStart);
+                std::string line;
+                if (lineEnd == std::string::npos) {
+                    line = headersBlock.substr(lineStart);
+                    lineStart = headersBlock.size();
+                } else {
+                    line = headersBlock.substr(lineStart, lineEnd - lineStart);
+                    lineStart = lineEnd + 2;
+                }
+                line = trim(line);
+                if (line.empty()) continue;
+                // Content-Disposition 行を探す
+                std::string lower = line;
+                for (std::string::size_type i = 0; i < lower.size(); ++i) {
+                    if (lower[i] >= 'A' && lower[i] <= 'Z')
+                        lower[i] = lower[i] - 'A' + 'a';
+                }
+                if (lower.find("content-disposition:") == 0) {
+                    // filename="..."
+                    const std::string key = "filename=\"";
+                    std::string::size_type fPos = line.find(key);
+                    if (fPos != std::string::npos) {
+                        fPos += key.size();
+                        std::string::size_type fEnd = line.find('"', fPos);
+                        if (fEnd != std::string::npos) {
+                            filename = line.substr(fPos, fEnd - fPos);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!filename.empty()) {
+            outFilename = sanitizeFilename(filename);
+            outData.assign(body, dataStart, dataEnd - dataStart);
+            return true;
+        }
+
+        // 次へ
+        searchPos = nextBoundary;
+    }
+    return false;
+}
+
+// ===== 既存: パス検証 =====
+static bool isPathUnderRootUnified(const std::string& rootPath,
+                                   const std::string& targetPath) {
+    LOG_DEBUG("=== UNIFIED PATH VALIDATION ===");
+    LOG_DEBUG("Target path: [" + targetPath + "]");
+    LOG_DEBUG("Root path: [" + rootPath + "]");
+
+    char rootReal_c[PATH_MAX] = {0};
+    if (realpath(rootPath.c_str(), rootReal_c) == NULL) {
+        LOG_DEBUG("Failed to get absolute path for root: " + rootPath);
+        return false;
+    }
+    std::string rootReal(rootReal_c);
+
+    // 親ディレクトリとファイル名
+    std::string parentPath;
+    std::string filename;
+    std::string::size_type lastSlashPos = targetPath.rfind('/');
+    if (lastSlashPos == std::string::npos) {
+        parentPath = ".";
+        filename = targetPath;
+    } else {
+        parentPath = targetPath.substr(0, lastSlashPos);
+        filename = targetPath.substr(lastSlashPos + 1);
+        if (parentPath.empty()) parentPath = "/";
+    }
+
+    char parentReal_c[PATH_MAX] = {0};
+    if (realpath(parentPath.c_str(), parentReal_c) == NULL) {
+        LOG_DEBUG("Failed to get absolute path for parent: " + parentPath);
+        return false;
+    }
+
+    std::string targetReal(parentReal_c);
+    if (!targetReal.empty() && targetReal[targetReal.length() - 1] != '/')
+        targetReal += '/';
+    targetReal += filename;
+
+    rootReal   = utils::path::normalizeSlashes(rootReal);
+    targetReal = utils::path::normalizeSlashes(targetReal);
+    if (!rootReal.empty() && rootReal[rootReal.length() - 1] != '/')
+        rootReal += '/';
+
+    LOG_DEBUG("Target absolute: [" + targetReal + "]");
+    LOG_DEBUG("Root absolute: [" + rootReal + "]");
+
+    bool isValid = (targetReal.find(rootReal) == 0);
+    LOG_DEBUG(std::string("Path validation result: ") + (isValid ? "OK" : "NG"));
+    return isValid;
+}
+
+// ===== UploadFileHandler 実装 =====
 
 UploadFileHandler::UploadFileHandler(const DocumentRootConfig& docRootConfig)
     : docRootConfig_(docRootConfig) {}
@@ -25,91 +242,127 @@ Either<IAction*, Response> UploadFileHandler::serve(const Request& request) {
 }
 
 Response UploadFileHandler::serveInternal(const Request& request) const {
-    // このロケーションでアップロードが許可されていなければ拒否
+    const std::string& rel = request.getPath(); // "/upload"
+    LOG_DEBUG("File upload request detected for path: " + rel);
+
+    LOG_DEBUG("Checking upload permissions for location: " + rel);
     if (!docRootConfig_.getEnableUpload()) {
+        LOG_DEBUG("Returning 403 Forbidden: Upload is not enabled for this location");
         return ResponseBuilder().status(kStatusForbidden).build();
     }
 
-    // Parser が decode + remove_dot_segments 済みのパスを返す前提
-    const std::string& rel = request.getPath();
+    const std::string root = utils::path::normalizeSlashes(docRootConfig_.getRoot());
 
-    const std::string& root = docRootConfig_.getRoot();
-    const std::string joined = utils::joinPath(root, rel);
+    // ここでは /upload をファイル名に使わない（API エンドポイント扱い）
+    // Content-Type 確認
+    const types::Option<std::string> ctOpt = request.getHeader("Content-Type");
+    if (ctOpt.isNone()) {
+        LOG_DEBUG("Returning 400 Bad Request: Missing Content-Type");
+        return ResponseBuilder().status(kStatusBadRequest).build();
+    }
+    const std::string contentType = ctOpt.unwrap();
+    if (contentType.find("multipart/form-data") == std::string::npos) {
+        LOG_DEBUG("Returning 400 Bad Request: Not multipart/form-data");
+        return ResponseBuilder().status(kStatusBadRequest).build();
+    }
+    std::string boundary = extractBoundary(contentType);
+    if (boundary.empty()) {
+        LOG_DEBUG("Returning 400 Bad Request: Boundary not found");
+        return ResponseBuilder().status(kStatusBadRequest).build();
+    }
 
-    // スラッシュ正規化（'\\' -> '/', '//' 圧縮）
-    const std::string full = utils::path::normalizeSlashes(joined);
+    // ボディ取得
+    const std::vector<char>& bodyVec = request.getBody();
+    std::string bodyStr;
+    if (!bodyVec.empty())
+        bodyStr.assign(&bodyVec[0], bodyVec.size());
 
-    // ルート配下チェック
-    if (!utils::path::isPathUnderRoot(root, full)) {
+    // パート解析
+    std::string filename;
+    std::string fileData;
+    if (!parseFirstFilePart(bodyStr, boundary, filename, fileData)) {
+        LOG_DEBUG("Returning 400 Bad Request: No file part with filename");
+        return ResponseBuilder().status(kStatusBadRequest).build();
+    }
+
+    // 保存パス構築
+    std::string savePath = root;
+    if (!savePath.empty() && savePath[savePath.size() - 1] != '/')
+        savePath += '/';
+    savePath += filename;
+
+    // パス検証
+    if (!isPathUnderRootUnified(root, savePath)) {
+        LOG_DEBUG("Returning 403 Forbidden: Path is not under root directory");
         return ResponseBuilder().status(kStatusForbidden).build();
     }
 
-    // 親ディレクトリの存在/権限
+    // 親ディレクトリ確認
     const types::Result<types::Unit, HttpStatusCode> dirCheck =
-        checkParentDir(full);
+        checkParentDir(savePath);
     if (dirCheck.isErr()) {
         return ResponseBuilder().status(dirCheck.unwrapErr()).build();
     }
 
-    // 6) 書き込み
-    return writeToFile(full, request.getBody());
-}
-
-types::Result<types::Unit, HttpStatusCode> UploadFileHandler::checkParentDir(
-    const std::string& normalized) const {
-    const std::string& root = docRootConfig_.getRoot();
-    if (!utils::path::isPathUnderRoot(root, normalized)) {
-        return ERR(kStatusForbidden);
-    }
-
-    const std::string::size_type lastSlash = normalized.rfind('/');
-    const std::string dirPath = (lastSlash == std::string::npos)
-                                    ? root
-                                    : normalized.substr(0, lastSlash);
-    struct stat sta;
-    if (stat(dirPath.c_str(), &sta) != 0) {
-        return ERR(kStatusNotFound);
-    }
-    if (!S_ISDIR(sta.st_mode)) {
-        return ERR(kStatusForbidden);
-    }
-    if (access(dirPath.c_str(), W_OK | X_OK) != 0) {
-        return ERR(kStatusForbidden);
-    }
-    return OK(types::Unit());
-}
-
-// O_CLOEXEC は 「close-on-exec フラグをつけてファイルディスクリプタを開く」
-// という意味で、exec()系システムコールを実行したときにそのファイルディスクリプタが
-// 自動的に閉じられるようにする
-Response UploadFileHandler::writeToFile(const std::string& path,
-                                        const std::vector<char>& body) {
+    // 書き込み
     int raw_fd;
 #ifdef O_CLOEXEC
-    raw_fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
+    raw_fd = open(savePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0600);
 #else
-    raw_fd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    raw_fd = open(savePath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
     if (raw_fd >= 0) {
         fcntl(raw_fd, F_SETFD, FD_CLOEXEC);
     }
 #endif
     if (raw_fd < 0) {
+        LOG_DEBUG("Returning 403 Forbidden: Failed to open file for writing");
         return ResponseBuilder().status(kStatusForbidden).build();
     }
-    const FileDescriptor fd(raw_fd);
-    const types::Option<int> fdOpt = fd.getFd();
-    if (fdOpt.isNone()) {
-        return ResponseBuilder().status(kStatusForbidden).build();
-    }
-    if (body.empty()) {
-        return ResponseBuilder().status(kStatusCreated).build();
-    }
-    const ssize_t written = write(fdOpt.unwrap(), body.data(), body.size());
-    if (written < 0 || static_cast<size_t>(written) != body.size()) {
-        return ResponseBuilder().status(kStatusInternalServerError).build();
+    {
+        FileDescriptor fd(raw_fd);
+        const types::Option<int> fdOpt = fd.getFd();
+        if (fdOpt.isNone()) {
+            LOG_DEBUG("Returning 403 Forbidden: Invalid FD");
+            return ResponseBuilder().status(kStatusForbidden).build();
+        }
+        if (!fileData.empty()) {
+            ssize_t written = write(fdOpt.unwrap(), fileData.data(), fileData.size());
+            if (written < 0 || static_cast<size_t>(written) != fileData.size()) {
+                return ResponseBuilder().status(kStatusInternalServerError).build();
+            }
+        }
     }
 
+    LOG_DEBUG("Upload successful: " + savePath);
     return ResponseBuilder().status(kStatusCreated).build();
 }
 
-}  // namespace http
+types::Result<types::Unit, HttpStatusCode>
+UploadFileHandler::checkParentDir(const std::string& normalized) const {
+    const std::string root = utils::path::normalizeSlashes(docRootConfig_.getRoot());
+    if (!isPathUnderRootUnified(root, normalized)) {
+        LOG_DEBUG("Returning 403 Forbidden: Normalized path is not under root directory");
+        return ERR(kStatusForbidden);
+    }
+    std::string::size_type lastSlash = normalized.rfind('/');
+    std::string dirPath =
+        (lastSlash == std::string::npos) ? root : normalized.substr(0, lastSlash);
+
+    struct stat sta;
+    if (stat(dirPath.c_str(), &sta) != 0) {
+        return ERR(kStatusNotFound);
+    }
+    if (!S_ISDIR(sta.st_mode)) {
+        LOG_DEBUG("Returning 403 Forbidden: Parent path is not a directory");
+        return ERR(kStatusForbidden);
+    }
+    if (access(dirPath.c_str(), W_OK | X_OK) != 0) {
+        LOG_DEBUG("Returning 403 Forbidden: No permission on parent directory");
+        return ERR(kStatusForbidden);
+    }
+    return OK(types::Unit());
+}
+
+// 旧 writeToFile は使わない（multipart 専用保存を serveInternal 内で完結）
+
+} // namespace http

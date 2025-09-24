@@ -11,6 +11,7 @@
 #include "config/token.hpp"
 #include "config/tokenizer.hpp"
 #include "config/validator.hpp"
+#include "utils/logger.hpp"
 
 void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(
     ServerContext&, size_t&) = {
@@ -28,18 +29,23 @@ void (ConfigParser::* ConfigParser::funcLocation_[FUNC_LOCATION_SIZE])(
 ConfigParser::ConfigParser(ConfigTokenizer& tokenizer,
                            const std::string& confFile)
     : tokens_(tokenizer.getTokens()), depth_(0), confFile_(confFile) {
+    LOG_INFO("ConfigParser created");
     makeVectorServer_();
 }
 
-ConfigParser::~ConfigParser() {}
+ConfigParser::~ConfigParser() {
+    LOG_INFO("ConfigParser destroyed");
+}
 
 void ConfigParser::makeVectorServer_() {
+    LOG_INFO("Parsing server configurations...");
     for (size_t i = 0; i < this->tokens_.size(); ++i) {
         const TokenType type = this->tokens_[i].getType();
         const int lineNumber = this->tokens_[i].getLineNumber();
         if (type == BRACE) {
             updateDepth(tokens_[i], lineNumber);
             if (this->depth_ == 0) {
+                LOG_INFO("Finished parsing server configurations");
                 return;
             }
         } else if (type == SERVER) {
@@ -75,6 +81,7 @@ void ConfigParser::updateDepth(const Token& token, int lineNumber) {
 }
 
 void ConfigParser::addServer_(size_t& index) {
+    LOG_INFO("Adding new server block");
     // NOLINTNEXTLINE(misc-const-correctness)
     ServerContext server("server");
 
@@ -90,12 +97,14 @@ void ConfigParser::addServer_(size_t& index) {
                 break;
             }
         } else if (type >= LISTEN && type <= LOCATION) {
+            LOG_DEBUG("Parsing server directive: " + tokens_[index].getText());
             (this->*funcServer_[type])(server, index);
         } else {
             continue;
         }
     }
     this->servers_.push_back(server);
+    LOG_INFO("Server block added");
 }
 
 void ConfigParser::setPort_(ServerContext& server, size_t& index) {
@@ -163,6 +172,7 @@ void ConfigParser::setErrPage_(ServerContext& server, size_t& index) {
 }
 
 void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
+    LOG_INFO("Adding new location block");
     // NOLINTNEXTLINE(misc-const-correctness)
     LocationContext location("location");
     const std::string path = incrementAndCheckSize_(index);
@@ -184,11 +194,13 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
                 break;
             }
         } else if (type >= ROOT && type <= ENABLE_UPLOAD) {
+            LOG_DEBUG("Parsing location directive: " + tokens_[index].getText());
             (this->*funcLocation_[type - FUNC_SERVER_SIZE])(location, index);
         } else {
             continue;
         }
     }
+    LOG_INFO("Location block added for path: " + path);
 }
 
 void ConfigParser::setDefaultMethod_(LocationContext& location) {

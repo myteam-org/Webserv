@@ -19,8 +19,8 @@ protected:
 
     void SetUp() override {
         tempDir = "tmp_upload_test";
-        uploadPath = "/upload_test_file.txt";  // 先頭 '/' を含む通常の HTTP path
-        filePath = utils::joinPath(tempDir, "upload_test_file.txt");
+        uploadPath = "/upload";  // アップロードエンドポイント
+        filePath = tempDir + "/test_file.txt";  // 実際に作成されるファイルパス
 
         mkdir(tempDir.c_str(), 0755);  // テスト用ディレクトリ作成
     }
@@ -30,19 +30,55 @@ protected:
         rmdir(tempDir.c_str());         // ディレクトリ削除
     }
 
-    static Request makeRequestPost(const std::string& requestTarget,
-                                const std::vector<char>& body) {
+    static Request makeMultipartRequest(const std::string& requestTarget,
+                                      const std::string& filename,
+                                      const std::string& fileContent) {
+        const std::string boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
+        const std::string contentType = "multipart/form-data; boundary=" + boundary;
+        
+        // multipart/form-data形式のボディを構築
+        std::string bodyStr;
+        bodyStr += "--" + boundary + "\r\n";
+        bodyStr += "Content-Disposition: form-data; name=\"file\"; filename=\"" + filename + "\"\r\n";
+        bodyStr += "Content-Type: text/plain\r\n";
+        bodyStr += "\r\n";
+        bodyStr += fileContent;
+        bodyStr += "\r\n--" + boundary + "--\r\n";
+        
+        std::vector<char> body(bodyStr.begin(), bodyStr.end());
+
         RawHeaders headers;
-        const ServerContext*   server   = NULL;
+        headers["content-type"] = contentType;  // Content-Typeヘッダーを設定
+
+        const ServerContext* server = NULL;
         const LocationContext* location = NULL;
 
-        // テストでは既に安全な文字列を使っているので、
-        // pathOnly は requestTarget と同じで OK、queryString は空で OK。
         return Request(
             kMethodPost,
             requestTarget,            // requestTarget (raw)
-            requestTarget,            // pathOnly (正規化済み相当として渡す)
+            requestTarget,            // pathOnly
             "",                       // queryString
+            headers,
+            body,
+            server,
+            location
+        );
+    }
+
+    static Request makeInvalidRequest(const std::string& requestTarget,
+                                    const std::vector<char>& body) {
+        RawHeaders headers;
+        // Content-Typeヘッダーを意図的に設定しない、または無効な値にする
+        headers["content-type"] = "text/plain";  // multipart/form-dataではない
+
+        const ServerContext* server = NULL;
+        const LocationContext* location = NULL;
+
+        return Request(
+            kMethodPost,
+            requestTarget,
+            requestTarget,
+            "",
             headers,
             body,
             server,
@@ -58,22 +94,56 @@ TEST_F(UploadFileHandlerTest, UploadsFileSuccessfully) {
 
     UploadFileHandler handler(config);
 
-    RawHeaders headers;
     std::string content = "Hello, Upload!";
-    std::vector<char> body(content.begin(), content.end());
+    std::string filename = "test_file.txt";
 
-    Request request = makeRequestPost(uploadPath, body);
+    Request request = makeMultipartRequest(uploadPath, filename, content);
 
     Either<IAction*, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());
     EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusCreated);
 
+    // ファイルが正しく作成されているかチェック
     std::ifstream ifs(filePath.c_str(), std::ios::binary);
-    ASSERT_TRUE(ifs.is_open());
+    ASSERT_TRUE(ifs.is_open()) << "Upload file was not created: " << filePath;
 
     std::stringstream ss;
     ss << ifs.rdbuf();
     EXPECT_EQ(ss.str(), content);
+}
+
+TEST_F(UploadFileHandlerTest, Returns400IfContentTypeIsInvalid) {
+    DocumentRootConfig config;
+    config.setRoot(tempDir);
+    config.setEnableUpload(ON);
+
+    UploadFileHandler handler(config);
+
+    std::string content = "Hello, Upload!";
+    std::vector<char> body(content.begin(), content.end());
+
+    Request request = makeInvalidRequest(uploadPath, body);
+
+    Either<IAction*, Response> result = handler.serve(request);
+    ASSERT_TRUE(result.isRight());
+    EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusBadRequest);
+}
+
+TEST_F(UploadFileHandlerTest, Returns403IfUploadIsDisabled) {
+    DocumentRootConfig config;
+    config.setRoot(tempDir);
+    config.setEnableUpload(OFF);  // アップロード無効
+
+    UploadFileHandler handler(config);
+
+    std::string content = "Hello, Upload!";
+    std::string filename = "test_file.txt";
+
+    Request request = makeMultipartRequest(uploadPath, filename, content);
+
+    Either<IAction*, Response> result = handler.serve(request);
+    ASSERT_TRUE(result.isRight());
+    EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusForbidden);
 }
 
 TEST_F(UploadFileHandlerTest, Returns403IfFileCannotBeOpened) {
@@ -84,12 +154,14 @@ TEST_F(UploadFileHandlerTest, Returns403IfFileCannotBeOpened) {
 
     DocumentRootConfig config;
     config.setRoot(unwritableDir);
+    config.setEnableUpload(ON);
+    
     UploadFileHandler handler(config);
 
-    RawHeaders headers;
-    std::vector<char> body(10, 'x');
+    std::string content = "test content";
+    std::string filename = "test.txt";
 
-    Request request = makeRequestPost("/test.txt", body);
+    Request request = makeMultipartRequest(uploadPath, filename, content);
 
     Either<IAction*, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());
@@ -98,18 +170,51 @@ TEST_F(UploadFileHandlerTest, Returns403IfFileCannotBeOpened) {
 
 TEST_F(UploadFileHandlerTest, Returns404IfDirectoryDoesNotExist) {
     DocumentRootConfig config;
-    config.setRoot("nonexistent_dir");
+    config.setRoot("nonexistent_dir");  // 存在しないディレクトリ
     config.setEnableUpload(ON);
+    
     UploadFileHandler handler(config);
 
-    RawHeaders headers;
-    std::vector<char> body(10, 'x');
+    std::string content = "test content";
+    std::string filename = "file.txt";
 
-    Request request = makeRequestPost("/missing_dir/file.txt", body);
+    Request request = makeMultipartRequest(uploadPath, filename, content);
 
     Either<IAction*, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());
     EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusNotFound);
+}
+
+TEST_F(UploadFileHandlerTest, Returns400IfNoBoundaryInContentType) {
+    DocumentRootConfig config;
+    config.setRoot(tempDir);
+    config.setEnableUpload(ON);
+
+    UploadFileHandler handler(config);
+
+    RawHeaders headers;
+    headers["content-type"] = "multipart/form-data";  // boundaryがない
+
+    std::string content = "test content";
+    std::vector<char> body(content.begin(), content.end());
+
+    const ServerContext* server = NULL;
+    const LocationContext* location = NULL;
+
+    Request request(
+        kMethodPost,
+        uploadPath,
+        uploadPath,
+        "",
+        headers,
+        body,
+        server,
+        location
+    );
+
+    Either<IAction*, Response> result = handler.serve(request);
+    ASSERT_TRUE(result.isRight());
+    EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusBadRequest);
 }
 
 }  // namespace http

@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <signal.h>
 #include <string.h>
+#include <time.h>
 
 #include "server/EpollEventNotifier.hpp"
 #include "server/EpollEvent.hpp"
@@ -10,18 +11,31 @@
 
 namespace {
 
+// C++98準拠のsleep関数（usleepの代替）
+static void msleep(int milliseconds) {
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+}
+
 TEST(EpollEventNotifierTest, RegisterModifyUnregisterFd) {
     int sv[2];
     ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, sv), 0);
 
     {
-        FileDescriptor fd1(sv[0]);  // このスコープ内でのみ FileDescriptor を使う
+        FileDescriptor fd1(sv[0]);
         FileDescriptor fd2(sv[1]);
 
         EpollEventNotifier notifier;
+        // 🔧 重要：epollファイルディスクリプタを初期化！
+        types::Result<types::Unit, int> openResult = notifier.open();
+        ASSERT_TRUE(openResult.isOk()) << "notifier.open() failed";
+
         EpollEvent ev(EPOLLIN, NULL);
         types::Result<int, int> regResult = notifier.registerFd(fd1, ev);
         ASSERT_TRUE(regResult.isOk()) << "registerFd failed: " << strerror(regResult.unwrapErr());
+        
         ev.addEvents(EPOLLOUT);
         types::Result<int, int> modResult = notifier.modifyFd(fd1, ev);
         ASSERT_TRUE(modResult.isOk()) << "modifyFd failed: " << strerror(modResult.unwrapErr());
@@ -29,8 +43,6 @@ TEST(EpollEventNotifierTest, RegisterModifyUnregisterFd) {
         types::Result<int, int> unregResult = notifier.unregisterFd(fd1);
         ASSERT_TRUE(unregResult.isOk()) << "unregisterFd failed: " << strerror(unregResult.unwrapErr());
     }
-
-    // 明示的に FD を close した FileDescriptor に任せる
 }
 
 TEST(EpollEventNotifierTest, WaitDetectsReadableFd) {
@@ -42,8 +54,13 @@ TEST(EpollEventNotifierTest, WaitDetectsReadableFd) {
         FileDescriptor writer(sv[1]);
 
         EpollEventNotifier notifier;
+        // 🔧 重要：epollファイルディスクリプタを初期化！
+        types::Result<types::Unit, int> openResult = notifier.open();
+        ASSERT_TRUE(openResult.isOk()) << "notifier.open() failed";
+
         EpollEvent ev(EPOLLIN, NULL);
-        ASSERT_TRUE(notifier.registerFd(reader, ev).isOk());
+        types::Result<int, int> regResult = notifier.registerFd(reader, ev);
+        ASSERT_TRUE(regResult.isOk()) << "registerFd failed: " << strerror(regResult.unwrapErr());
 
         const char* msg = "ping";
         ssize_t write_result = write(writer.getFd().unwrap(), msg, strlen(msg));
@@ -59,7 +76,7 @@ TEST(EpollEventNotifierTest, WaitDetectsReadableFd) {
                 detected = true;
                 break;
             }
-            usleep(1000); // wait 1ms
+            msleep(1); // wait 1ms（C++98準拠）
         }
 
         ASSERT_TRUE(detected) << "EPOLLIN not detected in retries";
@@ -69,6 +86,10 @@ TEST(EpollEventNotifierTest, WaitDetectsReadableFd) {
 
 TEST(EpollEventNotifierTest, RegisterInvalidFdReturnsErr) {
     EpollEventNotifier notifier;
+    // 🔧 重要：epollファイルディスクリプタを初期化！
+    types::Result<types::Unit, int> openResult = notifier.open();
+    ASSERT_TRUE(openResult.isOk()) << "notifier.open() failed";
+
     FileDescriptor invalidFd(-1);
     EpollEvent ev(EPOLLIN, NULL);
     types::Result<int, int> result = notifier.registerFd(invalidFd, ev);
@@ -78,6 +99,10 @@ TEST(EpollEventNotifierTest, RegisterInvalidFdReturnsErr) {
 
 TEST(EpollEventNotifierTest, WaitOnEmptyReturnsOkOrErr) {
     EpollEventNotifier notifier;
+    // 🔧 重要：epollファイルディスクリプタを初期化！
+    types::Result<types::Unit, int> openResult = notifier.open();
+    ASSERT_TRUE(openResult.isOk()) << "notifier.open() failed";
+
     types::Result<std::vector<EpollEvent>, int> result = notifier.wait();
 
     if (result.isOk()) {

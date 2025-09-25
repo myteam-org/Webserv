@@ -1,9 +1,10 @@
-
 #include <gtest/gtest.h>
 
 #include "server/connection/Connection.hpp"
 #include "server/socket/ConnectionSocket.hpp"
 #include "io/input/reader/reader.hpp"
+#include "http/config/config_resolver.hpp"
+#include "config/context/serverContext.hpp"
 #include <cmath>
 
 namespace {
@@ -46,12 +47,27 @@ private:
     bool eof_;
 };
 
+// ConfigResolver のモック実装
+class MockConfigResolver : public http::config::IConfigResolver {
+public:
+    types::Result<const ServerContext*, error::AppError> chooseServer(
+        const std::string& /* host */) const {
+        static ServerContext dummy("server");
+        return types::ok<const ServerContext*>(&dummy);
+    }
+};
+
+} // namespace - この閉じ括弧で無名名前空間を閉じる
 
 TEST(ConnectionTest, InitialState) {
     uint16_t port = 65535;
     MockSocketAddr mock = MockSocketAddr("192.168.0.5", port);
     int fd = 9;
-    Connection conn(fd, mock);
+    MockConfigResolver resolver;
+    
+    // 新しい3引数コンストラクタを使用
+    Connection conn(fd, mock, resolver);
+    
     ReadBuffer* rb_addr = &conn.getReadBuffer();
     WriteBuffer* wb_addr = &conn.getWriteBuffer();
     EXPECT_NE(rb_addr, static_cast<ReadBuffer*>(0));
@@ -65,6 +81,7 @@ TEST(ConnectionTest, InitialState) {
     EXPECT_EQ(conn.getConnSock().getRawFd(), fd);
     EXPECT_EQ(conn.getConnSock().getPeerPort(), port);
     EXPECT_EQ(conn.getConnSock().getPeerAddress(), "192.168.0.5");
+    
     // lastRecv_ は現在時刻近傍
     std::time_t now = std::time(0);
     double diff = std::difftime(conn.getLastRecv(), now);
@@ -75,7 +92,9 @@ TEST(ConnectionTest, BufferReferencesStableAndConstOverloadsWork) {
     uint16_t port = 65535;
     MockSocketAddr mock("192.168.0.5", port);
     int fd = 10;
-    Connection conn(fd, mock);
+    MockConfigResolver resolver;
+    
+    Connection conn(fd, mock, resolver);
 
     // 非const／const の両アクセサが同じ実体を指すことを確認
     ReadBuffer* rb1 = &conn.getReadBuffer();
@@ -96,7 +115,9 @@ TEST(ConnectionTest, SetConnState_ReplacesAndDestructorCleansUp) {
     uint16_t port = 65535;
     MockSocketAddr mock("192.168.0.5", port);
     int fd = 12;
-    Connection conn(fd, mock);
+    MockConfigResolver resolver;
+    
+    Connection conn(fd, mock, resolver);
     EXPECT_EQ(conn.getConnState(), static_cast<IConnectionState*>(0));
 
     IConnectionState* s1 = new DummyState();
@@ -114,7 +135,9 @@ TEST(ConnectionTest, TimeoutLogic_WorksAroundThreshold) {
     uint16_t port = 65535;
     MockSocketAddr mock("192.168.0.5", port);
     int fd = 13;
-    Connection conn(fd, mock);
+    MockConfigResolver resolver;
+    
+    Connection conn(fd, mock, resolver);
 
     const std::time_t now = std::time(0);
 
@@ -127,9 +150,8 @@ TEST(ConnectionTest, TimeoutLogic_WorksAroundThreshold) {
     EXPECT_TRUE(conn.isTimeout());
 }
 
-} // namespace
-
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+

@@ -6,6 +6,8 @@
 #include "server/connection/Connection.hpp"
 #include "server/socket/ConnectionSocket.hpp"
 #include "server/socket/ISocketAddr.hpp"
+#include "http/config/config_resolver.hpp"
+#include "config/context/serverContext.hpp"
 
 //========================
 // Result アダプタ
@@ -17,6 +19,7 @@
 
 class DummyAddr : public ISocketAddr {
 public:
+    DummyAddr() : addr_("127.0.0.1"), port_(8080) {}
     virtual ~DummyAddr() {}
     virtual std::string getAddress() const { return addr_;}
     virtual uint16_t getPort() const { return port_;}
@@ -25,10 +28,21 @@ private:
     uint16_t port_;
 };
 
+// ConfigResolver のモック実装
+class MockConfigResolver : public http::config::IConfigResolver {
+public:
+    types::Result<const ServerContext*, error::AppError> chooseServer(
+        const std::string& /* host */) const {
+        static ServerContext dummy("server");
+        return types::ok<const ServerContext*>(&dummy);
+    }
+};
+
 // Connection を new で作る（ConnectionManager が delete する想定のため）
 static Connection* makeConn(int fd) {
     static DummyAddr addr;
-    return new Connection(fd, addr);                   // 例: Connection(int fd, const ISocketAddr&)
+    static MockConfigResolver resolver;
+    return new Connection(fd, addr, resolver);  // 3引数コンストラクタを使用
 }
 
 //========================

@@ -25,13 +25,22 @@ add_library(webserv_lib STATIC
     io/input/reader/fd.cpp
     io/input/write/buffer.cpp
     io/base/fileDescriptor.cpp
+    io/handler/CgiStdinHandler.cpp
+    io/handler/CgiStdoutHandler.cpp
+    io/handler/ClientHandler.cpp
+    io/handler/ListenerHandler.cpp
     server/epollEvent.cpp
     server/epollEventNotifier.cpp
+    server/server.cpp
     server/socket/connectionSocket.cpp
     server/socket/serverSocket.cpp
     server/socket/socketAddr.cpp
     server/connection/connection.cpp
     server/connection/connectionManager.cpp
+    server/dispatcher/requestDispatcher.cpp
+    server/fileDescriptor/fdRegistry.cpp
+    server/fileDescriptor/fdUtils.cpp
+    server/resolver/endpointResolver.cpp
     http/request/read/body.cpp
     http/request/read/header_parsing_utils.cpp
     http/request/read/length_body.cpp

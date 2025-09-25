@@ -2,6 +2,8 @@
 #include "utils/types/try.hpp"
 #include "server/socket/SocketAddr.hpp"
 #include "server/fileDescriptor/FdUtils.hpp"
+#include "utils/logger.hpp"
+#include "utils/string.hpp"
 
 Server::Server(const std::vector<ServerContext>& serverCtxs) 
     : serverCtxs_(serverCtxs), 
@@ -10,6 +12,7 @@ Server::Server(const std::vector<ServerContext>& serverCtxs)
     dispatcher_(0),
     resolver_(serverCtxs_),
     endpointResolver_(vsByKey_) {   
+    LOG_INFO("Server created");
     handlers_[FD_LISTENER]   = new ListenerHandler(this);
     handlers_[FD_CLIENT]     = new ClientHandler(this);
     handlers_[FD_CGI_STDIN]  = new CgiStdinHandler(this);
@@ -17,6 +20,7 @@ Server::Server(const std::vector<ServerContext>& serverCtxs)
 }
 
 Server::~Server() {
+    LOG_INFO("Server destroyed");
     delete handlers_[FD_LISTENER];
     delete handlers_[FD_CLIENT];
     delete handlers_[FD_CGI_STDIN];
@@ -24,14 +28,17 @@ Server::~Server() {
 }
 
 types::Result<types::Unit, int> Server::init() {
+    LOG_INFO("Initializing server...");
     TRY(epollNotifier_.open());
     TRY(initVirtualServers());
     TRY(buildListeners());
     TRY(initDispatcher());
+    LOG_INFO("Server initialized successfully");
     return types::ok(types::Unit());
 }
 
 types::Result<types::Unit, int> Server::initVirtualServers() {
+    LOG_INFO("Initializing virtual servers...");
     for (size_t i = 0; i < serverCtxs_.size(); ++i) {
         const ServerContext& sc = serverCtxs_[i];
 
@@ -39,17 +46,20 @@ types::Result<types::Unit, int> Server::initVirtualServers() {
         for (std::map<std::string, VirtualServer*>::const_iterator it = vsByKey_.begin();
              it != vsByKey_.end(); ++it) {
             if (key == it->first || overlapsWildcard(key, it->first)) {
+                LOG_ERROR("Duplicate or overlapping server configuration for key: " + key);
                 return types::err<int>(EINVAL); // ワイルドカードと重複エラー
             }
         }
         VirtualServer* vs = new VirtualServer(sc, /*bindAddress=*/canonicalizeIp(sc.getHost()));
         vsByKey_[key] = vs;
+        LOG_INFO("Virtual server created for key: " + key);
     }
+    LOG_INFO("Virtual servers initialized successfully");
     return types::ok();
 }
 
-// Todo: VirtualServer が複数の listen ポートを許容する場合、2 重ループにて処理する必要がある。
 types::Result<types::Unit,int> Server::buildListeners() {
+    LOG_INFO("Building listeners...");
     for (size_t i = 0; i < serverCtxs_.size(); ++i) {
         const ServerContext& sc = serverCtxs_[i];
         ListenerKey key;
@@ -58,18 +68,22 @@ types::Result<types::Unit,int> Server::buildListeners() {
         if (listeners_.find(key) != listeners_.end()) {
             continue;
         }
+        LOG_INFO("Creating listener for " + key.addr + ":" + u16toString(key.port));
         ServerSocket* ls = new ServerSocket();
         types::Result<int, int> r = ls->open(AF_INET, SOCK_STREAM, 0);
         if (r.isErr()) {
+            LOG_ERROR("Failed to open server socket");
             return types::err<int>(r.unwrapErr());
         }
         types::Result<int, int> r2 = ls->setReuseAddr(true);
         if (r2.isErr()) {
+           LOG_ERROR("Failed to set SO_REUSEADDR");
            return types::err<int>(r2.unwrapErr());
         };
         SocketAddr sa = SocketAddr::createIPv4(key.addr, key.port);
         types::Result<int, int> r3 = ls->bind(sa);
         if (r3.isErr()) {
+           LOG_ERROR("Failed to bind socket to " + key.addr + ":" + u16toString(key.port));
            return types::err<int>(r3.unwrapErr());
         };
         listeners_[key] = ls;
@@ -77,7 +91,9 @@ types::Result<types::Unit,int> Server::buildListeners() {
         const int lfd = ls->getRawFd();
         epollNotifier_.add(lfd, EPOLLIN | EPOLLERR);
         fdRegister_.add(lfd, FD_LISTENER, 0);
+        LOG_INFO("Listener created and listening on " + key.addr + ":" + u16toString(key.port));
     }
+    LOG_INFO("Listeners built successfully");
     return types::ok();
 }
 
@@ -87,9 +103,11 @@ types::Result<types::Unit,int> Server::initDispatcher() {
 }
 
 types::Result<types::Unit,int> Server::run() {
+    LOG_INFO("Server run loop started");
     for (;;) {
         types::Result<std::vector<EpollEvent>, int> r = epollNotifier_.wait(); // 200ms など
         if (r.isErr()) {
+            LOG_ERROR("epoll_wait failed");
             return types::err<int>(r.unwrapErr());
         }
         const std::vector<EpollEvent>& evs = r.unwrap();
@@ -99,6 +117,7 @@ types::Result<types::Unit,int> Server::run() {
             const uint32_t mask  = ev.getEvents();
             FdEntry fdEntry;
             if (!fdRegister_.find(fd, &fdEntry)) {
+                LOG_WARN("No FdEntry found for fd: " + utils::toString(fd));
                 // epollDelClose(fd);
                 continue;
             }
@@ -110,6 +129,7 @@ types::Result<types::Unit,int> Server::run() {
 }
 
 void Server::acceptLoop(int lfd) {
+    LOG_INFO("Accepting new connections on fd: " + utils::toString(lfd));
     for (;;) {
         SocketAddr peer = SocketAddr::makeEmpty();
         socklen_t len = peer.length();
@@ -119,10 +139,11 @@ void Server::acceptLoop(int lfd) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 break;
             }
-            // Todo : emit log.
+            LOG_ERROR("accept failed");
             break;
         }
         peer.setLength(len);
+        LOG_INFO("Accepted new connection on fd: " + utils::toString(cfd));
         FdUtils::set_nonblock_and_cloexec(cfd);
         Connection* conn = new Connection(cfd, peer, this->resolver());
         connManager_.registerConnection(conn);

@@ -65,7 +65,7 @@ void ClientHandler::onReadable(Connection& c) {
         if (!reqOpt.isNone()) {
             const http::Request& req = reqOpt.unwrap();
             c.pushCreatedReq(req);
-            continue; // さらに取れるだけ回す
+            // continue; // さらに取れるだけ回す
         }
         // NeedMore
         break;

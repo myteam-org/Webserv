@@ -1,18 +1,20 @@
 #include "http/request/read/header.hpp"
 
-#include "http/request/read/body.hpp"
 #include "config/context/serverContext.hpp"
+#include "http/config/config_resolver.hpp"
+#include "http/request/read/body.hpp"
 #include "http/request/read/context.hpp"
 #include "http/request/read/header_parsing_utils.hpp"
-#include "http/config/config_resolver.hpp"
 #include "http/request/read/length_body.hpp"
 #include "http/request/read/raw_headers.hpp"
 #include "http/request/read/state.hpp"
 #include "http/request/read/utils.hpp"
+#include "utils/logger.hpp"
 #include "utils/string.hpp"
 #include "utils/types/error.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/result.hpp"
+#include <cstdlib>
 
 namespace http {
 
@@ -25,8 +27,8 @@ ReadingRequestHeadersState::~ReadingRequestHeadersState() {}
 // 3. 必要なら次の状態(ReadingRequestBodyState)へ遷移させる
 // 4. TransitionResultにヘッダーや次のステートをセットして返す
 
-TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
-                                                    ReadBuffer& buf) {
+TransitionResult ReadingRequestHeadersState::handle(ReadContext &ctx,
+                                                    ReadBuffer &buf) {
     TransitionResult tr;
     RawHeaders headers;
 
@@ -52,30 +54,64 @@ TransitionResult ReadingRequestHeadersState::handle(ReadContext& ctx,
             tr.setStatus(types::err(error::kBadRequest));
             return tr;
         }
-        const std::string key = utils::toLower(utils::trim(line.substr(0, colon)));
+        const std::string key =
+            utils::toLower(utils::trim(line.substr(0, colon)));
         const std::string value = utils::trim(line.substr(colon + 1));
         headers.insert(std::make_pair(key, value));
     }
 }
 
 TransitionResult ReadingRequestHeadersState::handleHeadersComplete(
-    ReadContext& ctx, TransitionResult& tr, const RawHeaders& headers) {
+    ReadContext &ctx, TransitionResult &tr, const RawHeaders &headers) {
     const std::string host = parser::extractHeader(headers, "Host");
-    const types::Result<const ServerContext*, error::AppError> result =
+    const types::Result<const ServerContext *, error::AppError> result =
         ctx.getConfigResolver().chooseServer(host);
     if (result.isErr()) {
         tr.setStatus(types::err(result.unwrapErr()));
         return tr;
     }
-    const ServerContext* serverContext = result.unwrap();
+    const ServerContext *serverContext = result.unwrap();
     if (serverContext == NULL) {
         tr.setStatus(types::err(error::kIOUnknown));
         return tr;
     }
     ctx.setServer(*serverContext);
+
+    bool hasBody = false;
+    BodyEncodingType bodyType = kNone;
+    BodyLengthConfig bodyConfig;
+
+    const std::string contentLengthValue =
+        parser::extractHeader(headers, "content-length");
+    if (!contentLengthValue.empty()) {
+        hasBody = true;
+        bodyType = kContentLength;
+        bodyConfig.contentLength = std::atoi(contentLengthValue.c_str());
+        bodyConfig.clientMaxBodySize = serverContext->getClientMaxBodySize();
+    }
+
+    const std::string transferEncodingValue =
+        parser::extractHeader(headers, "transfer-encoding");
+    if (!transferEncodingValue.empty() &&
+        transferEncodingValue.find("chunked") != std::string::npos) {
+        hasBody = true;
+        bodyType = kChunked;
+        bodyConfig.contentLength = 0;
+        bodyConfig.clientMaxBodySize = serverContext->getClientMaxBodySize();
+    }
+
+    // bodyが必要ならbodyステート生成＆遷移
+    if (hasBody) {
+        IState *bodyState = new ReadingRequestBodyState(bodyType, bodyConfig);
+        tr.setNextState(bodyState);
+        tr.setHeaders(types::some(headers));
+        tr.setStatus(types::ok(kDone));
+        return tr;
+    }
     tr.setHeaders(types::some(headers));
     tr.setStatus(types::ok(kDone));
     return tr;
 }
 
-}  // namespace http
+} // namespace http
+

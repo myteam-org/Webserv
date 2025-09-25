@@ -14,8 +14,6 @@ class VirtualServer {
     http::Router &getRouter();
 
    private:
-    static void registerHandlers(http::RouterBuilder &routerBuilder,
-                                 const LocationContext &locationContext);
     void setupRouter();
 
     const ServerContext serverConfig_;

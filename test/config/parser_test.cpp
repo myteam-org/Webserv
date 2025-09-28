@@ -251,6 +251,21 @@ server {
         { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
+// Test error handling - invalid port number
+TEST_F(ConfigParserTest, InvalidPortNumberError4) {
+    std::string config = R"(
+server {
+    listen 80;
+}
+)";
+
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
+
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+}
+
 // Test error handling - invalid server block member error1
 TEST_F(ConfigParserTest, InvalidSeerverBlockMemberError1) {
     std::string config = R"(
@@ -506,7 +521,7 @@ server {
 TEST_F(ConfigParserTest, NoHostInServerError) {
     std::string configText = R"(
 server {
-    listen 80;
+    listen 8080;
     location / {
         root /;
         index index.html;
@@ -547,7 +562,7 @@ server {
 TEST_F(ConfigParserTest, NoLocationInServerError) {
     std::string configText = R"(
 server {
-    listen 80;
+    listen 8080;
     host localhost;
 }
 )";
@@ -585,7 +600,7 @@ server {
 TEST_F(ConfigParserTest, NoRootInLocationError) {
     std::string configText = R"(
 server {
-    listen 80;
+    listen 8080;
     host localhost;
     location / {
         index index.html;
@@ -626,7 +641,7 @@ server {
 TEST_F(ConfigParserTest, NoIndexInLocationError) {
     std::string configText = R"(
 server {
-    listen 80;
+    listen 8080;
     host localhost;
     location / {
         root /;

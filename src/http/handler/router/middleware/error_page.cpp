@@ -2,6 +2,7 @@
 #include "utils/string.hpp"
 #include <fstream>
 #include <sstream>
+#include <unistd.h> // getcwd用
 #include "http/response/builder.hpp"
 
 namespace http {
@@ -11,6 +12,7 @@ ErrorPage::ErrorPage(const ErrorPageMap& errorPageMap)
 
 namespace {
 
+// エラーページファイル読み込み
 std::string LoadErrorPageBodyFromFile(const std::string& filePath) {
     const std::ifstream fileStream(filePath.c_str());
     std::ostringstream contentStream;
@@ -37,6 +39,7 @@ const char* const kHtmlAfterBody =
     "</body>\n"
     "</html>\n";
 
+// デフォルトエラーページHTML生成
 std::string BuildDefaultErrorPageBody(const int statusCode, const std::string& statusText) {
     std::ostringstream statusLineStream;
     statusLineStream << statusCode << " " << statusText;
@@ -65,12 +68,15 @@ Either<IAction*, Response> ErrorPage::intercept(const Request& requestContext, I
     const ErrorPageMap::const_iterator errorPageIterator = errorPageMap_.find(statusCode);
     if (errorPageIterator != errorPageMap_.end()) {
         errorPageBody = LoadErrorPageBodyFromFile(errorPageIterator->second);
+        // bodyが空ならデフォルトページを返す
+        if (errorPageBody.empty()) {
+            errorPageBody = BuildDefaultErrorPageBody(statusCode, http::getHttpStatusText(statusCode));
+        }
     } else {
         errorPageBody = BuildDefaultErrorPageBody(statusCode, http::getHttpStatusText(statusCode));
     }
 
     return Right(ResponseBuilder().html(errorPageBody, statusCode).build());
-    return Right(Response(statusCode));
 }
 
 } // namespace http

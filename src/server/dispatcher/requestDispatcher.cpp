@@ -1,4 +1,6 @@
 #include "server/dispatcher/RequestDispatcher.hpp"
+#include "action/cgi_action.hpp"
+#include "utils/logger.hpp"
 
 RequestDispatcher::RequestDispatcher(EndpointResolver& resolver) : resovler_(resolver) {    
 }
@@ -18,6 +20,7 @@ DispatchResult RequestDispatcher::step(Connection& c) {
 DispatchResult RequestDispatcher::dispatchNext(Connection& c, http::Request& req) {
     VirtualServer *vserver = resovler_.resolveByFd(c.getFd());
     if (!vserver) { 
+        LOG_WARN("Cannot find any virtual server from filedescriptor");
         http::ResponseBuilder rb;
         rb.status(http::kStatusBadRequest).text("Bad Request", http::kStatusBadRequest);
         enqueueResponse(c, rb.build());
@@ -35,7 +38,15 @@ DispatchResult RequestDispatcher::dispatchNext(Connection& c, http::Request& req
         enqueueResponse(c, resp);        // WriteBufferへ
         return DispatchResult::ArmOut();
     }
-    //To Do : cgi 処理など
+    IAction* action = responseRes.unwrapLeft();
+    CgiActionPrepared* cgi = dynamic_cast<CgiActionPrepared*>(action);
+    if (cgi) {
+        LOG_DEBUG("CGI preparetion is done.");
+        c.setPreparedCgi(cgi->payload());
+        delete action;
+        return DispatchResult::StartCgi(CgiFds());
+    }
+    LOG_WARN("Doesn't invoke any handler.");
     http::ResponseBuilder rb;
     rb.status(http::kStatusNotImplemented).text("Not Implemented", http::kStatusNotImplemented);
     enqueueResponse(c, rb.build());

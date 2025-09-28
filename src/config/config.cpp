@@ -1,6 +1,7 @@
 #include "config/config.hpp"
 
 #include <cstddef>
+#include <ostream>
 #include <string>
 
 #include "config/data.hpp"
@@ -103,11 +104,14 @@ void Config::checkFile(const std::string& filename) {
 void Config::checkAndEraseServerNode() {
     std::vector<ServerContext>& servers = this->parser_.getServer();
 
-    servers.erase(std::remove_if(servers.begin(), servers.end(),
-                                 ConfigServerValueErrorEraser(this)),
-                  servers.end());
-    std::cerr << "[ server removed: server or location block member error ]"
-              << std::endl;
+    std::vector<ServerContext>::iterator new_end =
+        std::remove_if(servers.begin(), servers.end(),
+            ConfigServerValueErrorEraser(this));
+    if (new_end != servers.end()) {
+        servers.erase(new_end, servers.end());
+        std::cerr << "[ server removed: server or location block member error ]"
+                  << std::endl;
+    }
 }
 
 bool Config::checkAndEraseLocationNode(const ServerContext& server) {

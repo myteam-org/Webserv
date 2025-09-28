@@ -7,6 +7,8 @@
 #include "utils/string.hpp"
 
 #include "utils/logger.hpp"
+#include "action/cgi_action.hpp"
+
 namespace http {
 CgiHandler::CgiHandler(const DocumentRootConfig& docRootConfig)
     : docRootConfig_(docRootConfig) {}
@@ -19,8 +21,34 @@ Either<IAction*, Response> CgiHandler::serve(const Request& req) {
     if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
         return Right(ResponseBuilder().status(kStatusNotFound).build());
     }
-    return Left(static_cast<IAction*>(0));
+    return prepareCgi(req);
     // return Right(this->serveInternal(req));
+}
+
+Either<IAction*, Response> CgiHandler::prepareCgi(const Request& req) {
+    std::string scriptPath;
+    std::string pathInfo;
+    if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
+        return Right(ResponseBuilder().status(kStatusNotFound).build());
+    }
+    const std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
+    const std::string realScriptPath = utils::normalizePath(joined);
+
+    std::vector<std::string> env;
+    buildCgiEnv(req, scriptPath, &pathInfo, &env);
+
+    std::vector<std::string> argv;
+    argv.push_back(realScriptPath);
+
+    const std::vector<char>& stdinBody = req.getBody();
+    PreparedCgi pc;
+    pc.argv = argv;
+    pc.env  = env;
+    pc.stdinBody = &req.getBody();
+    pc.owner  = this;
+    pc.parseFn = &CgiHandler::parseCgiAndBuildResponse;
+
+    return Left(static_cast<IAction*>(new CgiActionPrepared(pc)));
 }
 
 Response CgiHandler::serveInternal(const Request& req) const {
@@ -42,9 +70,9 @@ Response CgiHandler::serveInternal(const Request& req) const {
 
     std::string cgiOut;
     int exitCode = 0;
-    // if (!executeCgi(argv, env, stdinBody, &cgiOut, &exitCode)) {
-    //     return ResponseBuilder().status(kStatusBadGateway).build();
-    // }
+    if (!executeCgi(argv, env, stdinBody, &cgiOut, &exitCode)) {
+        return ResponseBuilder().status(kStatusBadGateway).build();
+    }
 
     return parseCgiAndBuildResponse(cgiOut);
 }

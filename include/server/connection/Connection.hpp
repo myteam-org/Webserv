@@ -7,7 +7,8 @@
 #include <ctime>
 #include <deque>
 #include "http/request/request.hpp"
-
+#include "action/cgi_action.hpp"
+#include "action/cgi_context.hpp"
 
 class Connection {
 private:
@@ -24,6 +25,8 @@ private:
     bool closeAfterWrite_;
     bool peerHalfClosed_;
     time_t lastRecv_;
+    PreparedCgi* preparedCgi_;
+    CgiContext*  cgi_;
 
 
 public:
@@ -56,4 +59,11 @@ public:
     bool isFrontDispatched() const;
     void markFrontDispatched();
     void resetFrontDispatched();
+    void setPreparedCgi(const PreparedCgi& p);
+    PreparedCgi* takePreparedCgi();
+    void clearPreparedCgi();
+    void setCgi(CgiContext* x);
+    CgiContext* getCgi() const;
+    bool isCgiActive() const;
+    void clearCgi();
 };

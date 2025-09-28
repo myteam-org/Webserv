@@ -3,7 +3,7 @@
 #include "utils/logger.hpp"
 
 int main(int argc, char** argv) {
-        SET_LOG_LEVEL(Logger::kDebug);
+        // SET_LOG_LEVEL(Logger::kDebug);
         LOG_INFO("Server starting...");
         if (!Config::checkArgc(argc)) {
                 LOG_ERROR("Invalid number of arguments");

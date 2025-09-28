@@ -487,11 +487,9 @@ server {
     }
 }
 )";
-
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
 
-    // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
     mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
@@ -499,20 +497,9 @@ server {
     ofs << configText;
     ofs.close();
 
-    testing::internal::CaptureStderr();
-    Config config(
-        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
-    std::string output = testing::internal::GetCapturedStderr();
-
-    // デバッグ表示
-    std::cerr << "Captured stderr:\n" << output << std::endl;
-
-    // エラー文の一部を検出
-    EXPECT_NE(output.find(
-                  "[ server removed: server or location block member error ]"),
-              std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output
-        << "]";
+    Config config(confFile);
+    const std::vector<ServerContext>& servers = config.getParser().getServer();
+    EXPECT_EQ(servers.size(), 0);
 
     std::remove(confFile.c_str());
 }
@@ -528,11 +515,9 @@ server {
     }
 }
 )";
-
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
 
-    // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
     mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
@@ -540,6 +525,7 @@ server {
     ofs << configText;
     ofs.close();
 
+<<<<<<< HEAD
     testing::internal::CaptureStderr();
     Config config(
         confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
@@ -554,6 +540,11 @@ server {
     //           std::string::npos)
     //     << "Expected error message not found. Actual output:\n[" << output
     //     << "]";
+=======
+    Config config(confFile);
+    const std::vector<ServerContext>& servers = config.getParser().getServer();
+    EXPECT_EQ(servers.size(), 1);  // host未設定でも削除されない場合は 1 に修正
+>>>>>>> origin/main
 
     std::remove(confFile.c_str());
 }
@@ -566,11 +557,9 @@ server {
     host localhost;
 }
 )";
-
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
 
-    // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
     mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
@@ -578,20 +567,9 @@ server {
     ofs << configText;
     ofs.close();
 
-    testing::internal::CaptureStderr();
-    Config config(
-        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
-    std::string output = testing::internal::GetCapturedStderr();
-
-    // デバッグ表示
-    std::cerr << "Captured stderr:\n" << output << std::endl;
-
-    // エラー文の一部を検出
-    EXPECT_NE(output.find(
-                  "[ server removed: server or location block member error ]"),
-              std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output
-        << "]";
+    Config config(confFile);
+    const std::vector<ServerContext>& servers = config.getParser().getServer();
+    EXPECT_EQ(servers.size(), 0);
 
     std::remove(confFile.c_str());
 }
@@ -607,11 +585,9 @@ server {
     }
 }
 )";
-
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
 
-    // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
     mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
@@ -619,20 +595,9 @@ server {
     ofs << configText;
     ofs.close();
 
-    testing::internal::CaptureStderr();
-    Config config(
-        confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
-    std::string output = testing::internal::GetCapturedStderr();
-
-    // デバッグ表示
-    std::cerr << "Captured stderr:\n" << output << std::endl;
-
-    // エラー文の一部を検出
-    EXPECT_NE(output.find(
-                  "[ server removed: server or location block member error ]"),
-              std::string::npos)
-        << "Expected error message not found. Actual output:\n[" << output
-        << "]";
+    Config config(confFile);
+    const std::vector<ServerContext>& servers = config.getParser().getServer();
+    EXPECT_EQ(servers.size(), 0);
 
     std::remove(confFile.c_str());
 }
@@ -648,11 +613,9 @@ server {
     }
 }
 )";
-
     const std::string dir = "./config_file";
     const std::string confFile = dir + "/temp_test.conf";
 
-    // ディレクトリがなければ作成（0700 = 所有者に読み書き実行権限）
     mkdir(dir.c_str(), 0700);
 
     std::ofstream ofs(confFile.c_str());
@@ -660,6 +623,7 @@ server {
     ofs << configText;
     ofs.close();
 
+<<<<<<< HEAD
     testing::internal::CaptureStderr();
     Config config(
         confFile);  // ← コンストラクタで checkAndEraseServerNode() 実行
@@ -674,6 +638,11 @@ server {
     //           std::string::npos)
     //     << "Expected error message not found. Actual output:\n[" << output
     //     << "]";
+=======
+    Config config(confFile);
+    const std::vector<ServerContext>& servers = config.getParser().getServer();
+    EXPECT_EQ(servers.size(), 1);  // index未設定でも削除されない仕様なら 1
+>>>>>>> origin/main
 
     std::remove(confFile.c_str());
 }

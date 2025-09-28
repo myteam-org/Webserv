@@ -521,7 +521,7 @@ server {
 TEST_F(ConfigParserTest, NoHostInServerError) {
     std::string configText = R"(
 server {
-    listen 80;
+    listen 8080;
     location / {
         root /;
         index index.html;
@@ -562,7 +562,7 @@ server {
 TEST_F(ConfigParserTest, NoLocationInServerError) {
     std::string configText = R"(
 server {
-    listen 80;
+    listen 8080;
     host localhost;
 }
 )";
@@ -600,7 +600,7 @@ server {
 TEST_F(ConfigParserTest, NoRootInLocationError) {
     std::string configText = R"(
 server {
-    listen 80;
+    listen 8080;
     host localhost;
     location / {
         index index.html;
@@ -641,7 +641,7 @@ server {
 TEST_F(ConfigParserTest, NoIndexInLocationError) {
     std::string configText = R"(
 server {
-    listen 80;
+    listen 8080;
     host localhost;
     location / {
         root /;

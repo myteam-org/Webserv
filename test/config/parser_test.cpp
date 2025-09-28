@@ -251,6 +251,21 @@ server {
         { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
 }
 
+// Test error handling - invalid port number
+TEST_F(ConfigParserTest, InvalidPortNumberError4) {
+    std::string config = R"(
+server {
+    listen 80;
+}
+)";
+
+    std::string filename;
+    ConfigTokenizer* tokenizer = makeTok(config, filename);
+
+    EXPECT_THROW(
+        { ConfigParser parser(*tokenizer, filename); }, std::runtime_error);
+}
+
 // Test error handling - invalid server block member error1
 TEST_F(ConfigParserTest, InvalidSeerverBlockMemberError1) {
     std::string config = R"(

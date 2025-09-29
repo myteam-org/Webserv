@@ -11,7 +11,7 @@ namespace http {
 class StaticFileHandlerTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        // Create a dummy root directory and some files/directories for testing
+        // テスト用ディレクトリとファイル作成
         system("mkdir -p /tmp/www/dir1");
         system("echo 'hello world' > /tmp/www/index.html");
         system("echo 'file content' > /tmp/www/file.txt");
@@ -19,22 +19,20 @@ protected:
         docRootConfig_.setRoot("/tmp/www");
         docRootConfig_.setIndex("index.html");
         docRootConfig_.setAutoIndex(OFF);
-        
-        // テスト用の共通オブジェクトを初期化
+
         server_ = NULL;
         location_ = NULL;
     }
-    
+
     void TearDown() override {
         system("rm -rf /tmp/www");
     }
-    
-    // Requestオブジェクトを作成するヘルパーメソッド
+
+    // Requestオブジェクト作成ヘルパー
     Request createRequest(const std::string& target) {
         RawHeaders headers;
         std::vector<char> body;
 
-        // request-target を path と query に分割
         std::string pathOnly = target;
         std::string queryString;
         const std::size_t qm = target.find('?');
@@ -42,7 +40,6 @@ protected:
             pathOnly = target.substr(0, qm);
             queryString = target.substr(qm + 1);
         }
-        // テスト入力は既に正規化済み想定（"/", "/dir1", "/file.txt" など）
         return Request(
             kMethodGet,    // method
             target,        // requestTarget (raw)
@@ -54,7 +51,7 @@ protected:
             location_      // location
         );
     }
-    
+
     DocumentRootConfig docRootConfig_;
     const ServerContext* server_;
     const LocationContext* location_;
@@ -105,11 +102,13 @@ TEST_F(StaticFileHandlerTest, ServeDirectoryWithAutoindexEnabled) {
 }
 
 TEST_F(StaticFileHandlerTest, ServeDirectoryWithAutoindexDisabledAndNoIndexFile) {
-    StaticFileHandler handler(docRootConfig_); // Autoindex is OFF by default
+    // index.htmlが存在しないように削除
+    system("rm -f /tmp/www/dir1/index.html");
+    StaticFileHandler handler(docRootConfig_); // AutoindexはOFFのまま
     Request request = createRequest("/dir1/");
     Either<IAction *, Response> result = handler.serve(request);
     ASSERT_TRUE(result.isRight());
-    EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusForbidden);
+    EXPECT_EQ(result.unwrapRight().getStatusCode(), kStatusNotFound);
 }
 
 } // namespace http

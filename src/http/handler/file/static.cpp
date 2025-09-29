@@ -53,8 +53,10 @@ std::string createDirectoryListingHtml(DIR *directory, const std::string &target
     htmlContent += "<body><h1>" + indexTitle + "</h1><hr><ul>";
 
     struct dirent *directoryEntry;
+    int entryCount = 0;
     while ((directoryEntry = readdir(directory)) != NULL) {
         appendDirectoryEntry(htmlContent, directoryEntry);
+        entryCount++;
     }
     closedir(directory);
 
@@ -89,16 +91,21 @@ Response StaticFileHandler::directoryListing(const std::string &rootPath, const 
 }
 
 Response StaticFileHandler::handleDirectory(const Request &request, const std::string &directoryPath) const {
-
     if (!utils::endsWith(request.getRequestTarget(), "/")) {
         return ResponseBuilder().redirect(request.getRequestTarget() + "/").build();
     }
 
     // indexファイル探索を最優先に！
-    const std::string indexFilePath = directoryPath + documentRootConfig_.getIndex();
+    std::string indexFilePath = directoryPath;
+    // 末尾にスラッシュがなければ追加
+    if (!indexFilePath.empty() && indexFilePath[indexFilePath.size() - 1] != '/')
+        indexFilePath += "/";
+    indexFilePath += documentRootConfig_.getIndex();
+
     struct stat indexFileStatus = {};
     if (stat(indexFilePath.c_str(), &indexFileStatus) != -1) {
         return buildFileResponse(indexFileStatus, indexFilePath);
+    } else {
     }
 
     // indexファイルがなかった場合のみautoindex
@@ -122,13 +129,24 @@ Response StaticFileHandler::serveInternal(const Request &request) const {
     const std::string& locationPath = documentRootConfig_.getLocationPath();
     const std::string& reqTarget = request.getRequestTarget();
 
+
     std::string relativePath;
     if (reqTarget.size() >= locationPath.size()) {
         relativePath = reqTarget.substr(locationPath.size());
     } else {
         relativePath = "";
     }
-    std::string filePath = documentRootConfig_.getRoot() + relativePath;
+
+    // パス結合のバグ修正
+    std::string root = documentRootConfig_.getRoot();
+    // root末尾にスラッシュがなければ追加
+    if (!root.empty() && root[root.size() - 1] != '/')
+        root += "/";
+    // relativePathの先頭にスラッシュがあれば削除
+    if (!relativePath.empty() && relativePath[0] == '/')
+        relativePath = relativePath.substr(1);
+
+    std::string filePath = root + relativePath;
 
     struct stat fileStatus = {};
     if (stat(filePath.c_str(), &fileStatus) == -1) {

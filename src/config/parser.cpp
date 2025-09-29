@@ -132,11 +132,19 @@ void ConfigParser::setHost_(ServerContext& server, size_t& index) {
     }
 }
 
+// 修正: server_names ディレクティブが複数値を持てるように
 void ConfigParser::setserverName_(ServerContext& server, size_t& index) {
-    const std::string serverName = incrementAndCheckSize_(index);
+    // 1つ目
+    std::string serverName = incrementAndCheckSize_(index);
 
     if (this->tokens_[index].getType() == VALUE) {
-        server.setserverName(serverName);
+        server.addServerName(serverName);
+        // 追加: 以降の値も全部追加
+        while (index + 1 < this->tokens_.size() && this->tokens_[index + 1].getType() == VALUE) {
+            ++index;
+            serverName = this->tokens_[index].getText();
+            server.addServerName(serverName);
+        }
     } else {
         throwErr(serverName, ": server_name value error: line",
                  this->tokens_[index].getLineNumber());

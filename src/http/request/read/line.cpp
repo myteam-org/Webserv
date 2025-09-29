@@ -6,13 +6,15 @@
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
-// #include "http/request/read/header.hpp"
+#include "utils/logger.hpp"
 
 namespace http {
 
-ReadingRequestLineState::ReadingRequestLineState() {}
+ReadingRequestLineState::ReadingRequestLineState() {
+}
 
-ReadingRequestLineState::~ReadingRequestLineState() {}
+ReadingRequestLineState::~ReadingRequestLineState() {
+}
 
 // handle関数
 // 1. getLine(buf)を使って1行読み取る
@@ -24,32 +26,32 @@ ReadingRequestLineState::~ReadingRequestLineState() {}
 //    ・TransitionResultに requestLine と status をセットしreturnする
 
 TransitionResult ReadingRequestLineState::handle(ReadContext& ctx, ReadBuffer& buf) {
-  TransitionResult tr;
+    TransitionResult tr;
 
-  (void)ctx;
-  const GetLineResult result = getLine(buf);
-  if (!result.canUnwrap()) {
-    tr.setStatus(types::err(result.unwrapErr()));
+    (void)ctx;
+    const GetLineResult result = getLine(buf);
+    if (!result.canUnwrap()) {
+        tr.setStatus(types::err(result.unwrapErr()));
+        return tr;
+    }
+
+    const types::Option<std::string> lineOpt = result.unwrap();
+    if (lineOpt.isNone()) {
+        tr.setStatus(types::ok(IState::kSuspend));
+        return tr;
+    }
+
+    const std::string line = lineOpt.unwrap();
+
+    if (line.empty()) {
+        tr.setStatus(types::err(error::kIOUnknown));
+        return tr;
+    }
+
+    tr.setRequestLine(types::Option<std::string>(types::some(line)));
+    tr.setNextState(new ReadingRequestHeadersState());
+    tr.setStatus(types::ok(IState::kDone));
     return tr;
-  }
-
-  const types::Option<std::string> lineOpt = result.unwrap();
-  if (lineOpt.isNone()) {
-    tr.setStatus(types::ok(IState::kSuspend));
-    return tr;
-  }
-
-  const std::string line = lineOpt.unwrap();
-
-  if (line.empty()) {
-    tr.setStatus(types::err(error::kIOUnknown));
-    return tr;
-  }
-
-  tr.setRequestLine(types::Option<std::string>(types::some(line)));
-  tr.setNextState(new ReadingRequestHeadersState());
-  tr.setStatus(types::ok(IState::kDone));
-  return tr;
 }
 
 }  // namespace http

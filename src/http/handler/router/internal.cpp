@@ -1,8 +1,9 @@
+#include <sstream>
 #include "http/request/request.hpp"
 #include "http/handler/router/internal.hpp"
 #include "http/response/builder.hpp"
 #include "http/method.hpp" // isMethodImplementedを使う
-#include <sstream>
+#include "utils/logger.hpp"
 
 namespace http {
     InternalRouter::InternalRouter(const RouteRegistry& registry) 

@@ -1,26 +1,29 @@
-#include "http/response/builder.hpp"
-#include "http/handler/router/builder.hpp"
-#include "http/handler/file/static.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <cerrno>
-#include <cstring>
+#include <errno.h>
+#include <string>
+#include <sstream>
+
 #include "utils/string.hpp"
 #include "utils/logger.hpp"
+#include "http/handler/file/static.hpp"
+#include "http/response/response.hpp"
+#include "http/response/builder.hpp"
 
 namespace http {
 
 StaticFileHandler::~StaticFileHandler() {}
 
 Response buildFileResponse(const struct stat &fileStatus, const std::string &filePath) {
+    std::stringstream ss;
     if (!S_ISREG(fileStatus.st_mode)) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }
     return ResponseBuilder().file(filePath).build();
 }
 
-void appendDirectoryEntry(std::string &htmlContent, const dirent *directoryEntry) {
+void appendDirectoryEntry(std::string &htmlContent, const struct dirent *directoryEntry) {
     const std::string entryName = directoryEntry->d_name;
     if (entryName == "." || entryName == "..") {
         return;
@@ -39,6 +42,7 @@ void appendDirectoryEntry(std::string &htmlContent, const dirent *directoryEntry
 }
 
 std::string createDirectoryListingHtml(DIR *directory, const std::string &targetPath) {
+    std::stringstream ss;
     const std::string indexTitle = "Index of " + targetPath;
     const int initialCapacity = 1024;
     std::string htmlContent;
@@ -48,7 +52,7 @@ std::string createDirectoryListingHtml(DIR *directory, const std::string &target
     htmlContent += "<head><title>" + indexTitle + "</title></head>";
     htmlContent += "<body><h1>" + indexTitle + "</h1><hr><ul>";
 
-    const dirent *directoryEntry;
+    struct dirent *directoryEntry;
     while ((directoryEntry = readdir(directory)) != NULL) {
         appendDirectoryEntry(htmlContent, directoryEntry);
     }
@@ -90,15 +94,17 @@ Response StaticFileHandler::handleDirectory(const Request &request, const std::s
         return ResponseBuilder().redirect(request.getRequestTarget() + "/").build();
     }
 
-    if (documentRootConfig_.isAutoindexEnabled()) {
-        std::string targetPath = directoryPath.substr(documentRootConfig_.getRoot().length());
-        return directoryListing(documentRootConfig_.getRoot(), targetPath);
-    }
-
+    // indexファイル探索を最優先に！
     const std::string indexFilePath = directoryPath + documentRootConfig_.getIndex();
     struct stat indexFileStatus = {};
     if (stat(indexFilePath.c_str(), &indexFileStatus) != -1) {
         return buildFileResponse(indexFileStatus, indexFilePath);
+    }
+
+    // indexファイルがなかった場合のみautoindex
+    if (documentRootConfig_.isAutoindexEnabled()) {
+        std::string targetPath = directoryPath.substr(documentRootConfig_.getRoot().length());
+        return directoryListing(documentRootConfig_.getRoot(), targetPath);
     }
 
     if (errno == ENOENT) {

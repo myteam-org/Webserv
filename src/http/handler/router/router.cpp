@@ -1,6 +1,8 @@
+#include <sstream>
 #include "http/handler/router/router.hpp"
-namespace http {
-   Router::Router() 
+#include "utils/logger.hpp"
+
+namespace http {Router::Router() 
         : routeRegistry_(new RouteRegistry()),
           middlewareChain_(new MiddlewareChain()),
           internalRouter_(NULL),

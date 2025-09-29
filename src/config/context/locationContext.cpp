@@ -1,5 +1,7 @@
+#include <string>
+#include <sstream>
 #include "config/context/locationContext.hpp"
-#include <vector>
+#include "utils/logger.hpp"
 #include "http/method.hpp" // ← 追加: HttpMethod型宣言のヘッダ
 
 LocationContext::LocationContext(const std::string& text)

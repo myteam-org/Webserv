@@ -9,6 +9,7 @@
 #include "utils/string.hpp"
 #include "utils/types/try.hpp"
 #include "utils/types/option.hpp"
+#include "utils/logger.hpp"
 
 namespace http {
 namespace parse {
@@ -24,7 +25,8 @@ RequestParser::RequestParser(http::ReadContext& ctx)
       queryString_(),
       version_("HTTP/1.1"),
       headers_(),
-      body_() {}
+      body_() {
+}
 
 RequestParser::~RequestParser() {}
 
@@ -68,6 +70,9 @@ RequestParser::parseHeaders() {
         return types::ok(types::Unit());
     }
     headers_ = ctx_->getHeaders(); // 既にキーは lower-case で格納されている想定
+
+    for (RawHeaders::const_iterator it = headers_.begin(); it != headers_.end(); ++it) {
+    }
 
     if (!checkMissingHost()) {
         return types::err(error::kBadRequest);
@@ -165,9 +170,13 @@ bool RequestParser::validateContentLength() const {
         return true;
     }
     const std::string& v = it->second;
-    if (v.empty()) return false;
+    if (v.empty()) {
+        return false;
+    }
     for (std::string::size_type i = 0; i < v.size(); ++i) {
-        if (v[i] < '0' || v[i] > '9') return false;
+        if (v[i] < '0' || v[i] > '9') {
+            return false;
+        }
     }
     return true;
 }

@@ -12,6 +12,32 @@
 #include "http/handler/router/middleware/logger.hpp"
 #include "http/handler/router/router.hpp"
 
+// ---- Hostによる仮想サーバ選択 ----
+bool VirtualServer::matchesHost(const std::string &host) const {
+    std::string hostOnly = host;
+    std::string::size_type colonPos = host.find(':');
+    if (colonPos != std::string::npos) {
+        hostOnly = host.substr(0, colonPos);
+    }
+    const std::vector<std::string> &names = serverConfig_.getServerNames();
+    for (std::vector<std::string>::const_iterator it = names.begin(); it != names.end(); ++it) {
+        if (*it == hostOnly) {
+            return true;
+        }
+    }
+    return false;
+}
+
+VirtualServer* VirtualServer::findByHost(const std::vector<VirtualServer*>& servers, const std::string& host) {
+    for (size_t i = 0; i < servers.size(); ++i) {
+        if (servers[i]->matchesHost(host)) {
+            return servers[i];
+        }
+    }
+    return NULL;
+}
+
+// ---- 既存の処理 ----
 VirtualServer::VirtualServer(const ServerContext &serverConfig,
                              const std::string &bindAddress)
     : serverConfig_(serverConfig), bindAddress_(bindAddress), router_(NULL) {
@@ -28,7 +54,9 @@ const ServerContext &VirtualServer::getServerConfig() const {
     return serverConfig_;
 }
 
-http::Router &VirtualServer::getRouter() { return *router_; }
+http::Router &VirtualServer::getRouter() {
+    return *router_;
+}
 
 void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
                                      const LocationContext &locationContext) {
@@ -65,7 +93,6 @@ void VirtualServer::setupRouter() {
 
         // Redirect 優先 (任意: メソッド別に許可チェック)
         if (!redirect.empty()) {
-            // 各許可メソッドに RedirectHandler を登録
             if (allowed[GET] == ON)
                 routerBuilder.route(http::kMethodGet, path,
                                     new http::RedirectHandler(redirect));

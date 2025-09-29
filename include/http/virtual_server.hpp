@@ -13,6 +13,9 @@ class VirtualServer {
     const ServerContext &getServerConfig() const;
     http::Router &getRouter();
 
+    bool matchesHost(const std::string &host) const;
+    static VirtualServer* findByHost(const std::vector<VirtualServer*>& servers, const std::string& host);
+
    private:
     void setupRouter();
 

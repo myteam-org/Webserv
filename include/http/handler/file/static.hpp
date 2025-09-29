@@ -10,6 +10,8 @@ class StaticFileHandler : public IHandler {
 public:
     explicit StaticFileHandler(const DocumentRootConfig &documentRootConfig);
 
+    virtual ~StaticFileHandler();
+
     Either<IAction *, Response> serve(const Request &requestContext);
 
 private:

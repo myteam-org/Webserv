@@ -1,62 +1,68 @@
-#include "http/response/builder.hpp"
-#include "http/handler/router/builder.hpp"
-#include "http/handler/file/static.hpp"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <cerrno>
-#include <cstring>
-#include "utils/string.hpp"
+#include <errno.h>
+#include <string>
+#include <sstream>
 
+#include "utils/string.hpp"
+#include "utils/logger.hpp"
+#include "http/handler/file/static.hpp"
+#include "http/response/response.hpp"
+#include "http/response/builder.hpp"
 
 namespace http {
 
-namespace {
-    Response buildFileResponse(const struct stat &fileStatus, const std::string &filePath) {
-        if (!S_ISREG(fileStatus.st_mode)) {
-            return ResponseBuilder().status(kStatusForbidden).build();
-        }
-        return ResponseBuilder().file(filePath).build();
+StaticFileHandler::~StaticFileHandler() {}
+
+Response buildFileResponse(const struct stat &fileStatus, const std::string &filePath) {
+    std::stringstream ss;
+    if (!S_ISREG(fileStatus.st_mode)) {
+        return ResponseBuilder().status(kStatusForbidden).build();
     }
+    return ResponseBuilder().file(filePath).build();
+}
 
-    void appendDirectoryEntry(std::string &htmlContent, const dirent *directoryEntry) {
-        const std::string entryName = directoryEntry->d_name;
-        if (entryName == ".") {
-            return;
-        }
-        htmlContent += "<li><a href=\"";
-        htmlContent += entryName;
-        if (directoryEntry->d_type == DT_DIR) {
-            htmlContent += "/";
-        }
-        htmlContent += "\">";
-        htmlContent += entryName;
-        if (directoryEntry->d_type == DT_DIR) {
-            htmlContent += "/";
-        }
-        htmlContent += "</a></li>";
+void appendDirectoryEntry(std::string &htmlContent, const struct dirent *directoryEntry) {
+    const std::string entryName = directoryEntry->d_name;
+    if (entryName == "." || entryName == "..") {
+        return;
     }
-
-    std::string createDirectoryListingHtml(DIR *directory, const std::string &targetPath) {
-        const std::string indexTitle = "Index of " + targetPath;
-        const int initialCapacity = 1024;
-        std::string htmlContent;
-        htmlContent.reserve(initialCapacity);
-
-        htmlContent += "<!DOCTYPE html><html>";
-        htmlContent += "<head><title>" + indexTitle + "</title></head>";
-        htmlContent += "<body><h1>" + indexTitle + "</h1><hr><ul>";
-
-        const dirent *directoryEntry;
-        while ((directoryEntry = readdir(directory)) != NULL) {
-            appendDirectoryEntry(htmlContent, directoryEntry);
-        }
-        closedir(directory);
-
-        htmlContent += "</ul><hr></body></html>";
-        return htmlContent;
+    htmlContent += "<li><a href=\"";
+    htmlContent += entryName;
+    if (directoryEntry->d_type == DT_DIR) {
+        htmlContent += "/";
     }
-} // namespace
+    htmlContent += "\">";
+    htmlContent += entryName;
+    if (directoryEntry->d_type == DT_DIR) {
+        htmlContent += "/";
+    }
+    htmlContent += "</a></li>";
+}
+
+std::string createDirectoryListingHtml(DIR *directory, const std::string &targetPath) {
+    std::stringstream ss;
+    const std::string indexTitle = "Index of " + targetPath;
+    const int initialCapacity = 1024;
+    std::string htmlContent;
+    htmlContent.reserve(initialCapacity);
+
+    htmlContent += "<!DOCTYPE html><html>";
+    htmlContent += "<head><title>" + indexTitle + "</title></head>";
+    htmlContent += "<body><h1>" + indexTitle + "</h1><hr><ul>";
+
+    struct dirent *directoryEntry;
+    int entryCount = 0;
+    while ((directoryEntry = readdir(directory)) != NULL) {
+        appendDirectoryEntry(htmlContent, directoryEntry);
+        entryCount++;
+    }
+    closedir(directory);
+
+    htmlContent += "</ul><hr></body></html>";
+    return htmlContent;
+}
 
 StaticFileHandler::StaticFileHandler(const DocumentRootConfig &documentRootConfig)
     : documentRootConfig_(documentRootConfig) {
@@ -86,22 +92,33 @@ Response StaticFileHandler::directoryListing(const std::string &rootPath, const 
 }
 
 Response StaticFileHandler::handleDirectory(const Request &request, const std::string &directoryPath) const {
-
     if (!utils::endsWith(request.getRequestTarget(), "/")) {
         return ResponseBuilder().redirect(request.getRequestTarget() + "/").build();
     }
 
-    const std::string indexFilePath = directoryPath + documentRootConfig_.getIndex();
+    // indexファイル探索を最優先に！
+    std::string indexFilePath = directoryPath;
+    // 末尾にスラッシュがなければ追加
+    if (!indexFilePath.empty() && indexFilePath[indexFilePath.size() - 1] != '/')
+        indexFilePath += "/";
+    indexFilePath += documentRootConfig_.getIndex();
+
     struct stat indexFileStatus = {};
     if (stat(indexFilePath.c_str(), &indexFileStatus) != -1) {
         return buildFileResponse(indexFileStatus, indexFilePath);
+    } else {
     }
 
-    if (errno == ENOENT && documentRootConfig_.isAutoindexEnabled()) {
-        return directoryListing(documentRootConfig_.getRoot(), request.getRequestTarget());
+    // indexファイルがなかった場合のみautoindex
+    if (documentRootConfig_.isAutoindexEnabled()) {
+        std::string targetPath = directoryPath.substr(documentRootConfig_.getRoot().length());
+        return directoryListing(documentRootConfig_.getRoot(), targetPath);
     }
 
-    if (errno == ENOENT || errno == EACCES) {
+    if (errno == ENOENT) {
+        return ResponseBuilder().status(kStatusNotFound).build();
+    }
+    if (errno == EACCES) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }
 
@@ -109,7 +126,28 @@ Response StaticFileHandler::handleDirectory(const Request &request, const std::s
 }
 
 Response StaticFileHandler::serveInternal(const Request &request) const {
-    const std::string filePath = documentRootConfig_.getRoot() + request.getRequestTarget();
+
+    const std::string& locationPath = documentRootConfig_.getLocationPath();
+    const std::string& reqTarget = request.getRequestTarget();
+
+
+    std::string relativePath;
+    if (reqTarget.size() >= locationPath.size()) {
+        relativePath = reqTarget.substr(locationPath.size());
+    } else {
+        relativePath = "";
+    }
+
+    // パス結合のバグ修正
+    std::string root = documentRootConfig_.getRoot();
+    // root末尾にスラッシュがなければ追加
+    if (!root.empty() && root[root.size() - 1] != '/')
+        root += "/";
+    // relativePathの先頭にスラッシュがあれば削除
+    if (!relativePath.empty() && relativePath[0] == '/')
+        relativePath = relativePath.substr(1);
+
+    std::string filePath = root + relativePath;
 
     struct stat fileStatus = {};
     if (stat(filePath.c_str(), &fileStatus) == -1) {
@@ -129,4 +167,4 @@ Response StaticFileHandler::serveInternal(const Request &request) const {
     return buildFileResponse(fileStatus, filePath);
 }
 
-}  // namespace http
+} // namespace http

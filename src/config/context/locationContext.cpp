@@ -1,17 +1,24 @@
 #include "config/context/locationContext.hpp"
+#include <vector>
+#include "http/method.hpp" // ← 追加: HttpMethod型宣言のヘッダ
 
-#include <string>
-#include "config/data.hpp"
-
-LocationContext::LocationContext(const std::string& text) : value_(text) {
-    this->allowedMethod_[GET] = OFF;
-    this->allowedMethod_[POST] = OFF;
-    this->allowedMethod_[DELETE] = OFF;
+LocationContext::LocationContext(const std::string& text)
+    : value_(text), path_(""), redirect_("") {
+    for (int i = 0; i < METHOD_COUNT; ++i) {
+        allowedMethod_[i] = OFF;
+    }
 }
 
 LocationContext::~LocationContext() {}
 
-void LocationContext::setPath(const std::string& path) { this->path_ = path; }
+void LocationContext::setPath(const std::string& path) {
+    if (path.empty()) {
+        this->path_ = "/";
+    } else {
+        this->path_ = path;
+    }
+    this->documentRootConfig_.setLocationPath(this->path_);
+}
 
 void LocationContext::setMethod(AllowedMethod method) {
     this->allowedMethod_[method] = ON;

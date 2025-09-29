@@ -7,56 +7,56 @@
 #include <cerrno>
 #include <cstring>
 #include "utils/string.hpp"
-
+#include "utils/logger.hpp"
 
 namespace http {
 
-namespace {
-    Response buildFileResponse(const struct stat &fileStatus, const std::string &filePath) {
-        if (!S_ISREG(fileStatus.st_mode)) {
-            return ResponseBuilder().status(kStatusForbidden).build();
-        }
-        return ResponseBuilder().file(filePath).build();
+StaticFileHandler::~StaticFileHandler() {}
+
+Response buildFileResponse(const struct stat &fileStatus, const std::string &filePath) {
+    if (!S_ISREG(fileStatus.st_mode)) {
+        return ResponseBuilder().status(kStatusForbidden).build();
     }
+    return ResponseBuilder().file(filePath).build();
+}
 
-    void appendDirectoryEntry(std::string &htmlContent, const dirent *directoryEntry) {
-        const std::string entryName = directoryEntry->d_name;
-        if (entryName == ".") {
-            return;
-        }
-        htmlContent += "<li><a href=\"";
-        htmlContent += entryName;
-        if (directoryEntry->d_type == DT_DIR) {
-            htmlContent += "/";
-        }
-        htmlContent += "\">";
-        htmlContent += entryName;
-        if (directoryEntry->d_type == DT_DIR) {
-            htmlContent += "/";
-        }
-        htmlContent += "</a></li>";
+void appendDirectoryEntry(std::string &htmlContent, const dirent *directoryEntry) {
+    const std::string entryName = directoryEntry->d_name;
+    if (entryName == "." || entryName == "..") {
+        return;
     }
-
-    std::string createDirectoryListingHtml(DIR *directory, const std::string &targetPath) {
-        const std::string indexTitle = "Index of " + targetPath;
-        const int initialCapacity = 1024;
-        std::string htmlContent;
-        htmlContent.reserve(initialCapacity);
-
-        htmlContent += "<!DOCTYPE html><html>";
-        htmlContent += "<head><title>" + indexTitle + "</title></head>";
-        htmlContent += "<body><h1>" + indexTitle + "</h1><hr><ul>";
-
-        const dirent *directoryEntry;
-        while ((directoryEntry = readdir(directory)) != NULL) {
-            appendDirectoryEntry(htmlContent, directoryEntry);
-        }
-        closedir(directory);
-
-        htmlContent += "</ul><hr></body></html>";
-        return htmlContent;
+    htmlContent += "<li><a href=\"";
+    htmlContent += entryName;
+    if (directoryEntry->d_type == DT_DIR) {
+        htmlContent += "/";
     }
-} // namespace
+    htmlContent += "\">";
+    htmlContent += entryName;
+    if (directoryEntry->d_type == DT_DIR) {
+        htmlContent += "/";
+    }
+    htmlContent += "</a></li>";
+}
+
+std::string createDirectoryListingHtml(DIR *directory, const std::string &targetPath) {
+    const std::string indexTitle = "Index of " + targetPath;
+    const int initialCapacity = 1024;
+    std::string htmlContent;
+    htmlContent.reserve(initialCapacity);
+
+    htmlContent += "<!DOCTYPE html><html>";
+    htmlContent += "<head><title>" + indexTitle + "</title></head>";
+    htmlContent += "<body><h1>" + indexTitle + "</h1><hr><ul>";
+
+    const dirent *directoryEntry;
+    while ((directoryEntry = readdir(directory)) != NULL) {
+        appendDirectoryEntry(htmlContent, directoryEntry);
+    }
+    closedir(directory);
+
+    htmlContent += "</ul><hr></body></html>";
+    return htmlContent;
+}
 
 StaticFileHandler::StaticFileHandler(const DocumentRootConfig &documentRootConfig)
     : documentRootConfig_(documentRootConfig) {
@@ -90,17 +90,21 @@ Response StaticFileHandler::handleDirectory(const Request &request, const std::s
         return ResponseBuilder().redirect(request.getRequestTarget() + "/").build();
     }
 
+    if (documentRootConfig_.isAutoindexEnabled()) {
+        std::string targetPath = directoryPath.substr(documentRootConfig_.getRoot().length());
+        return directoryListing(documentRootConfig_.getRoot(), targetPath);
+    }
+
     const std::string indexFilePath = directoryPath + documentRootConfig_.getIndex();
     struct stat indexFileStatus = {};
     if (stat(indexFilePath.c_str(), &indexFileStatus) != -1) {
         return buildFileResponse(indexFileStatus, indexFilePath);
     }
 
-    if (errno == ENOENT && documentRootConfig_.isAutoindexEnabled()) {
-        return directoryListing(documentRootConfig_.getRoot(), request.getRequestTarget());
+    if (errno == ENOENT) {
+        return ResponseBuilder().status(kStatusNotFound).build();
     }
-
-    if (errno == ENOENT || errno == EACCES) {
+    if (errno == EACCES) {
         return ResponseBuilder().status(kStatusForbidden).build();
     }
 
@@ -108,7 +112,17 @@ Response StaticFileHandler::handleDirectory(const Request &request, const std::s
 }
 
 Response StaticFileHandler::serveInternal(const Request &request) const {
-    const std::string filePath = documentRootConfig_.getRoot() + request.getRequestTarget();
+
+    const std::string& locationPath = documentRootConfig_.getLocationPath();
+    const std::string& reqTarget = request.getRequestTarget();
+
+    std::string relativePath;
+    if (reqTarget.size() >= locationPath.size()) {
+        relativePath = reqTarget.substr(locationPath.size());
+    } else {
+        relativePath = "";
+    }
+    std::string filePath = documentRootConfig_.getRoot() + relativePath;
 
     struct stat fileStatus = {};
     if (stat(filePath.c_str(), &fileStatus) == -1) {
@@ -128,4 +142,4 @@ Response StaticFileHandler::serveInternal(const Request &request) const {
     return buildFileResponse(fileStatus, filePath);
 }
 
-}  // namespace http
+} // namespace http

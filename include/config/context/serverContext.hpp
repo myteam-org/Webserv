@@ -4,7 +4,6 @@ class ConfigTokenizer;
 class LocationContext;
 
 #include <sys/types.h>
-
 #include <cstddef>
 #include <iostream>
 #include <map>
@@ -15,6 +14,8 @@ class LocationContext;
 #include "config/token.hpp"
 #include "config/tokenizer.hpp"
 #include "http/status.hpp"
+
+typedef std::vector<LocationContext> LocationContextList;
 
 class ServerContext {
    public:
@@ -37,8 +38,9 @@ class ServerContext {
     const std::string& getServerName() const;
     const std::map<http::HttpStatusCode, std::string>& getErrorPage() const;
     size_t getClientMaxBodySize() const;
-    std::vector<LocationContext>& getLocation();
-    const std::vector<LocationContext>& getLocation() const;
+
+    LocationContextList& getLocation();
+    const LocationContextList& getLocation() const;
 
    private:
     std::string value_;
@@ -47,5 +49,5 @@ class ServerContext {
     std::string serverName_;
     std::map<http::HttpStatusCode, std::string> errorPage_;
     size_t clientMaxBodySize_;
-    std::vector<LocationContext> locations_;
+    LocationContextList locations_;
 };

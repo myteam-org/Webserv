@@ -7,6 +7,8 @@
 #include "http/request/read/line.hpp"
 #include "config/context/serverContext.hpp"
 #include "http/config/config_resolver.hpp"
+#include "utils/logger.hpp"
+#include "utils/string.hpp" // 追加でutils::toStringを使えるように
 
 namespace http {
 
@@ -102,7 +104,8 @@ bool ReadContext::isBodyComplete() const {
     if (!hasHeaders_) {
         return false;
     }
-    return hasBody_ || !parser::hasBody(headers_);
+    bool complete = hasBody_ || !parser::hasBody(headers_);
+    return complete;
 }
 
 void ReadContext::setRequestLine(const std::string& line) {
@@ -126,7 +129,10 @@ void ReadContext::setBody(const std::string& body) {
 
 const std::string& ReadContext::getBody() const { return body_; }
 
-void ReadContext::setServer(const ServerContext& server) { server_ = &server; }
+void ReadContext::setServer(const ServerContext& server) {
+    server_ = &server;
+}
+
 const ServerContext& ReadContext::getServer() const { return *server_; }
 bool ReadContext::hasServer() const { return server_ != NULL; }
 
@@ -148,8 +154,16 @@ void ReadContext::resetForNext() {
     server_ = NULL;
 }
 
-void ReadContext::markRequestLine() { hasRequestLine_ = true; }
-void ReadContext::markHeaders() { hasHeaders_ = true; }
-void ReadContext::markBody() { hasBody_ = true; }
+void ReadContext::markRequestLine() { 
+    hasRequestLine_ = true; 
+}
+
+void ReadContext::markHeaders() { 
+    hasHeaders_ = true; 
+}
+
+void ReadContext::markBody() { 
+    hasBody_ = true; 
+}
 
 } // namespace http

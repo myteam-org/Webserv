@@ -18,8 +18,11 @@
 
 namespace http {
 
-ReadingRequestHeadersState::ReadingRequestHeadersState() {}
-ReadingRequestHeadersState::~ReadingRequestHeadersState() {}
+ReadingRequestHeadersState::ReadingRequestHeadersState() {
+}
+
+ReadingRequestHeadersState::~ReadingRequestHeadersState() {
+}
 
 // handleの目的
 // 1. HTTPヘッダーを読み込む
@@ -114,4 +117,3 @@ TransitionResult ReadingRequestHeadersState::handleHeadersComplete(
 }
 
 } // namespace http
-

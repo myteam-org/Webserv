@@ -27,7 +27,7 @@ class ServerContext {
     std::string newToken(std::string& token);
     void setListen(u_int16_t port);
     void setHost(const std::string& host);
-    void setserverName(const std::string& serverName);
+    void addServerName(const std::string& serverName);
     void addMap(http::HttpStatusCode number, const std::string& fileName);
     void setClientMaxBodySize(size_t size);
     void addLocation(const LocationContext& location);
@@ -35,7 +35,7 @@ class ServerContext {
     const std::string& getValue() const;
     u_int16_t getListen() const;
     const std::string& getHost() const;
-    const std::string& getServerName() const;
+    const std::vector<std::string>& getServerNames() const;
     const std::map<http::HttpStatusCode, std::string>& getErrorPage() const;
     size_t getClientMaxBodySize() const;
 
@@ -46,7 +46,7 @@ class ServerContext {
     std::string value_;
     u_int16_t listen_;
     std::string host_;
-    std::string serverName_;
+    std::vector<std::string> serverNames_;
     std::map<http::HttpStatusCode, std::string> errorPage_;
     size_t clientMaxBodySize_;
     LocationContextList locations_;

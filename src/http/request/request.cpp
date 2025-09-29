@@ -2,8 +2,10 @@
 
 #include "config/context/locationContext.hpp"
 #include "utils/string.hpp"
+#include "utils/logger.hpp"
 
 namespace http {
+
 Request::Request(HttpMethod method, const std::string &requestTarget,
                  const std::string &pathOnly, const std::string &queryString,
                  const RawHeaders &headers, const std::vector<char> &body,
@@ -54,4 +56,5 @@ const LocationContext *Request::getLocation() const { return location_; }
 const DocumentRootConfig *Request::getDocumentRoot() const {
     return documentRoot_;
 }
+
 }  // namespace http

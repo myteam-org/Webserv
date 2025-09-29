@@ -22,12 +22,17 @@ class ConfigResolver : public IConfigResolver {
 
     types::Result<const ServerContext*, error::AppError> chooseServer(
         const std::string& host) const {
-        const std::size_t colon = host.find(':');
-        const std::string& hostname =
-            (colon != std::string::npos) ? host.substr(0, colon) : host;
+        // host: "a.test:8080" → "a.test"
+        std::size_t colon = host.find(':');
+        std::string hostname = (colon != std::string::npos) ? host.substr(0, colon) : host;
+
         for (std::size_t i = 0; i < servers_.size(); ++i) {
-            if (servers_[i].getHost() == hostname) {
-                return types::ok(&servers_[i]);
+            const std::vector<std::string>& serverNames = servers_[i].getServerNames();
+            for (std::size_t j = 0; j < serverNames.size(); ++j) {
+                if (serverNames[j] == hostname) {
+                    // 一致する server_name を見つけた
+                    return types::ok(&servers_[i]);
+                }
             }
         }
         return types::err(error::kBadRequest);

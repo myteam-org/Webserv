@@ -12,7 +12,8 @@ void ClientHandler::onEvent(const FdEntry& e, uint32_t m){
         return;
     }
     // 致命エラー
-        if (m & EPOLLERR) {
+    if (m & EPOLLERR) {
+        LOG_ERROR("ClientHandler::onEvent: Epoll fatal error");
         handleHangup(*c); //Connection close
         return;
     }
@@ -39,29 +40,27 @@ void ClientHandler::onEvent(const FdEntry& e, uint32_t m){
 }
 
 void ClientHandler::onReadable(Connection& c) {
-    // 1) 読む（WouldBlock まで）
     for (;;) {
         ReadBuffer::LoadResult lr = c.getReadBuffer().load();
-        if (lr.isErr()) {
-            // EPOLLERR/EPOLLRDHUP と整合させてクローズへ
-            handleReadError(c, lr.unwrapErr());
-            return;
-        }
+        // if (lr.isErr()) {
+        //     // 現状ここに入ることはない
+        //     // EPOLLERR/EPOLLRDHUP と整合させてクローズへ
+        //     handleReadError(c, lr.unwrapErr());
+        //     return;
+        // }
         if (lr.unwrap() == 0) {
             break; // これ以上は読めない
         }
         c.setLastRecv(std::time(0));
     }
-    // 2) 進める（取れるだけ）
     for (;;) {
         const http::RequestReader::ReadRequestResult readRes = c.getRequestReader().readRequest(c.getReadBuffer());
         if (readRes.isErr()) {
-            LOG_ERROR("Request cannot be parsed");
+            LOG_ERROR("ClientHandler::onReadable: Request cannot be parsed");
             failAndClose(c, readRes.unwrapErr()); //400
             return;
         }
         types::Option<http::Request> reqOpt = readRes.unwrap();
-        // request 完成判断
         if (!reqOpt.isNone()) {
             const http::Request& req = reqOpt.unwrap();
             c.pushCreatedReq(req);
@@ -91,10 +90,11 @@ void ClientHandler::onWritable(Connection& c) {
     WriteBuffer &writeBuffer = c.getWriteBuffer();
     for (;;) {
         types::Result<std::size_t, error::AppError>  writeRes = writeBuffer.flush();
-        if (writeRes.isErr()) { 
-            handleWriteError(c, errno);
-            return; 
-        }
+        // if (writeRes.isErr()) {
+        // 現状ここに入ることはない
+        //     handleWriteError(c, errno);
+        //     return; 
+        // }
         if (writeRes.unwrap() == 0) {
             break;
         }

@@ -49,10 +49,13 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/http/response/response_headers.cpp \
 	src/http/status.cpp \
 	src/http/virtual_server.cpp \
+	src/action/cgi_action.cpp \
+	src/action/cgi_context.cpp \
 	src/io/base/fileDescriptor.cpp \
 	src/io/input/read/buffer.cpp \
 	src/io/input/reader/fd.cpp \
 	src/io/input/write/buffer.cpp \
+	src/io/input/writer/fd.cpp \
 	src/io/handler/CgiStdinHandler.cpp \
 	src/io/handler/CgiStdoutHandler.cpp \
 	src/io/handler/ListenerHandler.cpp \

@@ -58,22 +58,22 @@ http::Router &VirtualServer::getRouter() {
     return *router_;
 }
 
-void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
-                                     const LocationContext &locationContext) {
-    const DocumentRootConfig &docRoot = locationContext.getDocumentRootConfig();
-    const std::string &path = locationContext.getPath();
-    const OnOff *allowed = locationContext.getAllowedMethod();
+// void VirtualServer::registerHandlers(http::RouterBuilder &routerBuilder,
+//                                      const LocationContext &locationContext) {
+//     const DocumentRootConfig &docRoot = locationContext.getDocumentRootConfig();
+//     const std::string &path = locationContext.getPath();
+//     const OnOff *allowed = locationContext.getAllowedMethod();
 
-    if (allowed[GET] == ON) {
-        routerBuilder.route(http::kMethodGet, path, new http::StaticFileHandler(docRoot));
-    }
-    if (allowed[POST] == ON) {
-        routerBuilder.route(http::kMethodPost, path, new http::UploadFileHandler(docRoot));
-    }
-    if (allowed[DELETE] == ON) {
-        routerBuilder.route(http::kMethodDelete, path, new http::DeleteFileHandler(docRoot));
-    }
-}
+//     if (allowed[GET] == ON) {
+//         routerBuilder.route(http::kMethodGet, path, new http::StaticFileHandler(docRoot));
+//     }
+//     if (allowed[POST] == ON) {
+//         routerBuilder.route(http::kMethodPost, path, new http::UploadFileHandler(docRoot));
+//     }
+//     if (allowed[DELETE] == ON) {
+//         routerBuilder.route(http::kMethodDelete, path, new http::DeleteFileHandler(docRoot));
+//     }
+// }
 
 // LocationContext redirect_文字列がある場合はRedirectHandlerをnewする
 // DocumentRootConfig cgi_ == ONの時は、CgiHandlerをnewする
@@ -110,6 +110,7 @@ void VirtualServer::setupRouter() {
 
         if (allowed[GET] == ON) {
             if (cgiOn) {
+                routerBuilder.route(http::kMethodGet, path, new http::CgiHandler(docRoot));
                 // routerBuilder.route(http::kMethodGet, path, new http::CgiHandler(docRoot, path));
             } else {
                 routerBuilder.route(http::kMethodGet, path,
@@ -118,6 +119,7 @@ void VirtualServer::setupRouter() {
         }
         if (allowed[POST] == ON) {
             if (cgiOn) {
+                routerBuilder.route(http::kMethodGet, path, new http::CgiHandler(docRoot));
                 // routerBuilder.route(http::kMethodPost, path, new http::CgiHandler(docRoot, path));
             } else {
                 routerBuilder.route(http::kMethodPost, path,

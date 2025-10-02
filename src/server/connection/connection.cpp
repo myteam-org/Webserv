@@ -160,6 +160,6 @@ bool Connection::isCgiActive() const {
 void Connection::clearCgi() {
     if (cgi_) {
         delete cgi_;
-        cgi_=0;
+        cgi_ = 0;
     }
 }

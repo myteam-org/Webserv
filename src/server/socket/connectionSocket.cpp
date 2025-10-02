@@ -4,7 +4,8 @@ ConnectionSocket::ConnectionSocket(int fd, const ISocketAddr& peerAddr)
     : fd_(fd),
     peerAddress_ (peerAddr.getAddress()),
     peerPort_(peerAddr.getPort()),
-    eof_(false) {}
+    read_eof_(false),
+    write_eof_(false) {}
 
 ConnectionSocket::~ConnectionSocket() {}
 
@@ -32,7 +33,7 @@ io::IReader::ReadResult ConnectionSocket::read(char* buf, std::size_t n) {
         return types::ok<std::size_t>(static_cast<size_t>(r));
     }
     if (r == 0) {
-        eof_ = true;
+        read_eof_ = true;
         return types::ok<std::size_t>(0);
     }
     // errno が使用できないので、EPOLL 側にて、処理が進んだかどうかを確認する。
@@ -42,6 +43,7 @@ io::IReader::ReadResult ConnectionSocket::read(char* buf, std::size_t n) {
 io::IWriter::WriteResult ConnectionSocket::write(const char* buf, std::size_t n) {
     ssize_t w = ::send(getRawFd(), buf, n, 0);
     if (w >= 0) {
+        
         return types::ok<std::size_t>(static_cast<size_t>(w));
     }
     // 進めなかった→0 を返して上位に「次の EPOLLOUT を待て」と伝える
@@ -49,7 +51,11 @@ io::IWriter::WriteResult ConnectionSocket::write(const char* buf, std::size_t n)
 }
 
 bool ConnectionSocket::eof() {
-    return eof_;
+    return read_eof_;
+}
+
+bool ConnectionSocket::writeEof() {
+    return write_eof_;
 }
 
 const int ConnectionSocket::kInvalidFd;

@@ -56,6 +56,12 @@ class Server {
         bool overlapsWildcard(const std::string& a, const std::string& b);
         std::string makeEndpointKeyFromConfig(const std::string& hostName, unsigned short port);
         std::string u16toString(unsigned short port);
+        void registerCgiFds(Connection& c, const CgiFds& fds);
+        types::Result<CgiFds, error::SystemError> spawnCgiFromPrepared(Connection& c);
+        types::Result<types::Unit, error::SystemError> setupPipeForCgi(int in_pipe[2], int out_pipe[2]);
+        static void closeAllPipeFds(int in_pipe[2], int out_pipe[2]);
+        static void to_c_argv(const std::vector<std::string>& src, std::vector<char*>& dst);
+        void cleanupConnectionCgi(Connection& c);
 };
 
 std::string canonicalizeIp(const std::string& hostName);

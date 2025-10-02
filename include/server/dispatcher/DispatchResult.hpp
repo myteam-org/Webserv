@@ -11,7 +11,10 @@ struct DispatchResult {
         kArmOut,    // 書き込み可能にしてほしい
         kStartCgi,  // CGI の fd を epoll に登録してほしい
         kDone,      // 仕事終わり(主にCGI)
-        kClose      // 接続を閉じる
+        kClose,      // 接続を閉じる
+        kCgiCloseIn,  // CGI stdin を閉じて/epoll解除
+        kCgiCloseOut, // CGI stdout を閉じて/epoll解除
+        kCgiAbort
     } kind;
 
     CgiFds cgi;
@@ -21,9 +24,15 @@ struct DispatchResult {
     static DispatchResult StartCgi(const CgiFds& fds) { DispatchResult r(kStartCgi); r.cgi = fds; return r; }
     static DispatchResult Done()     { return DispatchResult(kDone); }
     static DispatchResult Close()    { return DispatchResult(kClose); }
+    static DispatchResult CgiCloseIn()   { return DispatchResult(kCgiCloseIn); }
+    static DispatchResult CgiCloseOut()  { return DispatchResult(kCgiCloseOut); }
+    static DispatchResult CgiAbort()     { return DispatchResult(kCgiAbort); }
     bool isNone()     const { return kind == kNone; }
     bool isArmOut()   const { return kind == kArmOut; }
     bool isStartCgi() const { return kind == kStartCgi; }
     bool isDone()     const { return kind == kDone; }
     bool isClose()    const { return kind == kClose; }
+    bool isCgiCloseIn() const { return kind == kCgiCloseIn; }
+    bool isCgiCloseOut()     const { return kind == kCgiCloseOut; }
+    bool isCgiAbort()    const { return kind == kCgiAbort; }
 };

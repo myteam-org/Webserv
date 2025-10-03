@@ -49,6 +49,7 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/http/response/response_headers.cpp \
 	src/http/status.cpp \
 	src/http/virtual_server.cpp \
+	src/http/config/config_resolver.cpp \
 	src/io/base/fileDescriptor.cpp \
 	src/io/input/read/buffer.cpp \
 	src/io/input/reader/fd.cpp \

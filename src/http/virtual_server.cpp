@@ -14,12 +14,14 @@
 #include "utils/logger.hpp"
 
 // ---- Hostによる仮想サーバ選択 ----
+// matchesHostはhost_は使わず、server_namesのみで判定
 bool VirtualServer::matchesHost(const std::string &host) const {
     std::string hostOnly = host;
     std::string::size_type colonPos = host.find(':');
     if (colonPos != std::string::npos) {
         hostOnly = host.substr(0, colonPos);
     }
+    // server_namesのみ
     const std::vector<std::string> &names = serverConfig_.getServerNames();
     for (std::vector<std::string>::const_iterator it = names.begin(); it != names.end(); ++it) {
         if (*it == hostOnly) {
@@ -38,7 +40,6 @@ VirtualServer* VirtualServer::findByHost(const std::vector<VirtualServer*>& serv
     return NULL;
 }
 
-// ---- 既存の処理 ----
 VirtualServer::VirtualServer(const ServerContext &serverConfig,
                              const std::string &bindAddress)
     : serverConfig_(serverConfig), bindAddress_(bindAddress), router_(NULL) {

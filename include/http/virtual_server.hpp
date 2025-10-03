@@ -4,6 +4,7 @@
 #include "http/handler/router/builder.hpp"
 #include "http/handler/router/router.hpp"
 
+// 仮想サーバ選択はserver_namesのみ。host_はバインド用のみ。
 class VirtualServer {
    public:
     VirtualServer(const ServerContext &serverConfig,

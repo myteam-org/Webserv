@@ -74,6 +74,7 @@ add_library(webserv_lib STATIC
     http/handler/file/cgi_env.cpp
     http/handler/file/cgi_execute.cpp
     http/handler/file/cgi_parse.cpp
+	http/config/config_resolver.cpp
     http/mime.cpp
 )
 

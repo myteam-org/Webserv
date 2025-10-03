@@ -1,6 +1,6 @@
 #include "io/handler/CgiStdoutHandler.hpp"
 #include "io/input/reader/fd.hpp"
-
+#include "action/cgi_context.hpp"
 CgiStdoutHandler::CgiStdoutHandler(Server* s) : srv_(s) {}
 
 void CgiStdoutHandler::onEvent(const FdEntry& e, uint32_t m) {

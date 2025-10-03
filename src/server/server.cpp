@@ -7,6 +7,8 @@
 #include "utils/types/error.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "action/cgi_context.hpp"
+#include "action/cgi_action.hpp"
 
 Server::Server(const std::vector<ServerContext>& serverCtxs) 
     : serverCtxs_(serverCtxs), 

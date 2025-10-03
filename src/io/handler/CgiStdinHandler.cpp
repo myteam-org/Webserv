@@ -2,6 +2,7 @@
 #include "io/input/writer/fd.hpp" 
 #include "server/Server.hpp"
 #include "server/dispatcher/RequestDispatcher.hpp"
+#include "action/cgi_context.hpp"
 
 CgiStdinHandler::CgiStdinHandler(Server* s) : srv_(s) {}
 

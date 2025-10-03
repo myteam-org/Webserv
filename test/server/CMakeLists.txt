@@ -5,6 +5,7 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include/server/socket
     ${CMAKE_SOURCE_DIR}/include/server/connection
 	${CMAKE_SOURCE_DIR}/include/io/base
+    ${CMAKE_SOURCE_DIR}/include/action
 )
 
 add_executable(epollEvent_test epollEvent_test.cpp)

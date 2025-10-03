@@ -129,7 +129,7 @@ void ConfigParser::setHost_(ServerContext& server, size_t& index) {
     const std::string hostName = incrementAndCheckSize_(index);
 
     if (this->tokens_[index].getType() == VALUE) {
-        if (hostName == "localhost" || utils::isCanomicalDecimalIPv4(hostName)) {
+        if (hostName == "localhost" || utils::isCanonicalDecimalIPv4(hostName)) {
             server.setHost(hostName);
         } else {
             throwErr(hostName, ": host value error: line",

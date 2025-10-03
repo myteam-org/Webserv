@@ -693,22 +693,22 @@ TEST(Ipv4UtilsTest, RegularNumber_RejectsOutOfRangeAndFormat) {
 }
 
 TEST(Ipv4UtilsTest, Canonical127_AcceptsRange) {
-    EXPECT_TRUE(utils::isCanomicalDecimalIPv4("127.0.0.1"));
-    EXPECT_TRUE(utils::isCanomicalDecimalIPv4("127.1.2.3"));
-    EXPECT_TRUE(utils::isCanomicalDecimalIPv4("127.0.0.254"));
-    EXPECT_TRUE(utils::isCanomicalDecimalIPv4("127.255.255.254"));
+    EXPECT_TRUE(utils::isCanonicalDecimalIPv4("127.0.0.1"));
+    EXPECT_TRUE(utils::isCanonicalDecimalIPv4("127.1.2.3"));
+    EXPECT_TRUE(utils::isCanonicalDecimalIPv4("127.0.0.254"));
+    EXPECT_TRUE(utils::isCanonicalDecimalIPv4("127.255.255.254"));
 }
 
 TEST(Ipv4UtilsTest, Canonical127_RejectsNetworkAndBroadcast) {
-    EXPECT_FALSE(utils::isCanomicalDecimalIPv4("127.0.0.0"));         // ネットワーク
-    EXPECT_FALSE(utils::isCanomicalDecimalIPv4("127.255.255.255"));   // ブロードキャスト
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("127.0.0.0"));         // ネットワーク
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("127.255.255.255"));   // ブロードキャスト
 }
 
 TEST(Ipv4UtilsTest, Canonical127_RejectsOutside127OrNonCanonical) {
-    EXPECT_FALSE(utils::isCanomicalDecimalIPv4("126.1.2.3"));     // 127でない
-    EXPECT_FALSE(utils::isCanomicalDecimalIPv4("128.1.2.3"));     // 127でない
-    EXPECT_FALSE(utils::isCanomicalDecimalIPv4("127.01.2.3"));    // 先頭ゼロ
-    EXPECT_FALSE(utils::isCanomicalDecimalIPv4("127.0.0.1a"));    // 末尾ゴミ
-    EXPECT_FALSE(utils::isCanomicalDecimalIPv4(""));              // 空
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("126.1.2.3"));     // 127でない
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("128.1.2.3"));     // 127でない
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("127.01.2.3"));    // 先頭ゼロ
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("127.0.0.1a"));    // 末尾ゴミ
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4(""));              // 空
 }
 

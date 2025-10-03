@@ -48,7 +48,7 @@ bool isRegularNumber(const std::string& ipAddress, int num[4]) {
     return *c == '\0';
 }
 
-bool isCanomicalDecimalIPv4(const std::string& ipAddress) {
+bool isCanonicalDecimalIPv4(const std::string& ipAddress) {
     int num[4];
 
     if (!isRegularNumber(ipAddress, num)) {

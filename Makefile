@@ -15,6 +15,7 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/config/parser.cpp \
 	src/utils/logger.cpp \
 	src/utils/string.cpp \
+	src/utils/ip.cpp \
 	src/http/method.cpp \
 	src/http/request/read/utils.cpp \
 	src/http/request/read/body.cpp \

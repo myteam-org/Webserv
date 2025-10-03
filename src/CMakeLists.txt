@@ -21,6 +21,7 @@ add_library(webserv_lib STATIC
     config/validator.cpp
     utils/logger.cpp
     utils/string.cpp
+    utils/ip.cpp
     io/input/read/buffer.cpp
     io/input/reader/fd.cpp
     io/input/write/buffer.cpp

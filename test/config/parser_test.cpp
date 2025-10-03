@@ -11,6 +11,7 @@
 #include "serverContext.hpp"
 #include "token.hpp"
 #include "tokenizer.hpp"
+#include "utils/ip.hpp"
 
 class ConfigParserTest : public ::testing::Test {
    protected:
@@ -658,3 +659,56 @@ TEST_F(ConfigParserTest, EmptyConfiguration) {
 
     EXPECT_EQ(servers.size(), 0);
 }
+
+// ---- IPv4 canonical tests ----
+
+TEST(Ipv4UtilsTest, RegularNumber_AcceptsCanonical) {
+    int a[4];
+    EXPECT_TRUE(utils::isRegularNumber("0.0.0.0", a));
+    EXPECT_TRUE(utils::isRegularNumber("127.0.0.1", a));
+    EXPECT_TRUE(utils::isRegularNumber("255.255.255.254", a));
+    EXPECT_EQ(a[0], 255);
+    EXPECT_EQ(a[3], 254);
+}
+
+TEST(Ipv4UtilsTest, RegularNumber_RejectsLeadingZeros) {
+    int a[4];
+    EXPECT_FALSE(utils::isRegularNumber("127.01.0.1", a));
+    EXPECT_FALSE(utils::isRegularNumber("127.0.00.1", a));
+    EXPECT_FALSE(utils::isRegularNumber("001.2.3.4", a));
+}
+
+TEST(Ipv4UtilsTest, RegularNumber_RejectsOutOfRangeAndFormat) {
+    int a[4];
+    EXPECT_FALSE(utils::isRegularNumber("256.0.0.1", a));   // >255
+    EXPECT_FALSE(utils::isRegularNumber("999.0.0.1", a));   // >255
+    EXPECT_FALSE(utils::isRegularNumber("127.0.0", a));     // 欠損
+    EXPECT_FALSE(utils::isRegularNumber("127.0.0.1.2", a)); // 余分
+    EXPECT_FALSE(utils::isRegularNumber("127..0.1", a));    // ドット連続
+    EXPECT_FALSE(utils::isRegularNumber("127.0.0.-1", a));  // 非数字
+    EXPECT_FALSE(utils::isRegularNumber("a.b.c.d", a));     // 非数字
+    EXPECT_FALSE(utils::isRegularNumber(" 127.0.0.1", a));  // 空白先頭
+    EXPECT_FALSE(utils::isRegularNumber("127.0.0.1 ", a));  // 空白末尾
+    EXPECT_FALSE(utils::isRegularNumber("127.0.0.1x", a));  // 末尾ゴミ
+}
+
+TEST(Ipv4UtilsTest, Canonical127_AcceptsRange) {
+    EXPECT_TRUE(utils::isCanonicalDecimalIPv4("127.0.0.1"));
+    EXPECT_TRUE(utils::isCanonicalDecimalIPv4("127.1.2.3"));
+    EXPECT_TRUE(utils::isCanonicalDecimalIPv4("127.0.0.254"));
+    EXPECT_TRUE(utils::isCanonicalDecimalIPv4("127.255.255.254"));
+}
+
+TEST(Ipv4UtilsTest, Canonical127_RejectsNetworkAndBroadcast) {
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("127.0.0.0"));         // ネットワーク
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("127.255.255.255"));   // ブロードキャスト
+}
+
+TEST(Ipv4UtilsTest, Canonical127_RejectsOutside127OrNonCanonical) {
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("126.1.2.3"));     // 127でない
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("128.1.2.3"));     // 127でない
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("127.01.2.3"));    // 先頭ゼロ
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4("127.0.0.1a"));    // 末尾ゴミ
+    EXPECT_FALSE(utils::isCanonicalDecimalIPv4(""));              // 空
+}
+

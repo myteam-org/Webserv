@@ -12,6 +12,7 @@
 #include "config/tokenizer.hpp"
 #include "config/validator.hpp"
 #include "utils/logger.hpp"
+#include "utils/ip.hpp"
 
 void (ConfigParser::* ConfigParser::funcServer_[FUNC_SERVER_SIZE])(
     ServerContext&, size_t&) = {
@@ -128,7 +129,12 @@ void ConfigParser::setHost_(ServerContext& server, size_t& index) {
     const std::string hostName = incrementAndCheckSize_(index);
 
     if (this->tokens_[index].getType() == VALUE) {
-        server.setHost(hostName);
+        if (hostName == "localhost" || utils::isCanomicalDecimalIPv4(hostName)) {
+            server.setHost(hostName);
+        } else {
+            throwErr(hostName, ": host value error: line",
+                this->tokens_[index].getLineNumber());
+        }
     }
 }
 

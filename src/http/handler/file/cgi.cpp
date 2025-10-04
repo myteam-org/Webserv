@@ -17,8 +17,9 @@ Either<IAction*, Response> CgiHandler::serve(const Request& req) {
     std::string scriptPath;
     std::string pathInfo;
     Logger& log = Logger::instance();
-    LOG_INFO("cgiHandler serve:");
+    LOG_INFO("cgiHandler serve: function invoked");
     if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
+        LOG_WARN("cgiHandler serve: cannot find CgiTarget");
         return Right(ResponseBuilder().status(kStatusNotFound).build());
     }
     return prepareCgi(req);

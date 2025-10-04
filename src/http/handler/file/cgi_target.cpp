@@ -38,11 +38,12 @@ bool CgiHandler::isCgiTarget(const Request& req, std::string* scriptPath,
     }
 
     const std::string full = utils::joinPath(root, rel);
+    LOG_DEBUG("CgiHandler::isCgiTarget : CGI joinPath information" + full);
     const std::string norm = utils::normalizePath(full);
 
-    if (!checkIsUnderRoot(root, norm)) {
-        return false;
-    }
+    // if (!checkIsUnderRoot(root, norm)) {
+    //     return false;
+    // }
     return splitScriptAndPathInfo(root, norm, scriptPath, pathInfo);
 }
 

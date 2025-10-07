@@ -23,6 +23,7 @@ add_library(webserv_lib STATIC
     config/validator.cpp
     utils/logger.cpp
     utils/string.cpp
+    utils/ip.cpp
     io/input/read/buffer.cpp
     io/input/reader/fd.cpp
     io/input/write/buffer.cpp
@@ -77,6 +78,7 @@ add_library(webserv_lib STATIC
     http/handler/file/cgi_env.cpp
     http/handler/file/cgi_execute.cpp
     http/handler/file/cgi_parse.cpp
+	http/config/config_resolver.cpp
     http/mime.cpp
 )
 

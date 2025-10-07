@@ -1,6 +1,6 @@
 NAME	= webserv
 CPP	= c++
-CPPFLAG	= -Wall -Wextra -Wall -std=c++98 -pedantic
+CPPFLAG	= -Wall -Wextra -Wall -std=c++98 
 DBGFLAGS := -g
 # CPPFLAG += -g -fsanitize=address
 INC_DIR	= include

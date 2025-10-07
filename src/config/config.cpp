@@ -23,9 +23,9 @@ static std::string normalizeHostKey(const std::string& host) {
 
 struct ConfigServerValueErrorEraser {
    private:
-    const Config* config;
 
    public:
+	const Config* config;
     explicit ConfigServerValueErrorEraser(const Config* cfg) : config(cfg) {}
 
     bool operator()(const ServerContext& server) const {

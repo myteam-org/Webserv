@@ -3,9 +3,11 @@
 ServerContext::ServerContext(const std::string& text)
     : value_(text),
       listen_(0),
-      clientMaxBodySize_(MAX_BODY_SIZE),
       host_("localhost"),
-      serverNames_() // vector初期化
+      serverNames_(),
+      errorPage_(),
+      clientMaxBodySize_(MAX_BODY_SIZE),
+      locations_()
 {
     errorPage_[http::kStatusNotFound] = "404.html";
 }

@@ -10,7 +10,7 @@ const std::string Response::defaultHttpVersion = "HTTP/1.1";
 Response::Response(HttpStatusCode status,
                    const types::Option<std::string> &body,
                    const std::string &httpVersion)
-    : status_(status), httpVersion_(httpVersion), body_(body) {}
+    : status_(status), body_(body), httpVersion_(httpVersion) {}
 
 Response::Response(HttpStatusCode status, const ResponseHeaderFields &headers,
                    const types::Option<std::string> &body,

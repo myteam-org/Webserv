@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 #include "config/token.hpp"
+#include "config/context/documentRootConfig.hpp"
 
 bool Validator::number(const std::string& number, int type) {
     for (size_t i = 0; i < number.size(); ++i) {
@@ -62,4 +63,26 @@ bool Validator::isValidRoot(const std::string& root,
 
     return stat(path.c_str(), &sta) == 0 && S_ISDIR(sta.st_mode) &&
            access(path.c_str(), R_OK | X_OK) == 0;
+}
+
+bool Validator::isCgiValid(const LocationContext& location) {
+    std::string text = location.getPath();
+    OnOff cgiExtension = location.getDocumentRootConfig().getCgiExtensions();
+
+    if (text.empty()) {
+        return false;
+    }
+    if (text[0] != '.') {
+        return true;
+    }
+    if (text.size() != 3) {
+        return false;
+    }
+    if (text == ".py" && cgiExtension == OFF) {
+        return false;
+    }
+    if (text != ".py" && cgiExtension == ON) {
+        return false;
+    }
+    return true;
 }

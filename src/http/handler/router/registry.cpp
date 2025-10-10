@@ -36,7 +36,6 @@ namespace http {
     // 例: ("/", ".py", GET) -> CgiHandler* の設定で、「/hello.py に GET が来たら CGI」を選べるようになる
     void RouteRegistry::addRouteForExtension(HttpMethod method, const std::string& path, const std::string& ext, IHandler* handler) {
         // 例: path="/", ext=".py"
-        std::cerr << "addRouteForExtension" << std::endl;
         IHandler*& slot = extHandlers_[path][ext][method];
         if (slot) {
             delete slot;

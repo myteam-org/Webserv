@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include "utils/string.hpp"
 
 namespace utils {
 namespace path {
@@ -117,6 +118,35 @@ inline bool isPathUnderRoot(const std::string& root,
     }
     return path.compare(0, root.size(), root) == 0 &&
            (path.size() == root.size() || path[root.size()] == '/');
+}
+
+inline std::string stripQuery(const std::string& target) {
+    const std::string::size_type pos = target.find('?');
+    if (pos == std::string::npos) {
+        return target;
+    } else {
+        return target.substr(0, pos);
+    }
+
+}
+
+// "/a/b.py" -> ".py", "/a/b" -> "", "/.htaccess" -> ""（隠しファイル扱い）
+inline std::string getExtension(const std::string& path) {
+    std::string newPath = stripQuery(path);
+    const std::string::size_type slash = newPath.find_last_of('/');
+    const std::string::size_type dot = newPath.find_last_of('.');
+    if (dot == std::string::npos) {
+        return "";
+    }
+    if (slash != std::string::npos && dot < slash) {
+        return "";
+    }
+    // 先頭ドットだけの隠しファイルは拡張子なしとみなす
+    if (dot == 0) {
+        return "";
+    }
+    std::string ext = newPath.substr(dot);
+    return utils::toLower(ext);
 }
 
 }  // namespace path

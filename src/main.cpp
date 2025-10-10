@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
         try {
                 const Config config(confFile);
                 LOG_INFO("Configuration loaded successfully");
-                // config.printParser();
+                config.printParser();
                 Server server(config.getParser().getServer());
                 server.init();
                 LOG_INFO("Server initialized");

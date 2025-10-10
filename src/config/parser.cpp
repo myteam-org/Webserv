@@ -202,6 +202,10 @@ void ConfigParser::addLocation_(ServerContext& server, size_t& index) {
         } else if (type == BRACE) {
             updateDepth(tokens_[index], lineNum);
             if (this->depth_ == 1) {
+                if (!Validator::isCgiValid(location)) {
+                                throwErr(text, ": cgi setting error: line",
+                     lineNum);
+                }
                 setDefaultMethod_(location);
                 server.getLocation().push_back(location);
                 break;

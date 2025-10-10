@@ -33,6 +33,13 @@ namespace http {
         return *this;
     }
 
+    RouterBuilder& RouterBuilder::routeForExtension(HttpMethod method, const std::string& path,
+                                                    const std::string& ext, IHandler* handler) {
+        std::cerr << "routeForExtension" << std::endl;
+        routerInstance_->routeRegistry_->addRouteForExtension(method, path, ext, handler);
+        return *this;
+    }
+
     RouterBuilder& RouterBuilder::middleware(IMiddleware* middlewareInstance) {
         if (isBuilt_) {
             LOG_ERROR("RouterBuilder: Cannot add middleware after build()");

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "config/context/locationContext.hpp"
+
 class Token;
 
 #include <sys/stat.h>
@@ -23,4 +25,5 @@ bool isValidIndexFile(const std::string& indexFile);
 std::string dirOf(const std::string& path);
 // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
 bool isValidRoot(const std::string& root, const std::string& confPath);
+bool isCgiValid(const LocationContext& location);
 }  // namespace Validator

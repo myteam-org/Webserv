@@ -37,6 +37,7 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/http/handler/file/cgi_target.cpp \
 	src/http/handler/file/cgi.cpp \
 	src/http/handler/file/upload.cpp \
+	src/http/handler/file/fileOrCgi.cpp \
 	src/http/handler/router/builder.cpp \
 	src/http/handler/router/internal.cpp \
 	src/http/handler/router/middleware/chain.cpp \

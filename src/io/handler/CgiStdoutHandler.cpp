@@ -22,6 +22,7 @@ void CgiStdoutHandler::onEvent(const FdEntry& e, uint32_t m) {
             const size_t n = rr.unwrap();
             if (n == 0) {
                 if (r.eof()) {
+                    LOG_DEBUG("CgiStdoutHandler::onEvent: CGI response creation finished");
                     DispatchResult d1 = srv_->getDispatcher()->finalizeCgi(*c);
                     srv_->applyDispatchResult(*c, d1);
                     srv_->applyDispatchResult(*c, DispatchResult::CgiCloseOut());

@@ -34,12 +34,20 @@ Either<IAction*, Response> CgiHandler::prepareCgi(const Request& req) {
     }
     const std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
     const std::string realScriptPath = utils::normalizePath(joined);
+    std::string rel = req.getPath();
+    if (!rel.empty() && rel[0] == '/') {
+        rel.erase(0, 1);
+    }
+    const std::string full = utils::joinPath(realScriptPath, rel);
+    LOG_DEBUG("CgiHandler::prepareCgi: joined :" + joined);
+    LOG_DEBUG("CgiHandler::prepareCgi: realScriptPath :" + realScriptPath);
+    LOG_DEBUG("CgiHandler::prepareCgi: full :" + full);
 
     std::vector<std::string> env;
     buildCgiEnv(req, scriptPath, &pathInfo, &env);
 
     std::vector<std::string> argv;
-    argv.push_back(realScriptPath);
+    argv.push_back(full);
 
     const std::vector<char>& stdinBody = req.getBody();
     PreparedCgi pc;

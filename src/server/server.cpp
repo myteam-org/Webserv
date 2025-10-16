@@ -324,10 +324,12 @@ types::Result<CgiFds, error::SystemError> Server::spawnCgiFromPrepared(Connectio
         FdUtils::safe_fd_close(in_pipe[1]);
         FdUtils::safe_fd_close(out_pipe[0]); 
         ::execve(prepared_ctx->argv[0].c_str(), &argvp[0], &envp[0]);
+        LOG_ERROR(::strerror(errno));
         LOG_ERROR("Server::spawnCgiFromPrepared: CGI execution error");
         _exit(127);
     }
     FdUtils::safe_fd_close(in_pipe[0]);
+    FdUtils::safe_fd_close(out_pipe[1]);
     CgiContext* ctx = new CgiContext();
     ctx->setProc(pid, in_pipe[1], out_pipe[0],0);
     ctx->setStdinBody(prepared_ctx->stdinBody);

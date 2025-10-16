@@ -59,7 +59,7 @@ bool CgiHandler::executeCgi(const std::vector<std::string>& argv,
     }
     const pid_t pid = fork();
     if (pid < 0) {
-        closePipe(inPipe);
+        closePipe(inPipe);  
         closePipe(outPipe);
         return false;
     }

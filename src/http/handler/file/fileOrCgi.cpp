@@ -1,4 +1,3 @@
-#warning "fileOrCgi.cpp is compiled"
 #include "http/handler/file/fileOrCgi.hpp"
 
 #include "http/request/request.hpp"

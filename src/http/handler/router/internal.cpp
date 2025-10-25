@@ -26,7 +26,6 @@ namespace http {
         }
 
         const std::string& matchedPath = matchResult.unwrap(); // "/" や "/upload" や ".py"
-        Logger& log = Logger::instance();
         LOG_INFO("MatchedPath information:" + matchedPath + "");
 
         // IHandler* handler = registry_.findHandler(req.getMethod(), matchedPath);

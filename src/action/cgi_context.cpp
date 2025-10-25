@@ -70,7 +70,7 @@ void CgiContext::setFdOut(int fd) {
     fd_out_ = fd;
 }
 
-const pid_t CgiContext::getPid() const {
+pid_t CgiContext::getPid() const {
     return pid_;
 }
 

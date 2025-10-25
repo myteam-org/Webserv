@@ -13,14 +13,14 @@ namespace {
 // utils    
 bool initCheck(const Request& req, std::string* scriptPath,
                std::string* pathInfo);
-bool checkIsUnderRoot(const std::string& root, const std::string& norm);
-bool splitScriptAndPathInfo(const std::string& root, const std::string& norm,
-                            std::string* scriptPath, std::string* pathInfo);
-bool findScriptPrefix(const std::string& abs, std::string* scriptFsPath,
-                      std::string* pathInfoSuffix);
-bool isRegularFile(const std::string& file);
-bool isExecutableFile(const std::string& file);
-std::string fsToVirtual(const std::string& root, const std::string& fileSystem);
+// bool checkIsUnderRoot(const std::string& root, const std::string& norm);
+// bool splitScriptAndPathInfo(const std::string& root, const std::string& norm,
+//                             std::string* scriptPath, std::string* pathInfo);
+// bool findScriptPrefix(const std::string& abs, std::string* scriptFsPath,
+//                       std::string* pathInfoSuffix);
+// bool isRegularFile(const std::string& file);
+// bool isExecutableFile(const std::string& file);
+// std::string fsToVirtual(const std::string& root, const std::string& fileSystem);
 
 }  // namespace
 
@@ -96,95 +96,95 @@ bool initCheck(const Request& req, std::string* scriptPath,
     return method == kMethodGet || method == kMethodPost;
 }
 
-bool checkIsUnderRoot(const std::string& root, const std::string& norm) {
-    if (root.empty()) {
-        return false;
-    }
-    return utils::path::isPathUnderRoot(root, norm);
-}
+// bool checkIsUnderRoot(const std::string& root, const std::string& norm) {
+//     if (root.empty()) {
+//         return false;
+//     }
+//     return utils::path::isPathUnderRoot(root, norm);
+// }
 
-bool splitScriptAndPathInfo(const std::string& root, const std::string& norm,
-                            std::string* scriptPath, std::string* pathInfo) {
-    if (scriptPath == NULL || pathInfo == NULL) {
-        return false;
-    }
+// bool splitScriptAndPathInfo(const std::string& root, const std::string& norm,
+//                             std::string* scriptPath, std::string* pathInfo) {
+//     if (scriptPath == NULL || pathInfo == NULL) {
+//         return false;
+//     }
 
-    std::string scriptFsPath;
-    std::string pathInfoSuffix;
-    if (!findScriptPrefix(norm, &scriptFsPath, &pathInfoSuffix)) {
-        return false;
-    }
-    // 拡張子チェック追加?
-    if (!isExecutableFile(scriptFsPath)) {
-        return false;
-    }
+//     std::string scriptFsPath;
+//     std::string pathInfoSuffix;
+//     if (!findScriptPrefix(norm, &scriptFsPath, &pathInfoSuffix)) {
+//         return false;
+//     }
+//     // 拡張子チェック追加?
+//     if (!isExecutableFile(scriptFsPath)) {
+//         return false;
+//     }
 
-    const std::string virt = fsToVirtual(root, scriptFsPath);
-    if (virt.empty()) {
-        return false;
-    }
+//     const std::string virt = fsToVirtual(root, scriptFsPath);
+//     if (virt.empty()) {
+//         return false;
+//     }
 
-    *scriptPath = virt;
-    *pathInfo = pathInfoSuffix;  // possible '/'start
+//     *scriptPath = virt;
+//     *pathInfo = pathInfoSuffix;  // possible '/'start
 
-    return true;
-}
+//     return true;
+// }
 
 // 末尾からディレクトリを削っていき、最長一致の既存ファイルを見つける
 // 見つかったら scriptFs=そのファイル, rest=残り（先頭'/'含む or 空）
-bool findScriptPrefix(const std::string& abs, std::string* scriptFsPath,
-                      std::string* pathInfoSuffix) {
-    if (scriptFsPath == 0 || pathInfoSuffix == 0) {
-        return false;
-    }
-    std::string cur = abs;
-    while (true) {
-        if (isRegularFile(cur)) {
-            *scriptFsPath = cur;
-            if (abs.size() > cur.size()) {
-                *pathInfoSuffix = abs.substr(cur.size());
-            } else {
-                pathInfoSuffix->clear();
-            }
-            return true;
-        }
-        const std::string::size_type pos = cur.rfind('/');
-        if (pos == std::string::npos || pos == 0) {
-            return false;
-        }
-        cur = cur.substr(0, pos);
-    }
-}
+// bool findScriptPrefix(const std::string& abs, std::string* scriptFsPath,
+//                       std::string* pathInfoSuffix) {
+//     if (scriptFsPath == 0 || pathInfoSuffix == 0) {
+//         return false;
+//     }
+//     std::string cur = abs;
+//     while (true) {
+//         if (isRegularFile(cur)) {
+//             *scriptFsPath = cur;
+//             if (abs.size() > cur.size()) {
+//                 *pathInfoSuffix = abs.substr(cur.size());
+//             } else {
+//                 pathInfoSuffix->clear();
+//             }
+//             return true;
+//         }
+//         const std::string::size_type pos = cur.rfind('/');
+//         if (pos == std::string::npos || pos == 0) {
+//             return false;
+//         }
+//         cur = cur.substr(0, pos);
+//     }
+// }
 
 // 正規ファイルか
-bool isRegularFile(const std::string& file) {
-    struct stat sta;
+// bool isRegularFile(const std::string& file) {
+//     struct stat sta;
 
-    if (stat(file.c_str(), &sta) != 0) {
-        return false;
-    }
-    return S_ISREG(sta.st_mode);
-}
+//     if (stat(file.c_str(), &sta) != 0) {
+//         return false;
+//     }
+//     return S_ISREG(sta.st_mode);
+// }
 
 // 実行可能ファイルか
-bool isExecutableFile(const std::string& file) {
-    if (!isRegularFile(file)) {
-        return false;
-    }
-    return access(file.c_str(), X_OK) == 0;
-}
+// bool isExecutableFile(const std::string& file) {
+//     if (!isRegularFile(file)) {
+//         return false;
+//     }
+//     return access(file.c_str(), X_OK) == 0;
+// }
 
-std::string fsToVirtual(const std::string& root,
-                        const std::string& fileSystem) {
-    if (fileSystem.compare(0, root.size(), root) != 0) {
-        return std::string();
-    }
-    std::string virt = fileSystem.substr(root.size());
-    if (virt.empty() || virt[0] != '/') {
-        virt.insert(virt.begin(), '/');
-    }
-    return virt;
-}
+// std::string fsToVirtual(const std::string& root,
+//                         const std::string& fileSystem) {
+//     if (fileSystem.compare(0, root.size(), root) != 0) {
+//         return std::string();
+//     }
+//     std::string virt = fileSystem.substr(root.size());
+//     if (virt.empty() || virt[0] != '/') {
+//         virt.insert(virt.begin(), '/');
+//     }
+//     return virt;
+// }
 
 }  // namespace
 

@@ -29,9 +29,9 @@ FdReader::ReadResult FdReader::read(char *buf, std::size_t nbyte) {
         return OK(static_cast<std::size_t>(0));
     }
     // need to delete
-    if (bytesRead == -1) {
-        LOG_WARN(::strerror(errno));
-    }
+    // if (bytesRead == -1) {
+    //     LOG_WARN(::strerror(errno));
+    // }
 
     return OK(static_cast<std::size_t>(0));
 }

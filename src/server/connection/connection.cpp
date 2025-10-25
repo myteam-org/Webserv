@@ -19,7 +19,9 @@ Connection::Connection(int fd, const ISocketAddr& peerAddr,
     , frontDispatched_(false)
     , closeAfterWrite_(false)
     , peerHalfClosed_(false)
-    , lastRecv_(std::time(0)) {}
+    , lastRecv_(std::time(0))
+    , cgi_(0)
+    , preparedCgi_(0) {}
 
 Connection::~Connection() {
     if (connState_) {

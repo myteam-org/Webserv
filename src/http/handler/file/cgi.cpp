@@ -16,7 +16,6 @@ CgiHandler::CgiHandler(const DocumentRootConfig& docRootConfig)
 Either<IAction*, Response> CgiHandler::serve(const Request& req) {
     std::string scriptPath;
     std::string pathInfo;
-    Logger& log = Logger::instance();
     LOG_INFO("cgiHandler serve: function invoked");
     if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
         LOG_WARN("cgiHandler serve: cannot find CgiTarget");
@@ -49,7 +48,6 @@ Either<IAction*, Response> CgiHandler::prepareCgi(const Request& req) {
     std::vector<std::string> argv;
     argv.push_back(full);
 
-    const std::vector<char>& stdinBody = req.getBody();
     PreparedCgi pc;
     pc.argv = argv;
     pc.env  = env;

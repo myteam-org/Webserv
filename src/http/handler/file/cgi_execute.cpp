@@ -196,9 +196,9 @@ bool doWrite(pid_t pid, int wfd, int rfd, const char* ptr, ssize_t remain) {
     while (remain > 0) {
         const ssize_t byte = write(wfd, ptr, static_cast<size_t>(remain));
         if (byte < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
+            // if (errno == EINTR) {
+            //     continue;
+            // }
             close(wfd);
             close(rfd);
             (void)waitpid(pid, 0, 0);
@@ -217,9 +217,9 @@ bool doRead(pid_t pid, int rfd, std::string* out) {
         char buf[kBufSize];
         const ssize_t byte = read(rfd, buf, sizeof(buf));
         if (byte < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
+            // if (errno == EINTR) {
+            //     continue;
+            // }
             close(rfd);
             (void)waitpid(pid, 0, 0);
             return false;

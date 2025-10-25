@@ -27,6 +27,7 @@ TransitionResult ReadingRequestBodyLengthState::handle(ReadContext& ctx,
         return done(std::string(""));
     }
     if (contentLength_ > clientMaxBodySize_) {
+        buf.clear();
         return error(tr, error::kRequestEntityTooLarge);
     }
     if (!ensureData(buf, tr)) {

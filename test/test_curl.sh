@@ -9,10 +9,10 @@ CURL_OPTS="-v -s -w '%{http_code}\n'"
 
 # テストケース一覧
 tests=(
+  "http://$ipaddr:$port/index.html"
   "http://$ipaddr:$port/hello.py"
   "http://$ipaddr:$port/notfound"
   "http://$ipaddr:$port/cgi-bin/test.py"
-  "http://$ipaddr:$port/index.html"
 )
 
 echo "Running GET curl tests against $ipaddr:$port"

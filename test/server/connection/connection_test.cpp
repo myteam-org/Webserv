@@ -142,11 +142,11 @@ TEST(ConnectionTest, TimeoutLogic_WorksAroundThreshold) {
     const std::time_t now = std::time(0);
 
     // 閾値未満 → false
-    conn.setLastRecv(now - (60 - 1)); // kTimeoutThresholdSec = 60 を想定
+    conn.setLastRecv(now - (Connection::kTimeoutThresholdSec - 1)); // kTimeoutThresholdSec = 60 を想定
     EXPECT_FALSE(conn.isTimeout());
 
     // 閾値超過 → true
-    conn.setLastRecv(now - (60 + 1));
+    conn.setLastRecv(now - (Connection::kTimeoutThresholdSec + 1));
     EXPECT_TRUE(conn.isTimeout());
 }
 

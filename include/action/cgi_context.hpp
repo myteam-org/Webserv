@@ -55,7 +55,7 @@ public:
     int getFdOut() const;
     void setFdIn(int fd);
     void setFdOut(int fd);
-    const pid_t getPid() const;
+    pid_t getPid() const;
     size_t getWritten() const;
     void setWritten(size_t writeSize);
     std::string getRawOut();

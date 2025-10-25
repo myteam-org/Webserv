@@ -99,6 +99,7 @@ http::Response RequestDispatcher::buildErrorResponse(
         VirtualServer* vs, http::HttpStatusCode status, const std::string& plain) {
     // TODO: vs に error_page 設定があればファイルを読み込み、
     //             body/Content-Type を差し替える処理をここに追加
+    (void)vs;
     http::ResponseBuilder rb;
     rb.status(status).header("Content-Type", "text/plain");
     rb.text(plain, status);

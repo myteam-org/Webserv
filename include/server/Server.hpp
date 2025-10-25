@@ -42,6 +42,8 @@ class Server {
         void armOutOnly(int fd);
         void armInOut(int fd);
         RequestDispatcher* getDispatcher() const;
+        static const time_t kTimeoutThresholdSec = 30;
+        static const time_t kCGITimeoutThresholdSec = 15;
     private:
         std::vector<ServerContext> serverCtxs_;
         EpollEventNotifier epollNotifier_;
@@ -62,6 +64,7 @@ class Server {
         static void closeAllPipeFds(int in_pipe[2], int out_pipe[2]);
         static void to_c_argv(const std::vector<std::string>& src, std::vector<char*>& dst);
         void cleanupConnectionCgi(Connection& c);
+        void sweepTimeouts();
 };
 
 std::string canonicalizeIp(const std::string& hostName);

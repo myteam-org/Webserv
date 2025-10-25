@@ -411,3 +411,29 @@ bool Server::overlapsWildcard(const std::string& a, const std::string& b) {
     // 同じポートで、どちらかが 0.0.0.0
     return (ipa == "0.0.0.0") || (ipb == "0.0.0.0");
 }
+
+void Server::sweepTimeouts() {
+    const time_t now = std::time(0);
+    std::map<int, Connection*>& conns = connManager_.getAllConnections();
+
+    for (std::map<int, Connection*>::iterator it = conns.begin(); it != conns.end(); ++it) {
+        Connection* c = it->second;
+        if (now - c->getLastRecv() > kTimeoutThresholdSec) {
+            LOG_INFO("timeout fd=" + utils::toString(c->getFd()));
+            epollNotifier_.del(c->getFd());
+            connManager_.unregisterConnection(c->getFd());
+            delete c;
+        }
+        if (c->isCgiActive()) {
+            CgiContext* cgictx = c->getCgi();
+            const time_t elapsed = now - cgictx->startTime();
+    if (elapsed > kCGITimeoutThresholdSec) {
+        LOG_WARN("CGI timeout pid=" + utils::toString(cgictx->getPid()));
+        kill(cgictx->getPid(), SIGKILL);
+        waitpid(cgictx->getPid(), NULL, WNOHANG);
+        cleanupConnectionCgi(*c);
+    }
+}
+    }
+}
+

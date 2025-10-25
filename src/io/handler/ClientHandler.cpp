@@ -13,13 +13,13 @@ void ClientHandler::onEvent(const FdEntry& e, uint32_t m){
     }
     if (m & EPOLLERR) {
         // Since getsockopt is forbidden function, comment out. But if you want to see detail you can uncomment.
-        int err = 0;
-        socklen_t len = sizeof(err);
-        if (getsockopt(e.fd, SOL_SOCKET, SO_ERROR, &err, &len) == 0) {
-            if (err != 0) {
-                LOG_ERROR("EPOLLERR detail: " + std::string(strerror(err)));
-            }
-        }
+        // int err = 0;
+        // socklen_t len = sizeof(err);
+        // if (getsockopt(e.fd, SOL_SOCKET, SO_ERROR, &err, &len) == 0) {
+        //     if (err != 0) {
+        //         LOG_ERROR("EPOLLERR detail: " + std::string(strerror(err)));
+        //     }
+        // }
         LOG_ERROR("ClientHandler::onEvent: Epoll fatal error");
         handleHangup(*c); //Connection close
         return;

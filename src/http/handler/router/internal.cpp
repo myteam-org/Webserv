@@ -4,6 +4,7 @@
 #include "http/response/builder.hpp"
 #include "http/method.hpp" // isMethodImplementedを使う
 #include "utils/logger.hpp"
+#include "utils/path.hpp"
 
 namespace http {
     InternalRouter::InternalRouter(const RouteRegistry& registry) 
@@ -14,16 +15,25 @@ namespace http {
         if (!isMethodImplemented(req.getMethod())) {
             return Right(ResponseBuilder().status(kStatusNotImplemented).build());
         }
+        // パスのみでマッチ
+        const std::string& target = req.getRequestTarget();
+        const std::string::size_type query = target.find('?');
+        const std::string pathOnly = (query == std::string::npos) ? target : target.substr(0, query);
 
-        const types::Option<std::string> matchResult = registry_.matchPath(req.getRequestTarget());
+        const types::Option<std::string> matchResult = registry_.matchPath(pathOnly);
         if (matchResult.isNone()) {
             return Right(ResponseBuilder().status(kStatusNotFound).build());
         }
 
-        const std::string& matchedPath = matchResult.unwrap();
+        const std::string& matchedPath = matchResult.unwrap(); // "/" や "/upload" や ".py"
+        Logger& log = Logger::instance();
+        LOG_INFO("MatchedPath information:" + matchedPath + "");
+
+        // IHandler* handler = registry_.findHandler(req.getMethod(), matchedPath);
         IHandler* handler = registry_.findHandler(req.getMethod(), matchedPath);
 
         if (!handler) {
+            LOG_WARN("handler is not registered. matched path or method is not allowed");
             const std::vector<HttpMethod> allowedMethods = registry_.getAllowedMethods(matchedPath);
             if (!allowedMethods.empty()) {
                 return Right(ResponseBuilder().status(kStatusMethodNotAllowed).build());

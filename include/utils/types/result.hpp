@@ -92,12 +92,19 @@ namespace types {
 // #define ERR(e) ::types::err(e)
 #define OK(val) (::types::ok(val))
 #define ERR(e)  (::types::err(e))
+// #define RETURN_IF_ERR(expr) \
+//     do { \
+//         const types::Result<types::Unit, error::AppError> _res = (expr); \
+//         if (_res.isErr()) \
+//             return ERR(_res.unwrapErr()); \
+//     } while (0)
 #define RETURN_IF_ERR(expr) \
     do { \
-        const types::Result<types::Unit, error::AppError> _res = (expr); \
+        const __typeof__(expr) _res = (expr); \
         if (_res.isErr()) \
             return ERR(_res.unwrapErr()); \
     } while (0)
+
 
 // 「成功」「失敗」を型で安全に扱うための仕組み
 // RustのResult<T, E>型をC++で再現した実装

@@ -19,6 +19,7 @@
 #include "utils/logger.hpp"
 #include "utils/path.hpp"
 #include "utils/string.hpp"
+#include "utils/logger.hpp"
 
 namespace http {
 
@@ -231,6 +232,7 @@ UploadFileHandler::UploadFileHandler(const DocumentRootConfig& docRootConfig)
     : docRootConfig_(docRootConfig) {}
 
 Either<IAction*, Response> UploadFileHandler::serve(const Request& request) {
+    LOG_INFO("uploadhandler is invoked");
     return Right(this->serveInternal(request));
 }
 

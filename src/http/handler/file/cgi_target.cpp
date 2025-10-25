@@ -25,6 +25,29 @@ std::string fsToVirtual(const std::string& root, const std::string& fileSystem);
 }  // namespace
 
 // 本体
+// bool CgiHandler::isCgiTarget(const Request& req, std::string* scriptPath,
+//                              std::string* pathInfo) const {
+//     if (!initCheck(req, scriptPath, pathInfo)) {
+//         return false;
+//     }
+
+//     const std::string& root = docRootConfig_.getRoot();
+//     std::string rel = req.getPath();
+//     if (!rel.empty() && rel[0] == '/') {
+//         rel.erase(0, 1);
+//     }
+
+//     const std::string full = utils::joinPath(root, rel);
+//     LOG_DEBUG("CgiHandler::isCgiTarget : CGI joinPath information" + full);
+//     const std::string norm = utils::normalizePath(full);
+
+//     // if (!checkIsUnderRoot(root, norm)) {
+//     //     return false;
+//     // }
+//     return splitScriptAndPathInfo(root, norm, scriptPath, pathInfo);
+// }
+
+
 bool CgiHandler::isCgiTarget(const Request& req, std::string* scriptPath,
                              std::string* pathInfo) const {
     if (!initCheck(req, scriptPath, pathInfo)) {
@@ -38,12 +61,26 @@ bool CgiHandler::isCgiTarget(const Request& req, std::string* scriptPath,
     }
 
     const std::string full = utils::joinPath(root, rel);
-    const std::string norm = utils::normalizePath(full);
 
-    if (!checkIsUnderRoot(root, norm)) {
+    const OnOff& cgiExtension = docRootConfig_.getCgiExtensions();
+    if (cgiExtension == OFF) {
         return false;
     }
-    return splitScriptAndPathInfo(root, norm, scriptPath, pathInfo);
+    if (full.size() < 3) {
+        return false;
+    }
+    const std::string lower = utils::toLower(full);
+    if (lower.compare(lower.size() - 3, 3, ".py") != 0) {
+        return false;
+    }
+    struct stat st;
+    if (stat(full.c_str(), &st) != 0 || !S_ISREG(st.st_mode)) {
+        return false;
+    }
+    if (access(full.c_str(), X_OK) != 0) {
+        return false;
+    }
+    return true;
 }
 
 namespace {

@@ -40,3 +40,7 @@ ConnectionManager::~ConnectionManager() {
     }
     connectionMap_.clear();
 }
+
+std::map<int, Connection*>& ConnectionManager::getAllConnections() {
+    return connectionMap_;
+}

@@ -19,7 +19,6 @@ void WriteBuffer::append(const std::string& data) {
 
 types::Result<std::size_t, error::AppError> WriteBuffer::flush() {
     std::size_t total = 0;
-
     while (head_ < buf_.size()) {
         const char* p = &buf_[0] + head_;
         const std::size_t n = buf_.size() - head_;
@@ -53,7 +52,6 @@ types::Result<std::size_t, error::AppError> WriteBuffer::flush() {
             compact_();
         }
     }
-
     return types::ok<std::size_t>(total);
 }
 

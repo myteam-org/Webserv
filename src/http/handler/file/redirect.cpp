@@ -5,6 +5,7 @@ namespace http {
     RedirectHandler::RedirectHandler(const std::string &destination) : destination_(destination) {}
 
     Either<IAction *, Response> RedirectHandler::serve(const Request &request) {
+        LOG_INFO("RedirectHandler is invoked");
         return Right(this->serveInternal(request));
     }
 

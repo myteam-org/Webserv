@@ -18,17 +18,15 @@ public:
     DispatchResult onCgiStdout(Connection& c);
     DispatchResult onCgiStdin(Connection& c);
     DispatchResult emitError(Connection& c, http::HttpStatusCode status, const std::string& plain);
+    DispatchResult finalizeCgi(Connection& c);
 
 private:
     // std::map<std::string, VirtualServer*> vServers_;
     EndpointResolver& resovler_;
     DispatchResult dispatchNext(Connection& c, http::Request& req);
-    // CGI
-    DispatchResult startCgi(Connection& c, const std::string& scriptPath);
     // Response を直列化して送信キューへ積む（WriteBuffer の薄いアダプタ）
     void enqueueResponse(Connection& c, const http::Response& resp);
     bool shouldClose(const http::Request& req) const;
     bool isCgiTarget(const std::string& path) const;
-    bool wantsCgi(Connection& c) const;
     http::Response buildErrorResponse(VirtualServer* vs, http::HttpStatusCode status, const std::string& plain);
 };

@@ -1,5 +1,7 @@
 #include "server/fileDescriptor/FdUtils.hpp"
 #include <fcntl.h>
+#include <unistd.h>
+#include "utils/logger.hpp"
 
 int FdUtils::set_nonblock_and_cloexec(int fd) {
     int fl = fcntl(fd, F_GETFL, 0);
@@ -17,4 +19,11 @@ int FdUtils::set_nonblock_and_cloexec(int fd) {
         return -1;
     }
     return 0;
+}
+
+void FdUtils::safe_fd_close(int fd) {
+    if (fd >= 0)
+        ::close(fd);
+    else 
+        LOG_WARN("Fdutils::safe_fd_close: File descriptor is invalid or already closed");
 }

@@ -126,3 +126,40 @@ const http::RequestReader& Connection::getRequestReader() const {
 int Connection::getFd() const {
     return connSock_.getRawFd();
 }
+
+void Connection::setPreparedCgi(const PreparedCgi& p) { 
+    clearPreparedCgi();
+    preparedCgi_ = new PreparedCgi(p);
+}
+
+PreparedCgi* Connection::takePreparedCgi() {
+    PreparedCgi* t = preparedCgi_;
+    preparedCgi_ = 0; 
+    return t;
+}
+
+void Connection::clearPreparedCgi() {
+    if(preparedCgi_){ 
+        delete preparedCgi_;
+        preparedCgi_=0;
+    }
+}
+
+void Connection::setCgi(CgiContext* x) {
+    cgi_ = x;
+}
+
+CgiContext* Connection::getCgi() const {
+    return cgi_;
+}
+
+bool Connection::isCgiActive() const {
+    return cgi_ != 0;
+}
+
+void Connection::clearCgi() {
+    if (cgi_) {
+        delete cgi_;
+        cgi_ = 0;
+    }
+}

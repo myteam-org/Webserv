@@ -11,6 +11,7 @@
 #include "utils/types/result.hpp"
 #include "utils/types/option.hpp"
 #include "utils/types/error.hpp"
+#include "utils/logger.hpp"
 
 namespace http {
 

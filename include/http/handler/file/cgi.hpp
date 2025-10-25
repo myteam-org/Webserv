@@ -3,6 +3,7 @@
 #include "http/handler/handler.hpp"
 #include "config/context/documentRootConfig.hpp"
 
+
 namespace http {
 
 class CgiHandler : public IHandler {
@@ -27,6 +28,7 @@ class CgiHandler : public IHandler {
                     const std::vector<char>& stdinBody,
                     std::string* stdoutBuf,
                     int* exitCode) const;
+    Either<IAction*, Response> prepareCgi(const Request& req);
     Response parseCgiAndBuildResponse(const std::string& cgiOut) const;
 };
 

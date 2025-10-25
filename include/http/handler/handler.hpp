@@ -3,7 +3,7 @@
 #include "utils/types/either.hpp"
 #include "action/action.hpp"
 #include "http/response/response.hpp"
-
+#include "utils/logger.hpp"
 namespace http {
     class IHandler {
     public:

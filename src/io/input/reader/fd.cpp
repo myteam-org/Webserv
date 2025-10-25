@@ -3,6 +3,7 @@
 #include "utils/types/result.hpp"
 #include <unistd.h>
 #include <cstring>
+#include "utils/logger.hpp"
 
 namespace io {
 
@@ -19,7 +20,6 @@ FdReader::ReadResult FdReader::read(char *buf, std::size_t nbyte) {
     if (eof_) {
         return OK(static_cast<std::size_t>(0));
     }
-
     const ssize_t bytesRead = ::read(fd_, buf, nbyte);
     if (bytesRead > 0) {
         return OK(static_cast<std::size_t>(bytesRead));
@@ -28,7 +28,11 @@ FdReader::ReadResult FdReader::read(char *buf, std::size_t nbyte) {
         eof_ = true;  // EOF 到達
         return OK(static_cast<std::size_t>(0));
     }
-    // r < 0: errno は見ない。いまは進めない/非致命扱い。
+    // need to delete
+    if (bytesRead == -1) {
+        LOG_WARN(::strerror(errno));
+    }
+
     return OK(static_cast<std::size_t>(0));
 }
 

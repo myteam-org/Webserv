@@ -1,6 +1,9 @@
 #include "server/dispatcher/RequestDispatcher.hpp"
+#include "action/cgi_action.hpp"
+#include "utils/logger.hpp"
+#include "http/response/response.hpp"
 
-RequestDispatcher::RequestDispatcher(EndpointResolver& resolver) : resovler_(resolver) {    
+RequestDispatcher::RequestDispatcher(EndpointResolver& resolver) : resovler_(resolver) {
 }
 
 DispatchResult RequestDispatcher::step(Connection& c) {
@@ -18,6 +21,7 @@ DispatchResult RequestDispatcher::step(Connection& c) {
 DispatchResult RequestDispatcher::dispatchNext(Connection& c, http::Request& req) {
     VirtualServer *vserver = resovler_.resolveByFd(c.getFd());
     if (!vserver) { 
+        LOG_WARN("RequestDispatcher::dispatchNext: Cannot find any virtual server from filedescriptor");
         http::ResponseBuilder rb;
         rb.status(http::kStatusBadRequest).text("Bad Request", http::kStatusBadRequest);
         enqueueResponse(c, rb.build());
@@ -35,17 +39,19 @@ DispatchResult RequestDispatcher::dispatchNext(Connection& c, http::Request& req
         enqueueResponse(c, resp);        // WriteBufferへ
         return DispatchResult::ArmOut();
     }
-    //To Do : cgi 処理など
+    IAction* action = responseRes.unwrapLeft();
+    CgiActionPrepared* cgi = dynamic_cast<CgiActionPrepared*>(action);
+    if (cgi) {
+        LOG_DEBUG("RequestDispatcher::dispatchNext: CGI preparetion is done.");
+        c.setPreparedCgi(cgi->payload());
+        delete action;
+        return DispatchResult::StartCgi(CgiFds());
+    }
+    LOG_WARN("RequestDispatcher::dispatchNext: Doesn't invoke any handler.");
     http::ResponseBuilder rb;
     rb.status(http::kStatusNotImplemented).text("Not Implemented", http::kStatusNotImplemented);
     enqueueResponse(c, rb.build());
     return DispatchResult::ArmOut();
-}
-
-DispatchResult RequestDispatcher::startCgi(Connection& /*c*/, const std::string& /*scriptPath*/) {
-    // ここでは本当に fork/exec しない。Server 側配線だけ先に動かすためのモック。
-    CgiFds fds; fds.stdin_fd = -1; fds.stdout_fd = -1;
-    return DispatchResult::StartCgi(fds);
 }
 
 DispatchResult RequestDispatcher::onCgiStdout(Connection& c) {
@@ -61,6 +67,16 @@ DispatchResult RequestDispatcher::onCgiStdout(Connection& c) {
 DispatchResult RequestDispatcher::onCgiStdin(Connection& /*c*/) {
     // 本来はリクエストボディを stdin へ。モックでは何もしない
     return DispatchResult::kNone;
+}
+
+DispatchResult RequestDispatcher::finalizeCgi(Connection& c) {
+    if (!c.isCgiActive()) {
+        return DispatchResult::kNone;
+    }
+    CgiContext* ctx = c.getCgi();
+    http::Response resp = ctx->invokeParser();
+    enqueueResponse(c, resp);
+    return DispatchResult::ArmOut();
 }
 
 void RequestDispatcher::enqueueResponse(Connection& c, const http::Response& resp) {
@@ -88,12 +104,3 @@ http::Response RequestDispatcher::buildErrorResponse(
     rb.text(plain, status);
     return rb.build();
 }
-
-// bool RequestDispatcher::wantsCgi(Connection& c) const {
-//     const std::string uri = getRequestTarget(c);
-//     // 超簡易：.cgi とか .py なら CGI とみなす
-//     const std::string::size_type dot = uri.rfind('.');
-//     if (dot == std::string::npos) return false;
-//     const std::string ext = uri.substr(dot);
-//     return (ext == ".cgi" || ext == ".py" || ext == ".php");
-// }

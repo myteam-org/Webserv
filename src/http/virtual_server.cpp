@@ -11,7 +11,6 @@
 #include "http/handler/router/middleware/error_page.hpp"
 #include "http/handler/router/middleware/logger.hpp"
 #include "http/handler/router/router.hpp"
-#include "utils/logger.hpp"
 
 // ---- Hostによる仮想サーバ選択 ----
 // matchesHostはhost_は使わず、server_namesのみで判定
@@ -60,6 +59,9 @@ http::Router &VirtualServer::getRouter() {
     return *router_;
 }
 
+// LocationContext redirect_文字列がある場合はRedirectHandlerをnewする
+// DocumentRootConfig cgi_ == ONの時は、CgiHandlerをnewする
+// どちらでもない時はregisterHandlers()を呼んで該当のHandlerをnewする
 void VirtualServer::setupRouter() {
     http::RouterBuilder routerBuilder;
     const LocationContextList locationContextList = serverConfig_.getLocation();
@@ -87,24 +89,25 @@ void VirtualServer::setupRouter() {
             continue;
         }
 
-        // CGI 対応 (いまはコメントアウトされていたので保留)
-        bool cgiOn = (docRoot.getCgiExtensions() == ON);
-
-        if (allowed[GET] == ON) {
-            if (cgiOn) {
-                // routerBuilder.route(http::kMethodGet, path, new http::CgiHandler(docRoot, path));
-            } else {
-                routerBuilder.route(http::kMethodGet, path,
-                                    new http::StaticFileHandler(docRoot));
+        // 拡張子ロケーション（例: ".py"）
+        if (!path.empty() && path[0] == '.') {
+            if (allowed[GET] == ON) {
+                routerBuilder.route(http::kMethodGet, path, new http::CgiHandler(docRoot));
             }
+            if (allowed[POST] == ON) {
+                routerBuilder.route(http::kMethodPost, path, new http::CgiHandler(docRoot));
+            }
+            continue;
+        }
+
+        // 通常のパスロケーション（"/", "/upload", ...）
+        if (allowed[GET] == ON) {
+            routerBuilder.route(http::kMethodGet, path,
+                                new http::StaticFileHandler(docRoot));
         }
         if (allowed[POST] == ON) {
-            if (cgiOn) {
-                // routerBuilder.route(http::kMethodPost, path, new http::CgiHandler(docRoot, path));
-            } else {
-                routerBuilder.route(http::kMethodPost, path,
-                                    new http::UploadFileHandler(docRoot));
-            }
+            routerBuilder.route(http::kMethodPost, path,
+                                new http::UploadFileHandler(docRoot));
         }
         if (allowed[DELETE] == ON) {
             routerBuilder.route(http::kMethodDelete, path,
@@ -120,3 +123,4 @@ void VirtualServer::setupRouter() {
     }
     router_ = routerBuilder.build();
 }
+

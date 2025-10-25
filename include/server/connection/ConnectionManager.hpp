@@ -10,6 +10,7 @@ public:
     types::Result<int, int> unregisterConnection(int fd);
     ConnectionManager();
     ~ConnectionManager();
+    std::map<int, Connection*>& getAllConnections();
 
 private:
     std::map<int, Connection*> connectionMap_;

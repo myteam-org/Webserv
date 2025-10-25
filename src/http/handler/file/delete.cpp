@@ -24,6 +24,7 @@ namespace http {
     }
 
     Either<IAction *, Response> DeleteFileHandler::serve(const Request &request) {
+         LOG_INFO("DeleteHandler is invoked");
         return Right(this->serveInternal(request));
     }
 

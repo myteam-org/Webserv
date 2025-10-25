@@ -69,6 +69,7 @@ StaticFileHandler::StaticFileHandler(const DocumentRootConfig &documentRootConfi
 }
 
 Either<IAction *, Response> StaticFileHandler::serve(const Request &requestContext) {
+    LOG_INFO("StaticFileHandler is invoked");
     return Right(this->serveInternal(requestContext));
 }
 

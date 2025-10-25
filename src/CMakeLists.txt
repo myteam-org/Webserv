@@ -10,6 +10,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 # webserv実行ファイルの定義
 add_library(webserv_lib STATIC
+    action/cgi_action.cpp
+    action/cgi_context.cpp
     config/token.cpp
     config/config.cpp
     config/parser.cpp
@@ -25,6 +27,7 @@ add_library(webserv_lib STATIC
     io/input/read/buffer.cpp
     io/input/reader/fd.cpp
     io/input/write/buffer.cpp
+    io/input/writer/fd.cpp
     io/base/fileDescriptor.cpp
     io/handler/CgiStdinHandler.cpp
     io/handler/CgiStdoutHandler.cpp
@@ -86,6 +89,7 @@ target_include_directories(webserv_lib PUBLIC
     ${PROJECT_SOURCE_DIR}/include/config/context
     ${PROJECT_SOURCE_DIR}/include/utils
     ${PROJECT_SOURCE_DIR}/include/utils/types
+    ${PROJECT_SOURCE_DIR}/include/action
     ${PROJECT_SOURCE_DIR}/include/io
     ${PROJECT_SOURCE_DIR}/include/io/input/read
     ${PROJECT_SOURCE_DIR}/include/io/input/reader

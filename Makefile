@@ -37,6 +37,7 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/http/handler/file/cgi_target.cpp \
 	src/http/handler/file/cgi.cpp \
 	src/http/handler/file/upload.cpp \
+	src/http/handler/file/fileOrCgi.cpp \
 	src/http/handler/router/builder.cpp \
 	src/http/handler/router/internal.cpp \
 	src/http/handler/router/middleware/chain.cpp \
@@ -50,11 +51,14 @@ SRCS	= 	src/config/tokenizer.cpp \
 	src/http/response/response_headers.cpp \
 	src/http/status.cpp \
 	src/http/virtual_server.cpp \
+	src/action/cgi_action.cpp \
+	src/action/cgi_context.cpp \
 	src/http/config/config_resolver.cpp \
 	src/io/base/fileDescriptor.cpp \
 	src/io/input/read/buffer.cpp \
 	src/io/input/reader/fd.cpp \
 	src/io/input/write/buffer.cpp \
+	src/io/input/writer/fd.cpp \
 	src/io/handler/CgiStdinHandler.cpp \
 	src/io/handler/CgiStdoutHandler.cpp \
 	src/io/handler/ListenerHandler.cpp \

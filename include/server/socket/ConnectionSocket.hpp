@@ -20,6 +20,7 @@ public:
     ReadResult read(char* buf, std::size_t n);
     WriteResult write(const char* buf, std::size_t n);
     bool eof();
+    bool writeEof();
 
 private:
     FileDescriptor fd_;
@@ -27,5 +28,6 @@ private:
     uint16_t peerPort_;
     static const int kInvalidFd = -1;
     ConnectionSocket(const ConnectionSocket&);
-    bool eof_;
+    bool read_eof_;
+    bool write_eof_;
 };

@@ -37,9 +37,14 @@ const std::vector<char>* CgiContext::getStdinBody() const{
     return stdinBody_;
 }
 
-time_t CgiContext::startTime() const {
+time_t CgiContext::getLastRecv() const {
     return t0_;
 }
+
+void CgiContext::setLastRecv(time_t time){
+    t0_ = time;
+}
+
 
 void CgiContext::terminateChild() {
     // Escalation（SIGTERM->SIGKILL）は Server 側ポリシーで実施する前提。

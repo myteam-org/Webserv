@@ -14,9 +14,6 @@ public:
     // ClientHandler から呼ばれる単一ステップ
     DispatchResult step(Connection& c);
 
-    // CGI stdout/ stdin 用のモック（今は形だけ）
-    DispatchResult onCgiStdout(Connection& c);
-    DispatchResult onCgiStdin(Connection& c);
     DispatchResult emitError(Connection& c, http::HttpStatusCode status, const std::string& plain);
     DispatchResult finalizeCgi(Connection& c);
 

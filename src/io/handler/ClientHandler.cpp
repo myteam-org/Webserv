@@ -11,8 +11,15 @@ void ClientHandler::onEvent(const FdEntry& e, uint32_t m){
     if (!c) {
         return;
     }
-    // 致命エラー
     if (m & EPOLLERR) {
+        // Since getsockopt is forbidden function, comment out. But if you want to see detail you can uncomment.
+        int err = 0;
+        socklen_t len = sizeof(err);
+        if (getsockopt(e.fd, SOL_SOCKET, SO_ERROR, &err, &len) == 0) {
+            if (err != 0) {
+                LOG_ERROR("EPOLLERR detail: " + std::string(strerror(err)));
+            }
+        }
         LOG_ERROR("ClientHandler::onEvent: Epoll fatal error");
         handleHangup(*c); //Connection close
         return;
@@ -40,13 +47,8 @@ void ClientHandler::onEvent(const FdEntry& e, uint32_t m){
 }
 
 void ClientHandler::onReadable(Connection& c) {
-    // for (;;) {
-        ReadBuffer::LoadResult lr = c.getReadBuffer().load();
-        // if (lr.unwrap() == 0) {
-        //     break; // これ以上は読めない
-        // }
-        c.setLastRecv(std::time(0));
-    // }
+    ReadBuffer::LoadResult lr = c.getReadBuffer().load();
+    c.setLastRecv(std::time(0));
     for (;;) {
         const http::RequestReader::ReadRequestResult readRes = c.getRequestReader().readRequest(c.getReadBuffer());
         if (readRes.isErr()) {
@@ -82,17 +84,7 @@ void ClientHandler::maybeDispatch(Connection& c) {
 
 void ClientHandler::onWritable(Connection& c) {
     WriteBuffer &writeBuffer = c.getWriteBuffer();
-    // for (;;) {
-        types::Result<std::size_t, error::AppError>  writeRes = writeBuffer.flush();
-        // if (writeRes.isErr()) {
-        // 現状ここに入ることはない
-        //     handleWriteError(c, errno);
-        //     return; 
-        // }
-    //     if (writeRes.unwrap() == 0) {
-    //         break;
-    //     }
-    // }
+    types::Result<std::size_t, error::AppError>  writeRes = writeBuffer.flush();
     if (writeBuffer.isEmpty()) {
         if (c.hasPending()) {
             c.popFront();
@@ -133,13 +125,13 @@ void ClientHandler::failAndClose(Connection& c, const error::AppError& err) {
 //     srv_->applyDispatchResult(c, DispatchResult::Close());
 // }
 
-void ClientHandler::handleReadError(Connection& c, const error::AppError& err) {
-    // TODO: ここで err から errno 相当のコードやメッセージを取得できるならログる
-    // 例: int e = err.to_errno(); log("read error: %d", e);
-    (void)err;
-    // 読み I/O エラーは即クローズでよい（レスポンスは返さない）
-    srv_->applyDispatchResult(c, DispatchResult::Close());
-}
+// void ClientHandler::handleReadError(Connection& c, const error::AppError& err) {
+//     // TODO: ここで err から errno 相当のコードやメッセージを取得できるならログる
+//     // 例: int e = err.to_errno(); log("read error: %d", e);
+//     (void)err;
+//     // 読み I/O エラーは即クローズでよい（レスポンスは返さない）
+//     srv_->applyDispatchResult(c, DispatchResult::Close());
+// }
 
 // パース／前段バリデーションのエラーを HTTP ステータスへ
 http::HttpStatusCode ClientHandler::mapParseErrorToHttpStatus(error::AppError err) {

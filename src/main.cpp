@@ -1,10 +1,13 @@
 #include "config/config.hpp"
 #include "server/Server.hpp"
 #include "utils/logger.hpp"
+#include <csignal>
+
 
 int main(int argc, char** argv) {
         SET_LOG_LEVEL(Logger::kDebug);
         LOG_INFO("Server starting...");
+        std::signal(SIGPIPE, SIG_IGN);
         if (!Config::checkArgc(argc)) {
                 LOG_ERROR("Invalid number of arguments");
                 return (1);

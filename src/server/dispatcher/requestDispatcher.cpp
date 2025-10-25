@@ -10,7 +10,7 @@ DispatchResult RequestDispatcher::step(Connection& c) {
     if (!c.hasPending()) {
         return DispatchResult::kNone;
     }
-    http::Request& req = c.front(); // pending_ の先頭を参照
+    http::Request& req = c.front();
     DispatchResult dispatchResult = dispatchNext(c, req);
     if (dispatchResult.isArmOut()) {
         c.markFrontDispatched();
@@ -32,10 +32,7 @@ DispatchResult RequestDispatcher::dispatchNext(Connection& c, http::Request& req
     Either<IAction*, http::Response> responseRes = vserver->getRouter().serve(req);
     if (responseRes.isRight()) {
         http::Response resp = responseRes.unwrapRight();
-        // 接続方針を Connection に伝える
-        // if (shouldClose(req)) {
-        //     c.markCloseAfterWrite();
-        // }
+        // c.markCloseAfterWrite();
         enqueueResponse(c, resp);        // WriteBufferへ
         return DispatchResult::ArmOut();
     }
@@ -52,21 +49,6 @@ DispatchResult RequestDispatcher::dispatchNext(Connection& c, http::Request& req
     rb.status(http::kStatusNotImplemented).text("Not Implemented", http::kStatusNotImplemented);
     enqueueResponse(c, rb.build());
     return DispatchResult::ArmOut();
-}
-
-DispatchResult RequestDispatcher::onCgiStdout(Connection& c) {
-    // 本来は CGI 出力からヘッダを切り出して Response へ。モックでは 200 固定で返す。
-    http::ResponseBuilder rb;
-    rb.status(http::kStatusOk)
-      .header("Content-Type", "text/plain")
-      .text("cgi output", http::kStatusOk);
-    enqueueResponse(c, rb.build());
-    return DispatchResult::ArmOut();
-}
-
-DispatchResult RequestDispatcher::onCgiStdin(Connection& /*c*/) {
-    // 本来はリクエストボディを stdin へ。モックでは何もしない
-    return DispatchResult::kNone;
 }
 
 DispatchResult RequestDispatcher::finalizeCgi(Connection& c) {
@@ -89,7 +71,6 @@ DispatchResult RequestDispatcher::emitError(Connection& c,
                                             const std::string& plain) {
     VirtualServer* vs = resovler_.resolveByFd(c.getFd());
     http::Response resp = buildErrorResponse(vs, status, plain);
-    // エラーは基本 close（nginx も 400/414/431/413 等は close 方向）
     c.markCloseAfterWrite();
     enqueueResponse(c, resp);
     return DispatchResult::ArmOut();

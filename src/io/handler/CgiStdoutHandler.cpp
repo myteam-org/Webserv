@@ -17,20 +17,18 @@ void CgiStdoutHandler::onEvent(const FdEntry& e, uint32_t m) {
     if (m & EPOLLIN) {
         io::FdReader r(c->getCgi()->getFdOut());
         char buf[8192];
-        for (;;) {
-            io::FdReader::ReadResult rr = r.read(buf, sizeof(buf));
-            const size_t n = rr.unwrap();
-            if (n == 0) {
-                if (r.eof()) {
-                    LOG_DEBUG("CgiStdoutHandler::onEvent: CGI response creation finished");
-                    DispatchResult d1 = srv_->getDispatcher()->finalizeCgi(*c);
-                    srv_->applyDispatchResult(*c, d1);
-                    srv_->applyDispatchResult(*c, DispatchResult::CgiCloseOut());
-                }
-                break;
+        io::FdReader::ReadResult rr = r.read(buf, sizeof(buf));
+        const size_t n = rr.unwrap();
+        c->getCgi()->setLastRecv(std::time(0));
+        if (n == 0) {
+            if (r.eof()) {
+                LOG_DEBUG("CgiStdoutHandler::onEvent: CGI response creation finished");
+                DispatchResult d1 = srv_->getDispatcher()->finalizeCgi(*c);
+                srv_->applyDispatchResult(*c, d1);
+                srv_->applyDispatchResult(*c, DispatchResult::CgiCloseOut());
             }
-            c->getCgi()->setRawOut(c->getCgi()->getRawOut().append(buf, buf + n));
         }
+        c->getCgi()->setRawOut(c->getCgi()->getRawOut().append(buf, buf + n));
     }
     if (m & EPOLLHUP) {
         DispatchResult d1 = srv_->getDispatcher()->finalizeCgi(*c);

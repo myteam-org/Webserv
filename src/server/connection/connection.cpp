@@ -2,13 +2,6 @@
 #include <ctime>
 #include "io/input/reader/fd.hpp"
 
-// Connection::Connection(int fd, const ISocketAddr& peerAddr)
-//     : connSock_(fd, peerAddr),
-//       connState_(0),
-//       readBuffer_(connSock_),
-//       writeBuffer_(connSock_),
-//       lastRecv_(std::time(0)) {}
-
 Connection::Connection(int fd, const ISocketAddr& peerAddr,
                        http::config::IConfigResolver& resolver)
     : connSock_(fd, peerAddr)
@@ -19,7 +12,9 @@ Connection::Connection(int fd, const ISocketAddr& peerAddr,
     , frontDispatched_(false)
     , closeAfterWrite_(false)
     , peerHalfClosed_(false)
-    , lastRecv_(std::time(0)) {}
+    , lastRecv_(std::time(0))
+    , cgi_(0)
+    , preparedCgi_(0) {}
 
 Connection::~Connection() {
     if (connState_) {

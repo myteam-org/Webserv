@@ -42,7 +42,6 @@ class Server {
         void armOutOnly(int fd);
         void armInOut(int fd);
         RequestDispatcher* getDispatcher() const;
-        static const time_t kTimeoutThresholdSec = 30;
         static const time_t kCGITimeoutThresholdSec = 15;
     private:
         std::vector<ServerContext> serverCtxs_;

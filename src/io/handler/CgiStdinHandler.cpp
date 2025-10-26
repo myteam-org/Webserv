@@ -20,13 +20,10 @@ void CgiStdinHandler::onEvent(const FdEntry& e, uint32_t m) {
     if ((m & EPOLLOUT) && ctx->getFdIn() >= 0 && ctx->getStdinBody()) {
         io::FdWriter w(ctx->getFdIn());
         const std::vector<char>& body = *ctx->getStdinBody();
-        while (ctx->getWritten() < body.size()) {
-            io::FdWriter::WriteResult wr = w.write(&body[ctx->getWritten()], body.size() - ctx->getWritten());
-            const std::size_t n = wr.unwrap();
-            if (n == 0)
-                break;
-            ctx->setWritten(ctx->getWritten() + n);
-        }
+        io::FdWriter::WriteResult wr = w.write(&body[ctx->getWritten()], body.size() - ctx->getWritten());
+        const std::size_t n = wr.unwrap();
+        ctx->setLastRecv(std::time(0));
+        ctx->setWritten(ctx->getWritten() + n);
         if (ctx->getWritten() >= body.size()) {
             srv_->applyDispatchResult(*c, DispatchResult::CgiCloseIn());
         }

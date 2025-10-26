@@ -109,6 +109,7 @@ types::Result<types::Unit,int> Server::initDispatcher() {
 
 types::Result<types::Unit,int> Server::run() {
     LOG_INFO("Server::run: Server run loop started");
+    time_t lastSweep = std::time(0);
     for (;;) {
         types::Result<std::vector<EpollEvent>, int> r = epollNotifier_.wait(); // 200ms など
         if (r.isErr()) {
@@ -129,7 +130,11 @@ types::Result<types::Unit,int> Server::run() {
             IFdHandler* fdEventHandler = handlers_[fdEntry.kind];
             fdEventHandler->onEvent(fdEntry, mask);
         }
-        // sweepTimeouts(); // ヘッダ/ボディ/CGI ごとの壁時計タイムアウトで close
+        const time_t now = std::time(0);
+        if (now - lastSweep >= 1) {  // 1秒ごとに一度だけ呼ぶ
+            sweepTimeouts();
+            lastSweep = now;
+        }
     }
 }
 
@@ -239,7 +244,6 @@ void Server::applyDispatchResult(Connection& c, const DispatchResult& dr) {
             // 子の回収はここで（WNOHANG）
             int st=0;
             (void)::waitpid(ctx->getPid(), &st, WNOHANG);
-
         }
         return;
     }
@@ -331,7 +335,7 @@ types::Result<CgiFds, error::SystemError> Server::spawnCgiFromPrepared(Connectio
     FdUtils::safe_fd_close(in_pipe[0]);
     FdUtils::safe_fd_close(out_pipe[1]);
     CgiContext* ctx = new CgiContext();
-    ctx->setProc(pid, in_pipe[1], out_pipe[0],0);
+    ctx->setProc(pid, in_pipe[1], out_pipe[0],std::time(0));
     ctx->setStdinBody(prepared_ctx->stdinBody);
     ctx->setOwner(prepared_ctx->owner, prepared_ctx->parseFn);
     c.setCgi(ctx);
@@ -348,7 +352,7 @@ void execChildProcess(int in_pipe[2], int out_pipe[2], PreparedCgi* prepared_ctx
     FdUtils::safe_fd_close(in_pipe[1]);
     FdUtils::safe_fd_close(out_pipe[0]); 
     ::execve(prepared_ctx->argv[0].c_str(), &argvp[0], &envp[0]);
-    _exit(127); // ここに来たら exec 失敗
+    _exit(127);
 }
 
 types::Result<types::Unit, error::SystemError> Server::setupPipeForCgi(int in_pipe[2], int out_pipe[2]) {
@@ -418,7 +422,7 @@ void Server::sweepTimeouts() {
 
     for (std::map<int, Connection*>::iterator it = conns.begin(); it != conns.end(); ++it) {
         Connection* c = it->second;
-        if (now - c->getLastRecv() > kTimeoutThresholdSec) {
+        if (now - c->getLastRecv() > Connection::kTimeoutThresholdSec) {
             LOG_INFO("timeout fd=" + utils::toString(c->getFd()));
             epollNotifier_.del(c->getFd());
             connManager_.unregisterConnection(c->getFd());
@@ -426,14 +430,13 @@ void Server::sweepTimeouts() {
         }
         if (c->isCgiActive()) {
             CgiContext* cgictx = c->getCgi();
-            const time_t elapsed = now - cgictx->startTime();
-    if (elapsed > kCGITimeoutThresholdSec) {
-        LOG_WARN("CGI timeout pid=" + utils::toString(cgictx->getPid()));
-        kill(cgictx->getPid(), SIGKILL);
-        waitpid(cgictx->getPid(), NULL, WNOHANG);
-        cleanupConnectionCgi(*c);
+            const time_t elapsed = now - cgictx->getLastRecv();
+            if (elapsed > CgiContext::kCGITimeoutThresholdSec) {
+                LOG_WARN("CGI timeout pid=" + utils::toString(cgictx->getPid()));
+                kill(cgictx->getPid(), SIGKILL);
+                waitpid(cgictx->getPid(), NULL, WNOHANG);
+                DispatchResult err = getDispatcher()->emitError(*c, http::kStatusGatewayTimeout, "Gateway Timeout");
+            }
+        }
     }
 }
-    }
-}
-

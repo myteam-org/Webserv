@@ -63,6 +63,11 @@ ReadBuffer::LoadResult ReadBuffer::load() {
     return OK(bytesRead);
 }
 
+
+void ReadBuffer::clear() {
+    buf_.clear();
+}
+
 size_t ReadBuffer::size() const {
     return buf_.size();
 }

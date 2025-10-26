@@ -45,7 +45,7 @@ public:
     void setProc(pid_t pid, int fd_in, int fd_out, time_t now);
     void setStdinBody(const std::vector<char>* body);
     const std::vector<char>* getStdinBody() const; 
-    time_t startTime() const;
+    time_t getLastRecv() const;
     void   terminateChild(); // SIGTERM -> SIGKILL は Server 側でやるなら呼び出しのみ
 
     // 付帯情報
@@ -55,11 +55,13 @@ public:
     int getFdOut() const;
     void setFdIn(int fd);
     void setFdOut(int fd);
-    const pid_t getPid() const;
+    pid_t getPid() const;
     size_t getWritten() const;
     void setWritten(size_t writeSize);
     std::string getRawOut();
     void setRawOut(std::string raw);
+    void setLastRecv(time_t time);
+    static const time_t kCGITimeoutThresholdSec = 15;
 
 private:
     CgiContext(const CgiContext&);

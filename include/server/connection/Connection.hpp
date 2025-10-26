@@ -19,7 +19,6 @@ private:
     http::RequestReader requestReader_;
     Connection(const Connection&);
     Connection& operator=(const Connection&);
-    static const std::time_t kTimeoutThresholdSec = 60;
     std::deque<http::Request> pending_;
     bool frontDispatched_;
     bool closeAfterWrite_;
@@ -30,7 +29,6 @@ private:
 
 
 public:
-    // Connection (int fd, const ISocketAddr& peerAddr);
     Connection(int fd, const ISocketAddr& peerAddr,
                        http::config::IConfigResolver& resolver);
 
@@ -51,7 +49,7 @@ public:
     void popFront();
     http::Request& front();
     void pushCreatedReq(http::Request req);
-    http::RequestReader& getRequestReader();   // 非const版（HandlerでreadRequestするため）
+    http::RequestReader& getRequestReader();
     bool isPeerHalfClosed() const;
     void onPeerHalfClose();
     bool shouldCloseAfterWrite() const;
@@ -66,4 +64,5 @@ public:
     CgiContext* getCgi() const;
     bool isCgiActive() const;
     void clearCgi();
+    static const std::time_t kTimeoutThresholdSec = 10;
 };

@@ -419,14 +419,16 @@ bool Server::overlapsWildcard(const std::string& a, const std::string& b) {
 void Server::sweepTimeouts() {
     const time_t now = std::time(0);
     std::map<int, Connection*>& conns = connManager_.getAllConnections();
-
-    for (std::map<int, Connection*>::iterator it = conns.begin(); it != conns.end(); ++it) {
+    for (std::map<int, Connection*>::iterator it = conns.begin(); it != conns.end();) {
         Connection* c = it->second;
         if (now - c->getLastRecv() > Connection::kTimeoutThresholdSec) {
             LOG_INFO("timeout fd=" + utils::toString(c->getFd()));
             epollNotifier_.del(c->getFd());
+            std::map<int, Connection*>::iterator next = it;
+            ++next;
             connManager_.unregisterConnection(c->getFd());
-            delete c;
+            it = next;
+            continue;
         }
         if (c->isCgiActive()) {
             CgiContext* cgictx = c->getCgi();
@@ -436,7 +438,9 @@ void Server::sweepTimeouts() {
                 kill(cgictx->getPid(), SIGKILL);
                 waitpid(cgictx->getPid(), NULL, WNOHANG);
                 DispatchResult err = getDispatcher()->emitError(*c, http::kStatusGatewayTimeout, "Gateway Timeout");
+                applyDispatchResult(*c, err);
             }
         }
+        ++it;
     }
 }

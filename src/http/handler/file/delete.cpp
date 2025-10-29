@@ -3,7 +3,7 @@
 #include "utils/logger.hpp"
 #include <sys/stat.h>
 #include <errno.h>
-#include <stdio.h>
+#include <cstdio>
 #include <string.h>
 
 namespace http {
@@ -89,7 +89,7 @@ namespace http {
             return ResponseBuilder().status(kStatusForbidden).build();
         }
         errno = 0;
-        if (remove(path.c_str()) != 0) {
+        if (std::remove(path.c_str()) != 0) {
             return ResponseBuilder().status(kStatusInternalServerError).build();
         }
         return ResponseBuilder().status(kStatusNoContent).build();

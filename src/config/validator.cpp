@@ -14,7 +14,7 @@ bool Validator::number(const std::string& number, int type) {
         }
     }
 
-    const int num = atoi(number.c_str());
+    const int num = std::atoi(number.c_str());
 
     if (type == LISTEN) {
         return (num >= MIN_PORT && num <= MAX_PORT);

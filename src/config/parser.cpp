@@ -118,7 +118,7 @@ void ConfigParser::setPort_(ServerContext& server, size_t& index) {
                      "supported: line",
                      this->tokens_[index].getLineNumber());
         }
-        server.setListen(static_cast<u_int16_t>(atoi(portNumber.c_str())));
+        server.setListen(static_cast<u_int16_t>(std::atoi(portNumber.c_str())));
     } else {
         throwErr(portNumber, ": port value error: line",
                  this->tokens_[index].getLineNumber());
@@ -163,7 +163,7 @@ void ConfigParser::setMaxBodySize_(ServerContext& server, size_t& index) {
     if (this->tokens_[index].getType() == VALUE &&
         Validator::number(maxBodySize, MAX_SIZE)) {
         server.setClientMaxBodySize(
-            static_cast<size_t>(atoi(maxBodySize.c_str())));
+            static_cast<size_t>(std::atoi(maxBodySize.c_str())));
     } else {
         throwErr(maxBodySize, ": client_max_body_size error: line",
                  this->tokens_[index].getLineNumber());
@@ -176,7 +176,7 @@ void ConfigParser::setErrPage_(ServerContext& server, size_t& index) {
     if (this->tokens_[index].getType() == VALUE &&
         Validator::number(errNumber, ERR_PAGE)) {
         const std::string pageName = incrementAndCheckSize_(index);
-        const int num = atoi(errNumber.c_str());
+        const int num = std::atoi(errNumber.c_str());
         server.addMap(static_cast<http::HttpStatusCode>(num), pageName);
     } else {
         throwErr(errNumber, ": ErrorPage value error: line",

@@ -58,30 +58,30 @@ Either<IAction*, Response> CgiHandler::prepareCgi(const Request& req) {
     return Left(static_cast<IAction*>(new CgiActionPrepared(pc)));
 }
 
-Response CgiHandler::serveInternal(const Request& req) const {
-    std::string scriptPath;
-    std::string pathInfo;
-    if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
-        return ResponseBuilder().status(kStatusNotFound).build();
-    }
-    const std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
-    const std::string realScriptPath = utils::normalizePath(joined);
+// Response CgiHandler::serveInternal(const Request& req) const {
+//     std::string scriptPath;
+//     std::string pathInfo;
+//     if (!isCgiTarget(req, &scriptPath, &pathInfo)) {
+//         return ResponseBuilder().status(kStatusNotFound).build();
+//     }
+//     const std::string joined = utils::joinPath(docRootConfig_.getRoot(), scriptPath);
+//     const std::string realScriptPath = utils::normalizePath(joined);
 
-    std::vector<std::string> env;
-    buildCgiEnv(req, scriptPath, &pathInfo, &env);
+//     std::vector<std::string> env;
+//     buildCgiEnv(req, scriptPath, &pathInfo, &env);
 
-    std::vector<std::string> argv;
-    argv.push_back(realScriptPath);
+//     std::vector<std::string> argv;
+//     argv.push_back(realScriptPath);
 
-    const std::vector<char>& stdinBody = req.getBody();
+//     const std::vector<char>& stdinBody = req.getBody();
 
-    std::string cgiOut;
-    int exitCode = 0;
-    if (!executeCgi(argv, env, stdinBody, &cgiOut, &exitCode)) {
-        return ResponseBuilder().status(kStatusBadGateway).build();
-    }
+//     std::string cgiOut;
+//     int exitCode = 0;
+//     if (!executeCgi(argv, env, stdinBody, &cgiOut, &exitCode)) {
+//         return ResponseBuilder().status(kStatusBadGateway).build();
+//     }
 
-    return parseCgiAndBuildResponse(cgiOut);
-}
+//     return parseCgiAndBuildResponse(cgiOut);
+// }
 
 }  // namespace http

@@ -5,7 +5,6 @@
 Connection::Connection(int fd, const ISocketAddr& peerAddr,
                        http::config::IConfigResolver& resolver)
     : connSock_(fd, peerAddr)
-    , connState_(0)
     , readBuffer_(connSock_)
     , writeBuffer_(connSock_)
     , requestReader_(resolver)
@@ -17,9 +16,8 @@ Connection::Connection(int fd, const ISocketAddr& peerAddr,
     , preparedCgi_(0) {}
 
 Connection::~Connection() {
-    if (connState_) {
-        delete connState_;
-        connState_ = 0;
+    if (cgi_ != NULL) {
+        delete cgi_;
     }
 }
 
@@ -40,17 +38,6 @@ WriteBuffer& Connection::getWriteBuffer() {
 
 const WriteBuffer& Connection::getWriteBuffer() const {
     return writeBuffer_;
-}
-
-IConnectionState* Connection::getConnState() const {
-    return connState_;
-}
-
-void Connection::setConnState(IConnectionState* connState) {
-    if (connState_ != connState) {
-        delete connState_;
-        connState_ = connState;
-    }
 }
 
 time_t Connection::getLastRecv() const {

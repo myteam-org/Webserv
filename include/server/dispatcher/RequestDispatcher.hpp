@@ -13,12 +13,10 @@ public:
     ~RequestDispatcher();
     // ClientHandler から呼ばれる単一ステップ
     DispatchResult step(Connection& c);
-
     DispatchResult emitError(Connection& c, http::HttpStatusCode status, const std::string& plain);
     DispatchResult finalizeCgi(Connection& c);
 
 private:
-    // std::map<std::string, VirtualServer*> vServers_;
     EndpointResolver& resovler_;
     DispatchResult dispatchNext(Connection& c, http::Request& req);
     // Response を直列化して送信キューへ積む（WriteBuffer の薄いアダプタ）

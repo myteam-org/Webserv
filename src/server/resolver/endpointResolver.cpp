@@ -28,11 +28,16 @@ std::string EndpointResolver::endpointKeyFromFd(int fd) {
     if (::getsockname(fd, reinterpret_cast<struct sockaddr*>(&sin), &len) != 0) {
         return "0.0.0.0:0"; // フェイルセーフ
     }
-    char ip[INET_ADDRSTRLEN]; // C++98
-    if (!::inet_ntop(AF_INET, &sin.sin_addr, ip, sizeof(ip))) {
-        return "0.0.0.0:0";
-    }
-    const unsigned short port = ntohs(sin.sin_port);
-    std::ostringstream oss; oss << ip << ":" << port;
+    uint32_t ip = ntohl(sin.sin_addr.s_addr);
+    unsigned char o1 = (ip >> 24) & 0xFF;
+    unsigned char o2 = (ip >> 16) & 0xFF;
+    unsigned char o3 = (ip >> 8)  & 0xFF;
+    unsigned char o4 = ip & 0xFF;
+    std::ostringstream oss;
+    oss << static_cast<int>(o1) << "."
+        << static_cast<int>(o2) << "."
+        << static_cast<int>(o3) << "."
+        << static_cast<int>(o4)
+        << ":" << ntohs(sin.sin_port);
     return oss.str();
 }

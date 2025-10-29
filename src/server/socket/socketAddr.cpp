@@ -4,18 +4,27 @@
 #include <netdb.h>
 #include <sstream> 
 
+// SocketAddr SocketAddr::createIPv4(const std::string& hostName, uint16_t port) {
+//     SocketAddr sockAddr;
+//     sockaddr_in addrIn;
+//     std::memset(&addrIn, 0, sizeof(sockaddr_in));
+
+//     if (inet_pton(AF_INET, hostName.c_str(), &addrIn.sin_addr) == 1) {
+//         addrIn.sin_family = AF_INET;
+//         addrIn.sin_port = htons(port);
+//     } else {
+//         resolveByName(hostName, port, &addrIn);
+//     }
+//     std::memset(&sockAddr.storage_, 0, sizeof(sockAddr.storage_));
+//     std::memcpy(&sockAddr.storage_, &addrIn, sizeof(addrIn));
+//     sockAddr.length_ = sizeof(addrIn);
+//     return sockAddr;
+// }
 SocketAddr SocketAddr::createIPv4(const std::string& hostName, uint16_t port) {
     SocketAddr sockAddr;
     sockaddr_in addrIn;
     std::memset(&addrIn, 0, sizeof(sockaddr_in));
-
-    if (inet_pton(AF_INET, hostName.c_str(), &addrIn.sin_addr) == 1) {
-        addrIn.sin_family = AF_INET;
-        addrIn.sin_port = htons(port);
-    } else {
-        resolveByName(hostName, port, &addrIn);
-    }
-    std::memset(&sockAddr.storage_, 0, sizeof(sockAddr.storage_));
+    resolveByName(hostName, port, &addrIn);
     std::memcpy(&sockAddr.storage_, &addrIn, sizeof(addrIn));
     sockAddr.length_ = sizeof(addrIn);
     return sockAddr;

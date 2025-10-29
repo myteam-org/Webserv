@@ -131,7 +131,7 @@ types::Result<types::Unit,int> Server::run() {
             fdEventHandler->onEvent(fdEntry, mask);
         }
         const time_t now = std::time(0);
-        if (now - lastSweep >= 1) {  // 1秒ごとに一度だけ呼ぶ
+        if (now - lastSweep >= 1) {
             sweepTimeouts();
             lastSweep = now;
         }
@@ -330,7 +330,7 @@ types::Result<CgiFds, error::SystemError> Server::spawnCgiFromPrepared(Connectio
         ::execve(prepared_ctx->argv[0].c_str(), &argvp[0], &envp[0]);
         LOG_ERROR(::strerror(errno));
         LOG_ERROR("Server::spawnCgiFromPrepared: CGI execution error");
-        _exit(127);
+        std::exit(127);
     }
     FdUtils::safe_fd_close(in_pipe[0]);
     FdUtils::safe_fd_close(out_pipe[1]);
@@ -352,7 +352,7 @@ void execChildProcess(int in_pipe[2], int out_pipe[2], PreparedCgi* prepared_ctx
     FdUtils::safe_fd_close(in_pipe[1]);
     FdUtils::safe_fd_close(out_pipe[0]); 
     ::execve(prepared_ctx->argv[0].c_str(), &argvp[0], &envp[0]);
-    _exit(127);
+    std::exit(127);
 }
 
 types::Result<types::Unit, error::SystemError> Server::setupPipeForCgi(int in_pipe[2], int out_pipe[2]) {
@@ -412,22 +412,14 @@ bool Server::overlapsWildcard(const std::string& a, const std::string& b) {
     if (a.substr(ca+1) != b.substr(cb+1)) {
         return false;
     }
-    // 同じポートで、どちらかが 0.0.0.0
     return (ipa == "0.0.0.0") || (ipb == "0.0.0.0");
 }
 
 void Server::sweepTimeouts() {
     const time_t now = std::time(0);
     std::map<int, Connection*>& conns = connManager_.getAllConnections();
-
-    for (std::map<int, Connection*>::iterator it = conns.begin(); it != conns.end(); ++it) {
+    for (std::map<int, Connection*>::iterator it = conns.begin(); it != conns.end();) {
         Connection* c = it->second;
-        if (now - c->getLastRecv() > Connection::kTimeoutThresholdSec) {
-            LOG_INFO("timeout fd=" + utils::toString(c->getFd()));
-            epollNotifier_.del(c->getFd());
-            connManager_.unregisterConnection(c->getFd());
-            delete c;
-        }
         if (c->isCgiActive()) {
             CgiContext* cgictx = c->getCgi();
             const time_t elapsed = now - cgictx->getLastRecv();
@@ -436,7 +428,21 @@ void Server::sweepTimeouts() {
                 kill(cgictx->getPid(), SIGKILL);
                 waitpid(cgictx->getPid(), NULL, WNOHANG);
                 DispatchResult err = getDispatcher()->emitError(*c, http::kStatusGatewayTimeout, "Gateway Timeout");
+                applyDispatchResult(*c, err);
             }
         }
+        if (now - c->getLastRecv() > Connection::kTimeoutThresholdSec) {
+            LOG_INFO("timeout fd=" + utils::toString(c->getFd()));
+            DispatchResult err = getDispatcher()->emitError(*c, http::kStatusRequestTimeout, "Request Timeout");
+            c->markCloseAfterWrite();
+            applyDispatchResult(*c, err);
+            epollNotifier_.del(c->getFd());
+            std::map<int, Connection*>::iterator next = it;
+            ++next;
+            connManager_.unregisterConnection(c->getFd());
+            it = next;
+            continue;
+        }
+        ++it;
     }
 }

@@ -3,8 +3,7 @@
 #include "utils/logger.hpp"
 #include "http/response/response.hpp"
 
-RequestDispatcher::RequestDispatcher(EndpointResolver& resolver) : resovler_(resolver) {
-}
+RequestDispatcher::RequestDispatcher(EndpointResolver& resolver) : resovler_(resolver) {}
 
 DispatchResult RequestDispatcher::step(Connection& c) {
     if (!c.hasPending()) {

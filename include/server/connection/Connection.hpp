@@ -13,7 +13,6 @@
 class Connection {
 private:
     ConnectionSocket connSock_;
-    IConnectionState* connState_;
     ReadBuffer readBuffer_;
     WriteBuffer writeBuffer_;
     http::RequestReader requestReader_;
@@ -38,8 +37,6 @@ public:
     const WriteBuffer& getWriteBuffer() const;
     ReadBuffer& getReadBuffer();
     WriteBuffer& getWriteBuffer();
-    IConnectionState* getConnState() const;
-    void setConnState(IConnectionState* connState);
     time_t getLastRecv() const;
     const http::RequestReader& getRequestReader() const;
     int getFd() const;
@@ -64,5 +61,5 @@ public:
     CgiContext* getCgi() const;
     bool isCgiActive() const;
     void clearCgi();
-    static const std::time_t kTimeoutThresholdSec = 10;
+    static const std::time_t kTimeoutThresholdSec = 20;
 };

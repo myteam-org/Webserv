@@ -2,7 +2,7 @@
 
 ipaddr="127.0.0.101"
 port=8081
-siegetestsec=30
+siegetestsec=300
 
 CURL_OPTS="-v -w '%{http_code}\n'"
 
@@ -45,3 +45,8 @@ done
 # Siege テスト
 # echo "Siege test will start. This takes 30sec..."
 # siege -c 10 -t $siegetestsec"s" "http://$ipaddr:$port/"
+#POST connection timeout case
+curl -v -X POST http://$ipaddr:$port/upload \
+     -H "Transfer-Encoding: chunked" \
+     --data-binary @largefile.bin \
+     --limit-rate 1b

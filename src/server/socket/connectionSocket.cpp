@@ -36,17 +36,14 @@ io::IReader::ReadResult ConnectionSocket::read(char* buf, std::size_t n) {
         read_eof_ = true;
         return types::ok<std::size_t>(0);
     }
-    // errno が使用できないので、EPOLL 側にて、処理が進んだかどうかを確認する。
     return types::ok<std::size_t>(0);
 }
 
 io::IWriter::WriteResult ConnectionSocket::write(const char* buf, std::size_t n) {
     ssize_t w = ::send(getRawFd(), buf, n, 0);
     if (w >= 0) {
-        
         return types::ok<std::size_t>(static_cast<size_t>(w));
     }
-    // 進めなかった→0 を返して上位に「次の EPOLLOUT を待て」と伝える
     return types::ok<std::size_t>(0);
 }
 
